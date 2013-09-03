@@ -2,3 +2,8 @@
 *.ui
 *.o
 tiger
+lexer.sml
+parser.output
+parser.sig
+parser.sml
+
