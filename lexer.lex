@@ -85,12 +85,18 @@ and String =
 	parse "\\" { StrEscape lexbuf }
 	| "\"" { "" }
 	| "\n" { raise Fail "Scanner: Newline en string literal." }
+    | "\\f" { StrSplit lexbuf }
 	| eof { raise Fail "Scanner: EOF en string literal." }
 	| _ {	let val c = getLexeme lexbuf in
 				if c > "\^_" then 	c^(String lexbuf)
 				else 	raise Fail ("Scanner: Caracter inválido ("^c^") en cadena.")
 			end
 	}
+
+and StrSplit =
+    parse SPC+ { StrSplit lexbuf }
+    | "\n"     { StrSplit lexbuf }
+    | "\\f"    { String lexbuf }
 
 
 and StrEscape = 

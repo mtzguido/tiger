@@ -1,4 +1,4 @@
-.PHONY: all clean re depend run trim
+.PHONY: all clean re depend run trim test
 
 HOME=/home/guido
 MOSML=${HOME}/mosml
@@ -14,7 +14,7 @@ run: tiger
 PARSER=parser.sml
 LEXER=lexer.sml
 
-MODULES=parser.sml lexer.sml lineno.sml tiger.sml ast.sml
+MODULES=parser.sml lexer.sml lineno.sml tiger.sml ast.sml hash.sml
 OBJS= $(patsubst %.sml,%.uo,${MODULES})
 
 tiger: ${OBJS}
@@ -51,8 +51,17 @@ depend: $(MODULES)
 	$(MOSMLTOOLS)/cutdeps < Makefile.bak > Makefile
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
+test: tiger
+	for i in ../tests/good/*.tig; do \
+		echo "$$i:" ; \
+		./tiger "$$i" ; \
+	done
+
+
 ### DO NOT DELETE THIS LINE
 parser.uo: parser.ui ast.uo lineno.uo 
 parser.ui: ast.uo 
+hash.uo: hash.ui 
 lexer.uo: parser.ui lineno.uo 
-tiger.uo: parser.ui lexer.uo ast.uo 
+escape.uo: ast.uo hash.ui 
+tiger.uo: parser.ui lexer.uo ast.uo escape.uo 

@@ -91,6 +91,7 @@ exp : NRO { IntE ($1, getinfo()) }
 
     | LET decs IN END { LetE ({decs=$2, body=UnitE fakeinfo}, getinfo()) } /* let */
     | LET decs IN exp END { LetE ({decs=$2, body=$4}, getinfo()) } /* let */
+    | LET decs IN exp PCOMA seq END { LetE ({decs=$2, body= SeqE ($4::$6, fakeinfo)}, getinfo()) } /* let */
 
     | lvalue { VarE ($1, getinfo()) } /* un lvalue tambien es expresion */
     | lvalue DOSPIG exp { AssignE ({ l=$1, r=$3}, getinfo()) } /* asignación */
