@@ -4,7 +4,7 @@ open lineno
 open ast
 
 fun getinfo () =
-    { pos = !lineno }
+    makeinfo (!lineno)
 
 fun typeDecMerge(FuncDecl [fd], (FuncDecl list)::rest) =
     (FuncDecl (fd::list))::rest
@@ -16,8 +16,8 @@ fun typeDecMerge(FuncDecl [fd], (FuncDecl list)::rest) =
 fun nombre (SimpleVar s) = s
   | nombre _ = raise Fail "Parser: Error interno 1"
 
-val fakeinfo = 
-    { pos = ~123 }
+val fakeinfo = makeinfo ~123
+
 
 %}
 
@@ -137,7 +137,8 @@ seq : exp PCOMA seq { $1 :: $3 }
     | exp { $1::[] }
     ;
 
-flds : id EQ exp { [($1, $3)] }
+flds :           { [] }
+     | id EQ exp { [($1,$3)] }
      | id EQ exp COMA flds { ($1,$3)::$5 }
      ;
 

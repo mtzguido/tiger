@@ -1,11 +1,11 @@
-structure ast :> ast =
-struct
+signature ast = 
+sig
 
 type symbol = string
-type info = { pos: int } 
+type info
 
-fun info2str ({pos}) = "(linea: "^(makestring pos)^")"
-fun makeinfo nl = {pos=nl}
+val info2str : info -> string
+val makeinfo : int -> info (* line number *)
 
 datatype exp = VarE of var * info
              | UnitE of info

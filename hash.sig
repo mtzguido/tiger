@@ -1,25 +1,25 @@
 signature hash =
 sig
 
-type ('a, 'b) Tabla
-exception yaExiste of string
-exception noExiste
-exception noExisteS of string
-val tabNueva : unit -> (''a, 'b) Tabla
-val fromTab : (''a, 'b) Tabla -> (''a, 'b) Tabla
-val name : 'a -> 'a
-val tabEsta : ''a * (''a, 'b) Tabla -> bool
-val tabInserta : ''a * 'b * (''a, 'b) Tabla -> (''a, 'b) Tabla
-val tabRInserta : ''a * 'b * (''a, 'b) Tabla -> (''a, 'b) Tabla
-val tabBusca : ''a * (''a, 'b) Tabla -> 'b option
-val tabSaca : ''a * (''a, 'b) Tabla -> 'b
-val tabAplica : ('a -> 'b) * (''c, 'a) Tabla -> (''c, 'b) Tabla
-val tabAAplica : ('a -> ''c) * ('b -> 'd) * ('a, 'b) Tabla -> (''c, 'd) Tabla
-val tabRAAplica : ('a -> ''b) * ('c -> 'd) * ('a, 'c) Tabla -> (''b, 'd) Tabla
-val tabInserList : ('a, 'b) Tabla * ('a * 'b) list -> ('a, 'b) Tabla
-val tabAList : ('a, 'b) Tabla -> ('a * 'b) list
-val tabFiltra : ('b -> bool) * (''a, 'b) Tabla -> (''a, 'b) Tabla
-val tabPrimer : ('b -> bool) * ('a, 'b) Tabla -> ('a * 'b)
-val tabClaves : ('a, 'b) Tabla -> 'a list
+(* las operaciones modifican la tabla pasada como parametro.
+   si se desea que no haya efectos lateral, usar tabCopy *)
+
+exception Dup
+exception Miss
+
+type (''a, 'b) Tabla
+val tabNew    :  unit -> (''a, 'b) Tabla
+val tabCopy   : (''a, 'b) Tabla -> (''a, 'b) Tabla
+
+val tabInsert  : (''a, 'b) Tabla -> (''a * 'b) -> unit (* lanza excepcion si ya está *)
+val tabReplace : (''a, 'b) Tabla -> (''a * 'b) -> unit (* agrega, posiblemente sobreescribiendo *)
+
+val tabHas  : (''a, 'b) Tabla -> ''a -> bool
+val tabFind : (''a, 'b) Tabla -> ''a -> 'b option
+val tabTake : (''a, 'b) Tabla -> ''a -> 'b             (* lanza excepcion si no está *)
+
+val tabToList : (''a, 'b) Tabla -> (''a * 'b) list
+val tabInsertList  : (''a, 'b) Tabla -> (''a * 'b) list -> unit
+val tabReplaceList : (''a, 'b) Tabla -> (''a * 'b) list -> unit
 
 end
