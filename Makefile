@@ -1,6 +1,5 @@
 .PHONY: all clean re depend run trim test
 
-HOME=/home/guido
 MOSML=${HOME}/mosml
 MOSMLTOOLS=camlrunm ${MOSML}/tools
 MOSMLC=${MOSML}/bin/mosmlc -c -liberal
@@ -56,20 +55,20 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
 test: tiger
-	for i in ../tiger/testcases/*.tig ; do \
-		echo "$$i:" ; \
-		./tiger "$$i" ; \
-	done
-#	for i in ../tests/*/*.tig ; do \
+#	for i in ../tiger/testcases/*.tig ; do \
 #		echo "$$i:" ; \
 #		./tiger "$$i" ; \
 #	done
+	for i in ../tests/*/*.tig ; do \
+		echo "$$i:" ; \
+		./tiger "$$i" ; \
+	done
 
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
-main.uo: parser.ui lexer.uo common.uo ast.ui escape.ui 
-semantics.uo: semantics.ui types.ui ast.ui hash.ui 
+main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
+semantics.uo: semantics.ui types.uo ast.ui hash.ui 
 parser.uo: parser.ui ast.ui lineno.uo 
 parser.ui: ast.ui 
 hash.uo: hash.ui 

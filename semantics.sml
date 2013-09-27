@@ -5,12 +5,14 @@ open ast hash types
 
 datatype IR = SCAF
 datatype EnvEntry =
-    VIntRO 
-  | Var of TigerType
+    Var of TigerType
   | Func of {formals:TigerType list, ret:TigerType, extern:bool, label:string}
 
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
+
+val _ = tabInsertList init_tenv [("R", TRecord ([("a",TInt),("b",TInt),("c",TInt)], ref ()))]
+val _ = tabInsertList init_venv [("x", Var TInt)]
 
 fun uncurry f (x,y) = f x y
 
@@ -26,7 +28,7 @@ fun typeMatch t1 t2 = case (t1, t2) of
   | (TRecord _, TNil)  => true
   | (TRecord (_, u1), TRecord (_, u2))
        => u1 = u2
-  | (TInt _, TInt _)   => true (* no importa acc? *)
+  | (TInt, TInt)   => true (* no importa acc? *)
   | (TString, TString) => true
   | (TArray (_,u1), TArray (_,u2))
        => u1 = u2
@@ -46,7 +48,7 @@ fun seman vt tt exp = case exp of
     UnitE _ => (SCAF, TUnit)
   | VarE (v,_) => varSeman vt tt v
   | NilE _ => (SCAF, TNil)
-  | IntE (i,_) => (SCAF, TInt RO) (* no deberia importar que sea RO, ya que no es l_value *)
+  | IntE (i,_) => (SCAF, TInt)
   | StringE (s,_) => (SCAF, TString)
   | CallE ({func,args},_) => let val (formals, ret) =
                                    ( case tabFind vt func of
@@ -58,14 +60,14 @@ fun seman vt tt exp = case exp of
                                  val pairs = ListPair.zip (actual_types,formals)
                              in if List.all (uncurry typeMatch) pairs
                                   then (SCAF, ret)
-                                  else raise Fail "arg mismatch"
+                                  else raise Fail "arg mismatch en call"
                              end
   | OpE ({left,oper,right}, _) =>
     let fun arith oo l r =
           let val (_,lt) = seman vt tt l
               val (_,rt) = seman vt tt r
-          in if typeMatch lt (TInt RW) andalso typeMatch rt (TInt RW)
-               then (SCAF, TInt RW)
+          in if typeMatch lt TInt andalso typeMatch rt TInt
+               then (SCAF, TInt)
                else raise Fail "oper aritmético sobre no-enteros"
           end
         fun eq oo l r = 
@@ -74,14 +76,14 @@ fun seman vt tt exp = case exp of
           in if typeMatch lt rt
                 andalso not (lt = TNil andalso rt = TNil)
                 andalso not (lt = TUnit)
-               then (SCAF, TInt RW)
+               then (SCAF, TInt)
                else raise Fail "comparación inválida"
           end
         fun ord oo l r =  
           let val (_,lt) = seman vt tt l
               val (_,rt) = seman vt tt r
-          in if typeMatch lt rt andalso (typeMatch lt (TInt RW) orelse typeMatch lt TString)
-               then (SCAF, TInt RW)
+          in if typeMatch lt rt andalso (typeMatch lt TInt orelse typeMatch lt TString)
+               then (SCAF, TInt)
                else raise Fail "comparacion de orden inválida"
           end
         val opertype = case oper of
@@ -96,26 +98,94 @@ fun seman vt tt exp = case exp of
                          | GeOp => ord
                          | LeOp => ord
     in opertype oper left right end
-  | RecordE _ => (SCAF, TUnit)
-  | SeqE _ => (SCAF, TUnit)
-  | AssignE _ => (SCAF, TUnit)
-  | IfE _ => (SCAF, TUnit)
-  | WhileE _ => (SCAF, TUnit)
-  | ForE _ => (SCAF, TUnit)
-  | LetE _ => (SCAF, TUnit)
+  | RecordE ({fields=flds, typ},_) => 
+    let fun fldcmp ((n1,e1),(n2,e2)) = String.compare (n1,n2)
+        val sorted_flds = Listsort.sort fldcmp flds
+        val sorted_names = map (#1) sorted_flds
+        val formal_types = case tabFind tt typ of
+                             SOME (TRecord (fs,_)) => fs
+                             | SOME _ => raise Fail "Not a record type"
+                             | NONE => raise Fail "no existe el tipo"
+    in if (map (#1) formal_types) <> sorted_names then
+          raise Fail "faltan o sobran campos papá, te debo un mejor mensaje de error"
+       else
+          let val actual_types = map ((#2)o(seman vt tt)o(#2)) sorted_flds
+              fun matches (f::fs) (a::aa) = if typeMatch f a then matches fs aa else raise Fail "type mismatch en record"
+                | matches [] [] = true
+                | matches _ _ = raise Fail "imposible"
+          in ( matches (map (#2) formal_types) actual_types ;
+               (SCAF, tabTake tt typ) )
+          end
+    end
+  | SeqE (es, _) =>
+    let val semans = map (seman vt tt) es
+        val last = List.last semans
+    in (SCAF, #2 last) end
+  | AssignE ({l,r},_) => 
+    let val ls = varSeman vt tt l
+        val rs = seman vt tt r
+    in if typeMatch (#2 ls) (#2 rs)
+         then (SCAF, TUnit)
+         else raise Fail "asignacion invalida :)"
+    end
+  | IfE ({test,th,el=SOME el}, _) =>
+    let val (_, testtip) = seman vt tt test
+    in if typeMatch testtip TInt
+         then let val (_, lt) = seman vt tt th
+                  val (_, rt) = seman vt tt el
+               in if typeMatch lt rt
+                     then (SCAF, lt)
+                     else raise Fail "error, branches con distintos tipos"
+               end
+         else
+           raise Fail "test no entero"
+    end
+  | IfE ({test,th, el=NONE}, _) =>
+    let val (_, testtip) = seman vt tt test
+    in if typeMatch testtip TInt
+         then let val (_, lt) = seman vt tt th
+               in if typeMatch lt TUnit
+                     then (SCAF, TUnit)
+                     else raise Fail "error, if imperativo con tipo no unit"
+               end
+         else
+           raise Fail "test no entero"
+    end
+  | WhileE ({test,body},_) =>
+    let val (_, bodyt) = seman vt tt body
+        val (_, testt) = seman vt tt test
+      in if typeMatch testt TInt andalso typeMatch bodyt TUnit
+           then (SCAF, TUnit)
+           else raise Fail "Error en while, test no entero o cuerpo no int."
+      end
+  | ForE ({index,lo,hi,body,...},_) =>
+    let val (_,lot) = seman vt tt lo
+        val (_,hit) = seman vt tt hi
+        val _ = if not (typeMatch lot TInt) then raise Fail "error en for: low no int" else ()
+        val _ = if not (typeMatch hit TInt) then raise Fail "error en for: high no int" else ()
+        val newvt = tabCopy vt 
+        val _ = tabReplace newvt (index, Var TInt)
+        val (bodyir, bodyt) = seman newvt tt body
+     in if typeMatch bodyt TUnit
+          then (SCAF, TUnit)
+          else raise Fail "for: cuerpo no unit"
+     end
+  | LetE ({decs, body},_) =>
+    let val (newvt, newtt) = foldl (fn d => fn e => declSeman (#1 e) (#2 e) d) (vt,tt)
+        val 
   | BreakE _ => (SCAF, TUnit)
   | ArrayE _ => (SCAF, TUnit)
 
 and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                                        SOME (Var t) => (SCAF, t)
-                                       | NONE => raise Fail "var no def"
-                                       | _ => raise Fail "no es variable" )
+                                       | NONE => raise Fail "Variable no definida. (no tendría que agarrarlo el escapado??)"
+                                       | _ => raise Fail (s^" no es variable") )
   | varSeman vt tt (IndexVar (arr,idx)) =
         let val elemt = case varSeman vt tt arr of
                           (_, TArray (e,_)) => e
                           | _ => raise Fail "lalaalal"
             val (_,idxt) = seman vt tt idx
-        in if typeMatch idxt (TInt RW)
+        in if typeMatch idxt TInt
              then (SCAF, elemt)
              else raise Fail "subscript not int"
        end
