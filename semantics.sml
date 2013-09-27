@@ -171,11 +171,16 @@ fun seman vt tt exp = case exp of
           else raise Fail "for: cuerpo no unit"
      end
   | LetE ({decs, body},_) =>
-    let val (newvt, newtt) = foldl (fn d => fn e => declSeman (#1 e) (#2 e) d) (vt,tt)
-        val 
+    let fun proc_decl (dec,(vt', tt')) = declSeman vt' tt' dec
+        val (newvt, newtt) = foldl proc_decl (vt,tt) decs
+    in seman newvt newtt body
+    end
   | BreakE _ => (SCAF, TUnit)
-  | ArrayE _ => (SCAF, TUnit)
-
+  | ArrayE ({typ,size,init},_) =>
+    let val tt = case tabFind tt typ of
+                   SOME t => tipoReal t
+                   | NONE => raise Fail "tipo no existente (en decl de array)"
+        in (SCAF, TArray (tt, ref ())) end
 and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                                        SOME (Var t) => (SCAF, t)
                                        | NONE => raise Fail "Variable no definida. (no tendría que agarrarlo el escapado??)"
@@ -198,7 +203,9 @@ and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                        | [(_,typ)] => typ
                        | _ => raise Fail "que pasó che?"
       in (SCAF, fldt) end
-and declSeman vt tt _ = (vt,tt)
+and declSeman vt tt (FuncDecl _) = (vt,tt)
+  | declSeman vt tt (TypeDecl _) = (vt,tt)
+  | declSeman vt tt (VarDecl _) = (vt,tt)
 
 fun semantics tree = (seman init_venv init_tenv tree ; print "tipado ok\n")
 
