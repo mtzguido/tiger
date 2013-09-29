@@ -12,7 +12,7 @@ val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
 val _ = tabInsertList init_tenv [("R", TRecord ([("a",TInt),("b",TInt),("c",TInt)], ref ()))]
-val _ = tabInsertList init_venv [("x", Var TInt)]
+val _ = tabInsertList init_venv [("x", Var TIntRO)]
 
 fun uncurry f (x,y) = f x y
 
@@ -28,7 +28,12 @@ fun typeMatch t1 t2 = case (t1, t2) of
   | (TRecord _, TNil)  => true
   | (TRecord (_, u1), TRecord (_, u2))
        => u1 = u2
-  | (TInt, TInt)   => true (* no importa acc? *)
+
+  | (TInt,   TInt)   => true
+  | (TIntRO, TInt)   => true
+  | (TInt,   TIntRO) => true
+  | (TIntRO, TIntRO) => true
+
   | (TString, TString) => true
   | (TArray (_,u1), TArray (_,u2))
        => u1 = u2
@@ -122,9 +127,9 @@ fun seman vt tt exp = case exp of
         val last = List.last semans
     in (SCAF, #2 last) end
   | AssignE ({l,r},_) => 
-    let val ls = varSeman vt tt l
-        val rs = seman vt tt r
-    in if typeMatch (#2 ls) (#2 rs)
+    let val (li,lt) = varSeman vt tt l
+        val (ri,rt) = seman vt tt r
+    in if typeMatch lt rt andalso lt <> TIntRO
          then (SCAF, TUnit)
          else raise Fail "asignacion invalida :)"
     end
@@ -164,7 +169,7 @@ fun seman vt tt exp = case exp of
         val _ = if not (typeMatch lot TInt) then raise Fail "error en for: low no int" else ()
         val _ = if not (typeMatch hit TInt) then raise Fail "error en for: high no int" else ()
         val newvt = tabCopy vt 
-        val _ = tabReplace newvt (index, Var TInt)
+        val _ = tabReplace newvt (index, Var TIntRO)
         val (bodyir, bodyt) = seman newvt tt body
      in if typeMatch bodyt TUnit
           then (SCAF, TUnit)
