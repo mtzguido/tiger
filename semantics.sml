@@ -11,7 +11,7 @@ datatype EnvEntry =
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
-val _ = tabInsertList init_tenv [("R", TRecord ([("a",TInt),("b",TInt),("c",TInt)], ref ()))]
+val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
 val _ = tabInsertList init_venv [("x", Var TIntRO)]
 
 fun uncurry f (x,y) = f x y
@@ -49,7 +49,9 @@ fun typeMatch t1 t2 = case (t1, t2) of
           )
   | (_,_) => false
 
-fun seman vt tt exp = case exp of
+fun seman vt tt exp = 
+ let fun seman' e = seman vt tt e
+ in case exp of
     UnitE _ => (SCAF, TUnit)
   | VarE (v,_) => varSeman vt tt v
   | NilE _ => (SCAF, TNil)
@@ -60,7 +62,7 @@ fun seman vt tt exp = case exp of
                                          NONE => raise Fail "func no def"
                                        | SOME (Func {formals,ret,...}) => (formals,ret)
                                        | SOME _ => raise Fail "no es func" )
-                                 val seman_args = map (seman vt tt) args
+                                 val seman_args = map seman' args
                                  val actual_types = map (#2) seman_args
                                  val pairs = ListPair.zip (actual_types,formals)
                              in if List.all (uncurry typeMatch) pairs
@@ -69,15 +71,15 @@ fun seman vt tt exp = case exp of
                              end
   | OpE ({left,oper,right}, _) =>
     let fun arith oo l r =
-          let val (_,lt) = seman vt tt l
-              val (_,rt) = seman vt tt r
+          let val (_,lt) = seman' l
+              val (_,rt) = seman' r
           in if typeMatch lt TInt andalso typeMatch rt TInt
                then (SCAF, TInt)
                else raise Fail "oper aritmético sobre no-enteros"
           end
         fun eq oo l r = 
-          let val (_,lt) = seman vt tt l
-              val (_,rt) = seman vt tt r
+          let val (_,lt) = seman' l
+              val (_,rt) = seman' r
           in if typeMatch lt rt
                 andalso not (lt = TNil andalso rt = TNil)
                 andalso not (lt = TUnit)
@@ -85,8 +87,8 @@ fun seman vt tt exp = case exp of
                else raise Fail "comparación inválida"
           end
         fun ord oo l r =  
-          let val (_,lt) = seman vt tt l
-              val (_,rt) = seman vt tt r
+          let val (_,lt) = seman' l
+              val (_,rt) = seman' r
           in if typeMatch lt rt andalso (typeMatch lt TInt orelse typeMatch lt TString)
                then (SCAF, TInt)
                else raise Fail "comparacion de orden inválida"
@@ -114,7 +116,7 @@ fun seman vt tt exp = case exp of
     in if (map (#1) formal_types) <> sorted_names then
           raise Fail "faltan o sobran campos papá, te debo un mejor mensaje de error"
        else
-          let val actual_types = map ((#2)o(seman vt tt)o(#2)) sorted_flds
+          let val actual_types = map ((#2)o seman' o(#2)) sorted_flds
               fun matches (f::fs) (a::aa) = if typeMatch f a then matches fs aa else raise Fail "type mismatch en record"
                 | matches [] [] = true
                 | matches _ _ = raise Fail "imposible"
@@ -123,21 +125,21 @@ fun seman vt tt exp = case exp of
           end
     end
   | SeqE (es, _) =>
-    let val semans = map (seman vt tt) es
+    let val semans = map seman' es
         val last = List.last semans
     in (SCAF, #2 last) end
   | AssignE ({l,r},_) => 
     let val (li,lt) = varSeman vt tt l
-        val (ri,rt) = seman vt tt r
+        val (ri,rt) = seman' r
     in if typeMatch lt rt andalso lt <> TIntRO
          then (SCAF, TUnit)
          else raise Fail "asignacion invalida :)"
     end
   | IfE ({test,th,el=SOME el}, _) =>
-    let val (_, testtip) = seman vt tt test
+    let val (_, testtip) = seman' test
     in if typeMatch testtip TInt
-         then let val (_, lt) = seman vt tt th
-                  val (_, rt) = seman vt tt el
+         then let val (_, lt) = seman' th
+                  val (_, rt) = seman' el
                in if typeMatch lt rt
                      then (SCAF, lt)
                      else raise Fail "error, branches con distintos tipos"
@@ -146,9 +148,9 @@ fun seman vt tt exp = case exp of
            raise Fail "test no entero"
     end
   | IfE ({test,th, el=NONE}, _) =>
-    let val (_, testtip) = seman vt tt test
+    let val (_, testtip) = seman' test
     in if typeMatch testtip TInt
-         then let val (_, lt) = seman vt tt th
+         then let val (_, lt) = seman' th
                in if typeMatch lt TUnit
                      then (SCAF, TUnit)
                      else raise Fail "error, if imperativo con tipo no unit"
@@ -157,15 +159,15 @@ fun seman vt tt exp = case exp of
            raise Fail "test no entero"
     end
   | WhileE ({test,body},_) =>
-    let val (_, bodyt) = seman vt tt body
-        val (_, testt) = seman vt tt test
+    let val (_, bodyt) = seman' body
+        val (_, testt) = seman' test
       in if typeMatch testt TInt andalso typeMatch bodyt TUnit
            then (SCAF, TUnit)
            else raise Fail "Error en while, test no entero o cuerpo no int."
       end
   | ForE ({index,lo,hi,body,...},_) =>
-    let val (_,lot) = seman vt tt lo
-        val (_,hit) = seman vt tt hi
+    let val (_,lot) = seman' lo
+        val (_,hit) = seman' hi
         val _ = if not (typeMatch lot TInt) then raise Fail "error en for: low no int" else ()
         val _ = if not (typeMatch hit TInt) then raise Fail "error en for: high no int" else ()
         val newvt = tabCopy vt 
@@ -186,6 +188,7 @@ fun seman vt tt exp = case exp of
                    SOME t => tipoReal t
                    | NONE => raise Fail "tipo no existente (en decl de array)"
         in (SCAF, TArray (tt, ref ())) end
+end
 and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                                        SOME (Var t) => (SCAF, t)
                                        | NONE => raise Fail "Variable no definida. (no tendría que agarrarlo el escapado??)"
@@ -208,9 +211,32 @@ and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                        | [(_,typ)] => typ
                        | _ => raise Fail "que pasó che?"
       in (SCAF, fldt) end
-and declSeman vt tt (FuncDecl _) = (vt,tt)
-  | declSeman vt tt (TypeDecl _) = (vt,tt)
-  | declSeman vt tt (VarDecl _) = (vt,tt)
+and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) = 
+      let val (initir,initt) = seman vt tt init
+          val formaltype = case typ of
+                             SOME typename => ( case tabFind tt typename of
+                                                  SOME t => tipoReal t
+                                                  | NONE => raise Fail ("Tipo no existente: "^typename^".")
+                                              )
+                             | NONE => initt
+      in if typeMatch formaltype initt
+           then let val newvt = tabCopy vt
+                    val _ = tabReplace newvt (name, Var formaltype)
+                in (newvt, tt) end
+           else raise Fail "tipo inferido y declarado difieren"
+      end
+  | declSeman vt tt (FuncDecl fun_dec_list) = (* se peude redefinir en un mismo batch? *)
+      let val newvt = tabCopy vt
+          fun add_one (fd, vt') = let val argstypes = 
+                                      val rettype = case #result fd of
+                                                      SOME t => tabFind t
+                                                      | NONE => TUnit (* algo asi... completar! *)
+                                  in tabReplace vt' (#name fd, Func {formals=argtypes, ret=case #result fd of
+  | declSeman vt tt (TypeDecl typ_dec_list) = 
+      let val newtt = tabCopy tt
+          (* val _ = *)
+      in (vt, tt)
+      end
 
 fun semantics tree = (seman init_venv init_tenv tree ; print "tipado ok\n")
 
