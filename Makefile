@@ -1,9 +1,11 @@
 .PHONY: all clean re depend run trim test
 
 MOSML=${HOME}/mosml
-MOSMLTOOLS=camlrunm ${MOSML}/tools
+MOSMLTOOLS=${MOSML}/bin/camlrunm ${MOSML}/tools
 MOSMLC=${MOSML}/bin/mosmlc -c -liberal
 MOSMLL=${MOSML}/bin/mosmlc 
+MOSMLYAC=${MOSML}/bin/mosmlyac
+MOSMLLEX=${MOSML}/bin/mosmllex
 
 all: tiger
 
@@ -21,10 +23,10 @@ tiger: ${OBJS}
 	${MOSMLL} main.uo -o $@
 
 %.sml: %.lex
-	mosmllex $<
+	${MOSMLLEX} $<
 
 %.sml %.sig: %.y
-	mosmlyac -v $<
+	${MOSMLYAC} -v $<
 
 %.ui: %.sig
 	${MOSMLC} $< -o $@
@@ -67,14 +69,13 @@ test: tiger
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
-main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
-semantics.uo: semantics.ui types.uo ast.ui hash.ui 
-parser.uo: parser.ui ast.ui lineno.uo 
-parser.ui: ast.ui 
-hash.uo: hash.ui 
-lexer.uo: parser.ui lineno.uo 
-semantics.ui: ast.ui 
-common.uo: ast.ui 
-escape.uo: escape.ui common.uo ast.ui hash.ui 
 escape.ui: ast.ui 
 ast.uo: ast.ui 
+lexer.uo: parser.ui lineno.uo 
+escape.uo: escape.ui common.uo ast.ui hash.ui 
+common.uo: ast.ui 
+parser.uo: parser.ui 
+main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
+hash.uo: hash.ui 
+semantics.ui: ast.ui 
+semantics.uo: semantics.ui types.uo ast.ui hash.ui 
