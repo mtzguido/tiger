@@ -225,13 +225,31 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
                 in (newvt, tt) end
            else raise Fail "tipo inferido y declarado difieren"
       end
-  | declSeman vt tt (FuncDecl fun_dec_list) = (* se peude redefinir en un mismo batch? *)
+  | declSeman vt tt (FuncDecl fun_dec_list) =
       let val newvt = tabCopy vt
-          fun add_one (fd, vt') = let val argstypes = 
-                                      val rettype = case #result fd of
-                                                      SOME t => tabFind t
-                                                      | NONE => TUnit (* algo asi... completar! *)
-                                  in tabReplace vt' (#name fd, Func {formals=argtypes, ret=case #result fd of
+          fun add_one fd = let fun type_lookup typ = case tabFind tt typ of
+                                                       SOME t => tipoReal t
+                                                       | NONE => raise Fail "tipo no existente en param"
+                               val argstypes = map (type_lookup o #typ) (#params fd)
+                               val rettype = case #result fd of
+                                               SOME t => ( case tabFind tt t of
+                                                             SOME ttt => tipoReal ttt
+                                                             | NONE => raise Fail "asdasd123" )
+                                               | NONE => TUnit
+                               val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}
+                           in
+                               tabReplace newvt (#name fd, functype) end
+          val _ = List.app (add_one o #1) fun_dec_list
+          fun proc_one fd = let val localvt = tabCopy newvt
+                                fun argtype arg = case tabFind tt (#typ arg) of
+                                                    SOME t => tipoReal t
+                                                    | NONE => raise Fail "no existe tipo de argumento (no deberia ocurrir)"
+                                fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
+                                val _ = map arg2env (#params fd)
+                            in seman localvt tt (#body fd) end
+      in
+         ( map (proc_one o #1) fun_dec_list; (newvt, tt) )
+      end
   | declSeman vt tt (TypeDecl typ_dec_list) = 
       let val newtt = tabCopy tt
           (* val _ = *)

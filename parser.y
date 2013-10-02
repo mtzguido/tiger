@@ -37,6 +37,7 @@ val fakeinfo = makeinfo ~123
 %type<ast.exp list> seq
 %type<ast.decl list> decs
 %type<ast.field list> tyflds
+%type<ast.argument list> argsdec
 %type<ast.decl> dec tydec vardec fundec
 %type<ast.var> lvalue
 %type<ast.ty> ty
@@ -116,17 +117,22 @@ ty  : id { NameTy $1 } /* sinónimo */
     ;
 
 tyflds : { [] }
-       | id DOSP id { {name=$1, escape=ref false, typ=NameTy $3} :: [] }
-       | id DOSP id COMA tyflds {{ name=$1, escape=ref false, typ=NameTy $3} :: $5 }
+       | id DOSP id { {name=$1, typ=NameTy $3} :: [] }
+       | id DOSP id COMA tyflds {{ name=$1, typ=NameTy $3} :: $5 }
        ;
 
 vardec : VAR id DOSPIG exp { VarDecl ({ name=$2, escape=ref false, typ=NONE, init=$4}, getinfo()) } /* def variable */
        | VAR id DOSP id DOSPIG exp { VarDecl ({ name=$2, escape=ref false, typ=SOME $4, init=$6}, getinfo()) } /* def variable con tipo */
        ;
 
-fundec : FUNCTION id PI tyflds PD EQ exp { FuncDecl [({name=$2, params=$4, result=NONE, body=$7}, getinfo())] }
-       | FUNCTION id PI tyflds PD DOSP id EQ exp { FuncDecl [({name=$2, params=$4, result=SOME $7, body=$9}, getinfo())] }
+fundec : FUNCTION id PI argsdec PD EQ exp { FuncDecl [({name=$2, params=$4, result=NONE, body=$7}, getinfo())] }
+       | FUNCTION id PI argsdec PD DOSP id EQ exp { FuncDecl [({name=$2, params=$4, result=SOME $7, body=$9}, getinfo())] }
        ;
+
+argsdec :                          { [] }
+        |  id DOSP id              { [{name=$1, typ=$3, escape=ref false}] }
+        |  id DOSP id COMA argsdec {  {name=$1, typ=$3, escape=ref false}::$5 }
+        ;
 
 lvalue : id { SimpleVar $1 }
        | lvalue PUNTO id { FieldVar ($1, $3) }

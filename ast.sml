@@ -29,7 +29,7 @@ and var = SimpleVar of symbol
         | FieldVar of var * symbol
         | IndexVar of var * exp
 
-and decl = FuncDecl of ({ name:symbol, params: field list,
+and decl = FuncDecl of ({ name:symbol, params: argument list,
                           result: symbol option, body:exp } * info) list
          | VarDecl of { name:symbol, escape:bool ref, 
                         typ:symbol option, init: exp } * info
@@ -43,5 +43,6 @@ and oper = PlusOp | MinusOp | MultOp | DivOp
          | EqOp | NeqOp | LtOp | GtOp | GeOp
          | LeOp
 
-withtype field = {name:symbol, escape:bool ref, typ:ty}
+withtype field = {name:symbol, typ:ty}
+and   argument = {name:symbol, typ:symbol, escape:bool ref}
 end
