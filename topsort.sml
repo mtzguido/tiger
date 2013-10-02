@@ -20,7 +20,7 @@ struct
                 end
             val min_elem = leaf (hd verts) []
         in min_elem :: ( topSort' 
-                          (List.filter (fn (l,h) => l <> min_elem andalso h <> min_elem) deps)
+                          (List.filter (fn (l,h) => h <> min_elem) deps)
                           (List.filter (fn x => x <> min_elem) verts)
                        )
         end
