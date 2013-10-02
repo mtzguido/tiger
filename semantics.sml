@@ -1,7 +1,7 @@
 structure semantics :> semantics =
 struct
 
-open ast hash types
+open ast hash types common
 
 datatype IR = SCAF
 datatype EnvEntry =
@@ -10,6 +10,12 @@ datatype EnvEntry =
 
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
+
+fun elem x [] = false
+  | elem x (e::es) = x = e orelse elem x es
+
+fun checkDups [] = false
+  | checkDups (e::es) = if elem e es then true else checkDups es
 
 val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
 val _ = tabInsertList init_venv [("x", Var TIntRO)]
@@ -227,35 +233,39 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
       end
   | declSeman vt tt (FuncDecl fun_dec_list) =
       let val newvt = tabCopy vt
-          fun add_one fd = let fun type_lookup typ = case tabFind tt typ of
-                                                       SOME t => tipoReal t
-                                                       | NONE => raise Fail "tipo no existente en param"
-                               val argstypes = map (type_lookup o #typ) (#params fd)
-                               val rettype = case #result fd of
-                                               SOME t => ( case tabFind tt t of
-                                                             SOME ttt => tipoReal ttt
-                                                             | NONE => raise Fail "asdasd123" )
-                                               | NONE => TUnit
-                               val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}
-                           in
-                               tabReplace newvt (#name fd, functype) end
-          val _ = List.app (add_one o #1) fun_dec_list
-          fun proc_one fd = let val localvt = tabCopy newvt
-                                fun argtype arg = case tabFind tt (#typ arg) of
-                                                    SOME t => tipoReal t
-                                                    | NONE => raise Fail "no existe tipo de argumento (no deberia ocurrir)"
-                                fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
-                                val _ = map arg2env (#params fd)
-                            in seman localvt tt (#body fd) end
+          val _ = if checkDups (map (#name o #1) fun_dec_list) then raise Fail "funciones duplicadas en batch" else ()
+          fun add_one (fd, info) = 
+              let fun type_lookup typ = case tabFind tt typ of                                           
+                                          SOME t => tipoReal t                                           
+                                          | NONE => raise Fail "tipo no existente en param"              
+                  val argstypes = map (type_lookup o #typ) (#params fd)                                  
+                  val rettype = case #result fd of                                                       
+                                  SOME t => ( case tabFind tt t of                                       
+                                                SOME ttt => tipoReal ttt                                 
+                                                | NONE => raise Fail "asdasd123" )                       
+                                  | NONE => TUnit                                                        
+                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}             
+              in                                                                                         
+                  tabReplace newvt (#name fd, functype)
+              end
+          val  _ = List.app add_one fun_dec_list
+          fun proc_one (fd, info) = 
+              let val localvt = tabCopy newvt                                                                                           
+                  fun argtype arg = case tabFind tt (#typ arg) of
+                                      SOME t => tipoReal t
+                                      | NONE => raise Fail "no existe tipo de argumento (no deberia ocurrir)"
+                  fun arg2env a = tabReplace localvt (#name a, Var (argtype a))                                            
+                  val _ = map arg2env (#params fd)                                                                         
+              in seman localvt tt (#body fd) end                                                                           
       in
-         ( map (proc_one o #1) fun_dec_list; (newvt, tt) )
+         ( map proc_one fun_dec_list; (newvt, tt) )
       end
   | declSeman vt tt (TypeDecl typ_dec_list) = 
       let val newtt = tabCopy tt
-          (* val _ = *)
       in (vt, tt)
       end
 
-fun semantics tree = (seman init_venv init_tenv tree ; print "tipado ok\n")
+fun semantics tree = ( seman init_venv init_tenv tree ;
+                       if true orelse !verbose then print "Semantics: finalizado ok\n" else () )
 
 end (* struct *)
