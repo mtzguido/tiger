@@ -43,6 +43,6 @@ and oper = PlusOp | MinusOp | MultOp | DivOp
          | EqOp | NeqOp | LtOp | GtOp | GeOp
          | LeOp
 
-withtype field = {name:symbol, typ:ty}
+withtype field = {name:symbol, typ:symbol}
 and   argument = {name:symbol, typ:symbol, escape:bool ref}
 end

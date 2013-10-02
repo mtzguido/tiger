@@ -117,8 +117,8 @@ ty  : id { NameTy $1 } /* sinónimo */
     ;
 
 tyflds : { [] }
-       | id DOSP id { {name=$1, typ=NameTy $3} :: [] }
-       | id DOSP id COMA tyflds {{ name=$1, typ=NameTy $3} :: $5 }
+       | id DOSP id { {name=$1, typ=$3} :: [] }
+       | id DOSP id COMA tyflds {{ name=$1, typ=$3} :: $5 }
        ;
 
 vardec : VAR id DOSPIG exp { VarDecl ({ name=$2, escape=ref false, typ=NONE, init=$4}, getinfo()) } /* def variable */
