@@ -11,25 +11,23 @@ datatype EnvEntry =
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
+val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
+val _ = tabInsertList init_venv [("x", Var TIntRO)]
+
 fun elem x [] = false
   | elem x (e::es) = x = e orelse elem x es
 
 fun checkDups [] = false
   | checkDups (e::es) = if elem e es then true else checkDups es
 
-val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
-val _ = tabInsertList init_venv [("x", Var TIntRO)]
 
 fun uncurry f (x,y) = f x y
 
-(*
 fun tipoReal t = case t of
-    TSinom (_, r) => ( case !r of
-                         SOME tt => tipoReal tt
-                         | NONE => raise Fail "errrrrrrrr" )
+    TReference r => ( case !r of
+                        SOME tt => tipoReal tt
+                        | NONE => raise Fail "errrrrrrrr" )
   | otracosa => otracosa
-*)
-fun tipoReal t = t
 
 fun typeMatch t1 t2 = case (t1, t2) of
     (TUnit, TUnit)     => true
@@ -46,16 +44,16 @@ fun typeMatch t1 t2 = case (t1, t2) of
   | (TString, TString) => true
   | (TArray (_,u1), TArray (_,u2))
        => u1 = u2
-(*  | (tt, TSinom (_,tref))
+  | (tt, TReference tref)
        => ( case !tref of
               NONE => raise Fail "sinónimo inválido"
               | SOME t => typeMatch tt t
           )
-  | (TSinom (_,tref), tt)
+  | (TReference tref, tt)
        => ( case !tref of
               NONE => raise Fail "sinónimo inválido"
               | SOME t => typeMatch t tt
-          ) *)
+          ) 
   | (_,_) => false
 
 fun seman vt tt exp = 
@@ -267,8 +265,12 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
       let val newtt = tabCopy tt
           fun dep ({name,ty}, info) =
               case ty of
-                  NameTy t2 => [(name, t2)]
-                  | ArrayTy t2 => [(name, t2)]
+                  NameTy t2 => ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
+                                   [] => []
+                                   | _ => [(name,t2)] )
+                  | ArrayTy t2 => ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
+                                    [] => []
+                                    | _ => [(name,t2)] )
                   | RecordTy _ => []
           val dep_pairs = List.concat (map dep typ_dec_list)
           val _ = List.app (fn (a,b) => print ("dep: ("^a^", "^b^")\n")) dep_pairs
@@ -276,25 +278,38 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
           val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list 
           val ordered_types = topSort dep_pairs typ_list
           val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types 
+          val circular_fix = ref []
           fun proc_one name =
               let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of
                              x::[] => #ty (#1 x)
-                             | _ => raise Fail "da.. que pasó?"
+                             | _ => raise Fail "tipo usado en type batch y no def... arreglar y detectar antes de topsort (o no?) tambien cheququar duplicados"
                   val real_type =
                       case ty of 
                          NameTy s => ( case tabFind newtt s of
                                          SOME t => t
-                                         | NONE => raise Fail "sinonimo a tipo no existente"
+                                         | NONE => ( print "!!!!!!!1" ; TReference (ref NONE) )
                                      )
                          | ArrayTy s => ( case tabFind newtt s of
                                             SOME t => TArray (t, ref ())
-                                            | NONE => raise Fail "array de tipo no exist"
+                                            | NONE => ( print "%&!$@|!!" ; TArray (TReference (ref NONE), ref ()) )
                                         )
-                         | RecordTy flds => TRecord ([], ref ())
+                         | RecordTy flds => 
+                                let fun get_type {name,typ} = case tabFind newtt typ of
+                                            SOME t => (name,t)
+                                            | NONE => let val rr = ref NONE
+                                                      in ( circular_fix := (rr, typ)::(!circular_fix) ;
+                                                           (name, TReference (ref NONE)) ) end
+                                in TRecord (map get_type flds, ref ()) end
                in ( print ("agregado tipo: "^name^"\n"); 
                     tabReplace newtt (name, real_type) ) end
+          fun fix_one (r, n) = ( print ("buscando tipo "^n^"\n") ;
+                                 r := SOME (tabTake newtt n) )
       in 
-          ( List.app proc_one ordered_types; (vt, newtt) )
+          ( List.app proc_one ordered_types ;
+            print "1\n" ;
+            List.app fix_one (!circular_fix) ;
+            print "2\n" ;
+            (vt, newtt) )
       end handle Ciclo => raise Fail "Ciclo en delaracion de tipos"
 
 fun semantics tree = ( seman init_venv init_tenv tree ;

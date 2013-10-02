@@ -61,7 +61,7 @@ test: tiger
 #		echo "$$i:" ; \
 #		./tiger "$$i" ; \
 #	done
-	for i in ../tests/*/*.tig ; do \
+	for i in tests/*.tig ; do \
 		echo "$$i:" ; \
 		./tiger "$$i" ; \
 	done

@@ -9,5 +9,5 @@ datatype TigerType = TUnit
                    | TString
                    | TRecord of (string * TigerType) list * uniq
                    | TArray of TigerType * uniq
-
+                   | TReference of TigerType option ref
 end
