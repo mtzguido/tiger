@@ -274,11 +274,11 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
           val _ = List.app (fn (a,b) => print ("dep: ("^a^", "^b^")\n")) dep_pairs
           val typ_list = map (fn td => #name (#1 td)) typ_dec_list
           val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list 
-          val ordered_typdecs = topSort dep_pairs typ_list
+          val ordered_types = topSort dep_pairs typ_list
           val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types 
-          fun proc_one (name, info) =
+          fun proc_one name =
               let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of
-                             x::[] => #ty x
+                             x::[] => #ty (#1 x)
                              | _ => raise Fail "da.. que pasó?"
                   val real_type =
                       case ty of 
