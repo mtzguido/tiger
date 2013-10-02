@@ -24,7 +24,9 @@ in
       ("Escape: encontradas "
        ^(makestring (!nescapes))
        ^" variables escapadas.\n"
-       ^"Escape: son "^(listar (!escape_names))^".\n")
+       ^(if !nescapes > 0
+          then "Escape: son "^(listar (!escape_names))^".\n"
+          else "")  )
      else ()
     )
 end

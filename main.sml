@@ -37,6 +37,6 @@ val ast          = prog Tok (lexstream entrada) handle _ => raise ParseError
 val run = ( if !verbose then print "Parsing finalizado OK.\n" else ();
             if print_ast then printAst ast else () ;
             if not noEscape then marcarEscapes ast else () ;
-            semantics ast;
-            if !verbose then print "Escapes marcados\n" else ()
+            if !verbose then print "Escapes marcados\n" else () ;
+            semantics ast
           ) handle x => err x
