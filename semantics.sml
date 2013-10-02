@@ -8,6 +8,11 @@ datatype EnvEntry =
     Var of TigerType
   | Func of {formals:TigerType list, ret:TigerType, extern:bool, label:string}
 
+val labelStack = ref []
+
+fun pushLoopLabel () = labelStack := ()::(!labelStack)
+fun popLoopLabel () = labelStack := tl (!labelStack)
+
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
@@ -53,10 +58,10 @@ fun typeMatch t1 t2 = case (t1, t2) of
        => ( case !tref of
               NONE => raise Fail "sinónimo inválido"
               | SOME t => typeMatch t tt
-          ) 
+          )
   | (_,_) => false
 
-fun seman vt tt exp = 
+fun seman vt tt exp =
  let fun seman' e = seman vt tt e
  in case exp of
     UnitE _ => (SCAF, TUnit)
@@ -71,6 +76,9 @@ fun seman vt tt exp =
                                        | SOME _ => raise Fail "no es func" )
                                  val seman_args = map seman' args
                                  val actual_types = map (#2) seman_args
+                                 val _ = if length actual_types <> length formals
+                                           then raise Fail "n_actuals != n_formals"
+                                           else ()
                                  val pairs = ListPair.zip (actual_types,formals)
                              in if List.all (uncurry typeMatch) pairs
                                   then (SCAF, ret)
@@ -84,7 +92,7 @@ fun seman vt tt exp =
                then (SCAF, TInt)
                else raise Fail "oper aritmético sobre no-enteros"
           end
-        fun eq oo l r = 
+        fun eq oo l r =
           let val (_,lt) = seman' l
               val (_,rt) = seman' r
           in if typeMatch lt rt
@@ -93,7 +101,7 @@ fun seman vt tt exp =
                then (SCAF, TInt)
                else raise Fail "comparación inválida"
           end
-        fun ord oo l r =  
+        fun ord oo l r =
           let val (_,lt) = seman' l
               val (_,rt) = seman' r
           in if typeMatch lt rt andalso (typeMatch lt TInt orelse typeMatch lt TString)
@@ -112,7 +120,7 @@ fun seman vt tt exp =
                          | GeOp => ord
                          | LeOp => ord
     in opertype oper left right end
-  | RecordE ({fields=flds, typ},_) => 
+  | RecordE ({fields=flds, typ},_) =>
     let fun fldcmp ((n1,e1),(n2,e2)) = String.compare (n1,n2)
         val sorted_flds = Listsort.sort fldcmp flds
         val sorted_names = map (#1) sorted_flds
@@ -135,7 +143,7 @@ fun seman vt tt exp =
     let val semans = map seman' es
         val last = List.last semans
     in (SCAF, #2 last) end
-  | AssignE ({l,r},_) => 
+  | AssignE ({l,r},_) =>
     let val (li,lt) = varSeman vt tt l
         val (ri,rt) = seman' r
     in if typeMatch lt rt andalso lt <> TIntRO
@@ -166,8 +174,10 @@ fun seman vt tt exp =
            raise Fail "test no entero"
     end
   | WhileE ({test,body},_) =>
-    let val (_, bodyt) = seman' body
-        val (_, testt) = seman' test
+    let val (_, testt) = seman' test
+        val _ = pushLoopLabel ()
+        val (_, bodyt) = seman' body
+        val _ = popLoopLabel ()
       in if typeMatch testt TInt andalso typeMatch bodyt TUnit
            then (SCAF, TUnit)
            else raise Fail "Error en while, test no entero o cuerpo no int."
@@ -177,9 +187,11 @@ fun seman vt tt exp =
         val (_,hit) = seman' hi
         val _ = if not (typeMatch lot TInt) then raise Fail "error en for: low no int" else ()
         val _ = if not (typeMatch hit TInt) then raise Fail "error en for: high no int" else ()
-        val newvt = tabCopy vt 
+        val newvt = tabCopy vt
         val _ = tabReplace newvt (index, Var TIntRO)
+        val _ = pushLoopLabel ()
         val (bodyir, bodyt) = seman newvt tt body
+        val _ = popLoopLabel ()
      in if typeMatch bodyt TUnit
           then (SCAF, TUnit)
           else raise Fail "for: cuerpo no unit"
@@ -189,12 +201,16 @@ fun seman vt tt exp =
         val (newvt, newtt) = foldl proc_decl (vt,tt) decs
     in seman newvt newtt body
     end
-  | BreakE _ => (SCAF, TUnit)
+  | BreakE _ => if !labelStack = [] then raise Fail "Break fuera de loop" else (SCAF, TUnit)
   | ArrayE ({typ,size,init},_) =>
     let val tt = case tabFind tt typ of
                    SOME t => tipoReal t
                    | NONE => raise Fail "tipo no existente (en decl de array)"
-        in (SCAF, TArray (tt, ref ())) end
+        val (_,initt) = seman' init
+        in if typeMatch tt initt
+               then (SCAF, TArray (tt, ref ()))
+               else raise Fail "Valor de inicializacion para array difiere del tipo."
+        end
 end
 and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                                        SOME (Var t) => (SCAF, t)
@@ -210,7 +226,7 @@ and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
              else raise Fail "subscript not int"
        end
   | varSeman vt tt (FieldVar (record,fld)) =
-      let val flds = case varSeman vt tt record of 
+      let val flds = case varSeman vt tt record of
                        (_, TRecord (flds,_)) => flds
                        | _ => raise Fail "lelelele"
           val fldt = case List.filter (fn (s,_) => s = fld) flds of
@@ -218,7 +234,7 @@ and varSeman vt tt (SimpleVar s) = ( case tabFind vt s of
                        | [(_,typ)] => typ
                        | _ => raise Fail "que pasó che?"
       in (SCAF, fldt) end
-and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) = 
+and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of
                              SOME typename => ( case tabFind tt typename of
@@ -235,33 +251,41 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
   | declSeman vt tt (FuncDecl fun_dec_list) =
       let val newvt = tabCopy vt
           val _ = if checkDups (map (#name o #1) fun_dec_list) then raise Fail "funciones duplicadas en batch" else ()
-          fun add_one (fd, info) = 
-              let fun type_lookup typ = case tabFind tt typ of                                           
-                                          SOME t => tipoReal t                                           
-                                          | NONE => raise Fail "tipo no existente en param"              
-                  val argstypes = map (type_lookup o #typ) (#params fd)                                  
-                  val rettype = case #result fd of                                                       
-                                  SOME t => ( case tabFind tt t of                                       
-                                                SOME ttt => tipoReal ttt                                 
-                                                | NONE => raise Fail "asdasd123" )                       
-                                  | NONE => TUnit                                                        
-                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}             
-              in                                                                                         
+          fun add_one (fd, info) =
+              let fun type_lookup typ = case tabFind tt typ of
+                                          SOME t => tipoReal t
+                                          | NONE => raise Fail "tipo no existente en param"
+                  val argstypes = map (type_lookup o #typ) (#params fd)
+                  val rettype = case #result fd of
+                                  SOME t => ( case tabFind tt t of
+                                                SOME ttt => tipoReal ttt
+                                                | NONE => raise Fail "asdasd123" )
+                                  | NONE => TUnit
+                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}
+              in
                   tabReplace newvt (#name fd, functype)
               end
-          val  _ = List.app add_one fun_dec_list
-          fun proc_one (fd, info) = 
-              let val localvt = tabCopy newvt                                                                                           
+          fun proc_one (fd, info) =
+              let val localvt = tabCopy newvt
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal t
                                       | NONE => raise Fail "no existe tipo de argumento (no deberia ocurrir)"
-                  fun arg2env a = tabReplace localvt (#name a, Var (argtype a))                                            
-                  val _ = map arg2env (#params fd)                                                                         
-              in seman localvt tt (#body fd) end                                                                           
+                  fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
+                  val _ = map arg2env (#params fd)
+                  val (bodyir, bodyt) = seman localvt tt (#body fd)
+                  val rettype = case tabTake newvt (#name fd) of
+                                  Func {ret,...} => ret
+                                  | _ => raise Fail "imposible"
+              in if typeMatch bodyt rettype
+                  then  ()
+                  else raise Fail "formal return type and body type differ"
+              end
       in
-         ( map proc_one fun_dec_list; (newvt, tt) )
+         ( List.app add_one fun_dec_list ;
+           map proc_one fun_dec_list ;
+           (newvt, tt) )
       end
-  | declSeman vt tt (TypeDecl typ_dec_list) = 
+  | declSeman vt tt (TypeDecl typ_dec_list) =
       let val newtt = tabCopy tt
           fun dep ({name,ty}, info) =
               case ty of
@@ -275,16 +299,16 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
           val dep_pairs = List.concat (map dep typ_dec_list)
           val _ = List.app (fn (a,b) => print ("dep: ("^a^", "^b^")\n")) dep_pairs
           val typ_list = map (fn td => #name (#1 td)) typ_dec_list
-          val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list 
+          val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list
           val ordered_types = topSort dep_pairs typ_list
-          val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types 
+          val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types
           val circular_fix = ref []
           fun proc_one name =
               let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of
                              x::[] => #ty (#1 x)
                              | _ => raise Fail "tipo usado en type batch y no def... arreglar y detectar antes de topsort (o no?) tambien cheququar duplicados"
                   val real_type =
-                      case ty of 
+                      case ty of
                          NameTy s => ( case tabFind newtt s of
                                          SOME t => t
                                          | NONE => ( print "!!!!!!!1" ; TReference (ref NONE) )
@@ -293,18 +317,18 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
                                             SOME t => TArray (t, ref ())
                                             | NONE => ( print "%&!$@|!!" ; TArray (TReference (ref NONE), ref ()) )
                                         )
-                         | RecordTy flds => 
+                         | RecordTy flds =>
                                 let fun get_type {name,typ} = case tabFind newtt typ of
                                             SOME t => (name,t)
                                             | NONE => let val rr = ref NONE
                                                       in ( circular_fix := (rr, typ)::(!circular_fix) ;
                                                            (name, TReference (ref NONE)) ) end
                                 in TRecord (map get_type flds, ref ()) end
-               in ( print ("agregado tipo: "^name^"\n"); 
+               in ( print ("agregado tipo: "^name^"\n");
                     tabReplace newtt (name, real_type) ) end
           fun fix_one (r, n) = ( print ("buscando tipo "^n^"\n") ;
                                  r := SOME (tabTake newtt n) )
-      in 
+      in
           ( List.app proc_one ordered_types ;
             print "1\n" ;
             List.app fix_one (!circular_fix) ;

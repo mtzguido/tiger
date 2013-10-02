@@ -11,7 +11,7 @@ fun err (VarNoDec name) = print ("Error: variable no definida ("^name^").\n")
   | err (Fail s)        = print ("Error: "^s^".\n")
   | err (SysErr (s,_))  = print ("Error del sistema: "^s^".\n")
   | err  ParseError     = print "Error de parsing.\n"
-  | err x = raise x
+  | err x = print "Excepción no reconocida!"
 
 fun printTokens lbuf = 
     let fun onetok _ = let val tt = Tok lbuf
@@ -39,4 +39,4 @@ val run = ( if !verbose then print "Parsing finalizado OK.\n" else ();
             if not noEscape then marcarEscapes ast else () ;
             if !verbose then print "Escapes marcados\n" else () ;
             semantics ast
-          ) handle x => err x
+          ) handle x => (err x ; Process.exit failure)

@@ -1,5 +1,6 @@
-.PHONY: all clean re depend run trim test
+.PHONY: all clean re depend run trim test testgood testbad
 
+SHELL=/bin/bash
 MOSML=${HOME}/mosml
 MOSMLTOOLS=${MOSML}/bin/camlrunm ${MOSML}/tools
 MOSMLC=${MOSML}/bin/mosmlc -c -liberal
@@ -56,15 +57,27 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 	$(MOSMLTOOLS)/cutdeps < Makefile.bak > Makefile
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
-test: tiger
-#	for i in ../tiger/testcases/*.tig ; do \
-#		echo "$$i:" ; \
-#		./tiger "$$i" ; \
-#	done
-	for i in tests/*.tig ; do \
-		echo "$$i:" ; \
-		./tiger "$$i" ; \
+test: testgood testbad
+
+testgood: tiger
+	for i in tests/good/*.tig; do \
+		if ./tiger "$$i" &>/dev/null ; then \
+			echo "Test $$i ok." ; \
+		else \
+			echo "Test $$i FALLADO!" ; \
+		fi \
 	done
+
+testbad: tiger
+	for i in tests/bad/*.tig; do \
+		if ./tiger "$$i" &>/dev/null ; then \
+			echo "Test $$i FALLADO!" ; \
+		else \
+			echo "Test $$i ok." ; \
+		fi \
+	done
+
+
 
 # Dependencias autogeneradas:
 #
