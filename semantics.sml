@@ -1,7 +1,7 @@
 structure semantics :> semantics =
 struct
 
-open ast hash types common
+open ast hash types common topsort
 
 datatype IR = SCAF
 datatype EnvEntry =
@@ -22,11 +22,14 @@ val _ = tabInsertList init_venv [("x", Var TIntRO)]
 
 fun uncurry f (x,y) = f x y
 
+(*
 fun tipoReal t = case t of
     TSinom (_, r) => ( case !r of
                          SOME tt => tipoReal tt
                          | NONE => raise Fail "errrrrrrrr" )
   | otracosa => otracosa
+*)
+fun tipoReal t = t
 
 fun typeMatch t1 t2 = case (t1, t2) of
     (TUnit, TUnit)     => true
@@ -43,7 +46,7 @@ fun typeMatch t1 t2 = case (t1, t2) of
   | (TString, TString) => true
   | (TArray (_,u1), TArray (_,u2))
        => u1 = u2
-  | (tt, TSinom (_,tref))
+(*  | (tt, TSinom (_,tref))
        => ( case !tref of
               NONE => raise Fail "sinónimo inválido"
               | SOME t => typeMatch tt t
@@ -52,7 +55,7 @@ fun typeMatch t1 t2 = case (t1, t2) of
        => ( case !tref of
               NONE => raise Fail "sinónimo inválido"
               | SOME t => typeMatch t tt
-          )
+          ) *)
   | (_,_) => false
 
 fun seman vt tt exp = 
@@ -262,10 +265,39 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init},_)) =
       end
   | declSeman vt tt (TypeDecl typ_dec_list) = 
       let val newtt = tabCopy tt
-      in (vt, tt)
-      end
+          fun dep ({name,ty}, info) =
+              case ty of
+                  NameTy t2 => [(name, t2)]
+                  | ArrayTy t2 => [(name, t2)]
+                  | RecordTy _ => []
+          val dep_pairs = List.concat (map dep typ_dec_list)
+          val _ = List.app (fn (a,b) => print ("dep: ("^a^", "^b^")\n")) dep_pairs
+          val typ_list = map (fn td => #name (#1 td)) typ_dec_list
+          val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list 
+          val ordered_typdecs = topSort dep_pairs typ_list
+          val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types 
+          fun proc_one (name, info) =
+              let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of
+                             x::[] => #ty x
+                             | _ => raise Fail "da.. que pasó?"
+                  val real_type =
+                      case ty of 
+                         NameTy s => ( case tabFind newtt s of
+                                         SOME t => t
+                                         | NONE => raise Fail "sinonimo a tipo no existente"
+                                     )
+                         | ArrayTy s => ( case tabFind newtt s of
+                                            SOME t => TArray (t, ref ())
+                                            | NONE => raise Fail "array de tipo no exist"
+                                        )
+                         | RecordTy flds => TRecord ([], ref ())
+               in ( print ("agregado tipo: "^name^"\n"); 
+                    tabReplace newtt (name, real_type) ) end
+      in 
+          ( List.app proc_one ordered_types; (vt, newtt) )
+      end handle Ciclo => raise Fail "Ciclo en delaracion de tipos"
 
 fun semantics tree = ( seman init_venv init_tenv tree ;
-                       if true orelse !verbose then print "Semantics: finalizado ok\n" else () )
+                       if !verbose then print "Semantics: finalizado ok\n" else () )
 
 end (* struct *)

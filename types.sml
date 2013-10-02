@@ -9,7 +9,5 @@ datatype TigerType = TUnit
                    | TString
                    | TRecord of (string * TigerType) list * uniq
                    | TArray of TigerType * uniq
-(*                   | TFunc of TigerType list * TigerType AL PEDO? *)
-                   | TSinom of string * (TigerType option ref)
 
 end
