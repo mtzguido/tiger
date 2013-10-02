@@ -20,7 +20,7 @@ SRCS=   $(patsubst %,%.sml,${MODULES}) parser.y lexer.lex
 OBJS=   $(patsubst %,%.uo,${MODULES}) parser.uo parser.ui lexer.uo lexer.ui
 
 tiger: ${OBJS}
-	${MOSMLL} main.uo -o $@
+	${MOSMLL} main.uo	-o $@
 
 %.sml: %.lex
 	${MOSMLLEX} $<
@@ -29,10 +29,10 @@ tiger: ${OBJS}
 	${MOSMLYAC} -v $<
 
 %.ui: %.sig
-	${MOSMLC} $< -o $@
+	${MOSMLC} $< 	-o $@
 
 %.uo %.ui: %.sml
-	${MOSMLC} $< -o $@
+	${MOSMLC} $< 	-o $@
 
 clean: trim
 	rm -f tiger
