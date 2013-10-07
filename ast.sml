@@ -25,9 +25,9 @@ datatype exp = VarE of var * info
              | BreakE of info
              | ArrayE of { typ: symbol, size:exp, init:exp } * info
 
-and var = SimpleVar of symbol
-        | FieldVar of var * symbol
-        | IndexVar of var * exp
+and var = SimpleVar of symbol * info
+        | FieldVar of var * symbol * info
+        | IndexVar of var * exp * info
 
 and decl = FuncDecl of ({ name:symbol, params: argument list,
                           result: symbol option, body:exp } * info) list

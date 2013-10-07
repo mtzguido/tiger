@@ -13,7 +13,7 @@ fun typeDecMerge(FuncDecl [fd], (FuncDecl list)::rest) =
   | typeDecMerge(l, r) =
     l::r
 
-fun nombre (SimpleVar s) = s
+fun nombre (SimpleVar (s,_)) = s
   | nombre _ = raise Fail "Parser: Error interno 1"
 
 val fakeinfo = makeinfo ~123
@@ -134,9 +134,9 @@ argsdec :                          { [] }
         |  id DOSP id COMA argsdec {  {name=$1, typ=$3, escape=ref false}::$5 }
         ;
 
-lvalue : id { SimpleVar $1 }
-       | lvalue PUNTO id { FieldVar ($1, $3) }
-       | lvalue CI exp CD { IndexVar ($1, $3) }
+lvalue : id { SimpleVar ($1, getinfo ()) }
+       | lvalue PUNTO id { FieldVar ($1, $3, getinfo ()) }
+       | lvalue CI exp CD { IndexVar ($1, $3, getinfo ()) }
        ;
 
 seq : exp PCOMA seq { $1 :: $3 }

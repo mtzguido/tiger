@@ -65,13 +65,15 @@ testgood: tiger
 			echo "Test $$i ok." ; \
 		else \
 			echo "Test $$i FALLADO!" ; \
+			exit 1 ; \
 		fi \
 	done
 
 testbad: tiger
 	for i in tests/bad/*.tig; do \
-		if ./tiger "$$i" &>/dev/null ; then \
+		if ./tiger "$$i" ; then \
 			echo "Test $$i FALLADO!" ; \
+			exit 1 ; \
 		else \
 			echo "Test $$i ok." ; \
 		fi \

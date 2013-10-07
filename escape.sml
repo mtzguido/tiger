@@ -62,12 +62,12 @@ and marcarEscapes' env d (UnitE _) = ()
   | marcarEscapes' env d (VarE (var, info)) = marcarVar info env d var
 
 
-and marcarVar info env d (SimpleVar s) = ( case tabFind env s of
+and marcarVar info env d (SimpleVar (s,_)) = ( case tabFind env s of
                                         SOME (d', e) => if d > d' then (if !e then () else found (s, info) ; e := true ) else ()
                                         | NONE       => raise VarNoDec s
                                     ) (* hay que poner parentesis aca arriba... sneaky motherfu.. *)
-  | marcarVar info env d (FieldVar (v,_)) = marcarVar info env d v
-  | marcarVar info env d (IndexVar (v,e)) = ( marcarVar info env d v ; marcarEscapes' env d e )
+  | marcarVar info env d (FieldVar (v,_,_)) = marcarVar info env d v
+  | marcarVar info env d (IndexVar (v,e,_)) = ( marcarVar info env d v ; marcarEscapes' env d e )
 
 and marcarDecls env d [] = env
   | marcarDecls env d (dec::decls) = let val newenv = marcarDecl env d dec

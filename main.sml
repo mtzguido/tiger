@@ -11,6 +11,7 @@ fun err (VarNoDec name) = print ("Error: variable no definida ("^name^").\n")
   | err (Fail s)        = print ("Error: "^s^".\n")
   | err (SysErr (s,_))  = print ("Error del sistema: "^s^".\n")
   | err  ParseError     = print "Error de parsing.\n"
+  | err  SemanFail      = print "Error de semántica.\n"
   | err x = print "Excepción no reconocida!"
 
 fun printTokens lbuf = 
