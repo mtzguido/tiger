@@ -1,0 +1,9 @@
+/* los tipos a y b exteriories no
+   deberían interferir con los de adentro */
+
+let type a = {h:int, t:a}
+    type b = int
+    in let type b = a
+           type a = {fst:b, snd:b}
+       in a{fst=a{fst=nil, snd=nil}, snd=nil} end
+    end
