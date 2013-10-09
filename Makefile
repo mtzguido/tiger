@@ -60,24 +60,10 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 test: testgood testbad
 
 testgood: tiger
-	for i in tests/good/*.tig; do \
-		if ./tiger "$$i" &>/dev/null ; then \
-			echo "Test $$i ok." ; \
-		else \
-			echo "Test $$i FALLADO!" ; \
-			exit 1 ; \
-		fi \
-	done
+	$(SHELL) scripts/test_good.sh
 
 testbad: tiger
-	for i in tests/bad/*.tig; do \
-		if ./tiger "$$i" &>/dev/null; then \
-			echo "Test $$i FALLADO!" ; \
-			exit 1 ; \
-		else \
-			echo "Test $$i ok." ; \
-		fi \
-	done
+	$(SHELL) scripts/test_bad.sh
 
 
 
