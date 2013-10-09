@@ -340,27 +340,34 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       end
   | declSeman vt tt (TypeDecl typ_dec_list) =
       let val newtt = tabCopy tt
+          val trucho_ii = #2 (hd typ_dec_list)
           (* deteccion de ciclos *)
-          fun dep ({name,ty}, ii) =
-              case ty of
-                  NameTy t2 => ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
-                                   [] => []
-                                   | _ => [(name,t2)] )
-                  | ArrayTy t2 => ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
-                                    [] => []
-                                    | _ => [(name,t2)] )
-                  | RecordTy _ => []
-          val dep_pairs = List.concat (map dep typ_dec_list)
-          val typ_list = map (fn (td,ii) => #name td) typ_dec_list
-          val ordered_types = topSort dep_pairs typ_list
-                              handle Ciclo =>
-                                semanError (#2 (hd typ_dec_list)) "ciclo en declaración de tipos"
+          fun find_empty_types () =
+              let fun dep ({name,ty}, ii) =
+                      case ty of
+                        NameTy t2 =>
+                           ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
+                               [] => []
+                               | _ => [(name,t2)]
+                           )
+                        | ArrayTy t2 =>
+                           ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
+                               [] => []
+                               | _ => [(name,t2)]
+			   )
+                        | RecordTy _ => []
+              val dep_pairs = List.concat (map dep typ_dec_list)
+              val typ_list = map (fn (td,ii) => #name td) typ_dec_list
+           in case topSort dep_pairs typ_list of
+                 OK _ => NONE 
+                 | CICLE t => SOME t
+           end
 
           val circular_fix = ref []
           fun check_dups () = let val namelist =
-	                                map (fn ({name,ty},_) => name) typ_dec_list
+                                    map (fn ({name,ty},_) => name) typ_dec_list
                                in if checkDups namelist
-                                    then semanError (#2 (hd typ_dec_list)) "tipos duplicados en un mismo batch"
+                                    then semanError trucho_ii "tipos duplicados en un mismo batch"
                                     else ()
                               end
           fun add_one ({name,ty},_) = tabReplace newtt (name, TReference (ref NONE))
@@ -385,13 +392,16 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                       let fun fldcmp ({name=n1,...},{name=n2,...}) = String.compare (n1,n2)
                           val sorted_flds = Listsort.sort fldcmp flds
                           fun get_type {name,typ} =
-	                        case tabFind newtt typ of
+                            case tabFind newtt typ of
                                   SOME t => (name,t)
                                   | NONE => semanError ii (typ^": no existe el tipo (record)")
                       in rr := SOME (TRecord (map get_type sorted_flds, ref ())) end
                before print ("agregado tipo: "^name^"\n") end
       in
           ( check_dups () ;
+	    ( case find_empty_types () of
+	        SOME t => semanError trucho_ii (t^": tipo inhabitable")
+	        | NONE => () ) ;
             List.app add_one typ_dec_list ;
             List.app proc_one typ_dec_list ;
             (vt, newtt) )

@@ -1,5 +1,7 @@
 signature topsort =
 sig
-    exception Ciclo
-    val topSort : (''a * ''a) list -> ''a list -> ''a list
+    datatype ''a result = OK of ''a list
+                        | CICLE of ''a
+
+    val topSort : (''a * ''a) list -> ''a list -> ''a result
 end

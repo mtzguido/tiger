@@ -3,6 +3,11 @@ struct
     open hash
     exception Ciclo
 
+    val loop = ref NONE
+
+    datatype ''a result = OK of ''a list
+                        | CICLE of ''a
+
     fun elem x [] = false
       | elem x (e::es) = x = e orelse elem x es
     
@@ -12,7 +17,7 @@ struct
     fun topSort' deps [] = []
       | topSort' deps verts =
         let fun leaf v visited = 
-                let val _ = if elem v visited then raise Ciclo else ()
+                let val _ = if elem v visited then ( loop := SOME v ; raise Ciclo ) else ()
                     val preds = List.filter (fn (l,h) => l = v) deps
                 in case preds of
                      [] => v
@@ -25,5 +30,6 @@ struct
                        )
         end
 
-    fun topSort deps vs = topSort' deps vs
+    fun topSort deps vs = ( loop := NONE ;
+                            OK (topSort' deps vs) handle Ciclo => CICLE (valOf (!loop)) )
 end
