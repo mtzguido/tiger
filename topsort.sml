@@ -13,7 +13,7 @@ struct
       | topSort' deps verts =
         let fun leaf v visited = 
                 let val _ = if elem v visited then raise Ciclo else ()
-                    val preds = List.filter (fn (l,h) => l = v) deps (* l depende de h *)
+                    val preds = List.filter (fn (l,h) => l = v) deps
                 in case preds of
                      [] => v
                      | _ => leaf (#2 (hd preds)) (v::visited)

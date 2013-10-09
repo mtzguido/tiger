@@ -247,12 +247,18 @@ fun seman vt tt exp =
     end
   | BreakE ii => if !labelStack = [] then semanError ii "break fuera de bucle" else (SCAF, TUnit)
   | ArrayE ({typ,size,init}, ii) =>
-    let val tt = case tabFind tt typ of
-                   SOME t => tipoReal t
-                   | NONE => semanError ii ("no existe el tipo "^typ)
+    let val (elemt, uq) = case tabFind tt typ of
+                            SOME t => ( case tipoReal t of
+                                          TArray (t,uq) => (t,uq)
+                                          | _ => semanError ii (typ^": no es de tipo array")
+                                      )
+                            | NONE => semanError ii ("no existe el tipo "^typ)
         val (_,initt) = seman' init
-        in if typeMatch ii tt initt
-               then (SCAF, TArray (tt, ref ()))
+        val (_,sizet) = seman' size
+        in if typeMatch ii elemt initt
+               then if typeMatch ii sizet TInt
+                    then (SCAF, TArray (elemt, uq))
+                    else semanError ii "el tamaño del array no tipa a entero"
                else semanError ii "la inicialización del array no tipa al tipo del array"
         end
 end
@@ -349,6 +355,8 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
           val _ = List.app (fn t => print ("___TIPO: "^t^"\n")) ordered_types
           val circular_fix = ref []
           fun proc_one name =
+
+
               let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of
                              x::[] => #ty (#1 x)
                              | _ => raise Fail "tipo usado en type batch y no def... arreglar y detectar antes de topsort (o no?) tambien cheququar duplicados"
@@ -363,23 +371,24 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                             | NONE => ( print "%&!$@|!!" ; TArray (TReference (ref NONE), ref ()) )
                                         )
                          | RecordTy flds =>
-                                let fun get_type {name,typ} = case tabFind newtt typ of
+                                let fun fldcmp ({name=n1,...},{name=n2,...}) = String.compare (n1,n2)
+                                    val sorted_flds = Listsort.sort fldcmp flds
+                                    fun get_type {name,typ} = case tabFind newtt typ of
                                             SOME t => (name,t)
                                             | NONE => let val rr = ref NONE
+                                                          val _ = print ("esa: "^typ^"\n")
                                                       in ( circular_fix := (rr, typ)::(!circular_fix) ;
-                                                           (name, TReference (ref NONE)) ) end
-                                in TRecord (map get_type flds, ref ()) end
+                                                           (name, TReference rr) ) end
+                                in TRecord (map get_type sorted_flds, ref ()) end
                in ( print ("agregado tipo: "^name^"\n");
                     tabReplace newtt (name, real_type) ) end
           fun fix_one (r, n) = ( print ("buscando tipo "^n^"\n") ;
                                  r := SOME (tabTake newtt n) )
       in
           ( List.app proc_one ordered_types ;
-            print "1\n" ;
             List.app fix_one (!circular_fix) ;
-            print "2\n" ;
             (vt, newtt) )
-      end handle Ciclo => raise Fail "Ciclo en delaracion de tipos"
+      end handle Ciclo => semanError (#2 (hd typ_dec_list)) "ciclo en declaración de tipos"
 
 fun semantics tree = ( seman init_venv init_tenv tree ;
                        if !verbose then print "Semantics: finalizado ok\n" else () )

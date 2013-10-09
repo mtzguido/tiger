@@ -71,7 +71,7 @@ testgood: tiger
 
 testbad: tiger
 	for i in tests/bad/*.tig; do \
-		if ./tiger "$$i" ; then \
+		if ./tiger "$$i" &>/dev/null; then \
 			echo "Test $$i FALLADO!" ; \
 			exit 1 ; \
 		else \
