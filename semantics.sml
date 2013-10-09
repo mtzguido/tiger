@@ -55,10 +55,10 @@ fun semanErrorNoThrow info s = print ("Semantic: Error en "^(info2str info)^".\n
 
 fun uncurry f (x,y) = f x y
 
-fun tipoReal t = case t of
+fun tipoReal ii t = case t of
     TReference r => ( case !r of
-                        SOME tt => tipoReal tt
-                        | NONE => raise Fail "errrrrrrrr" )
+                        SOME tt => tipoReal ii tt
+                        | NONE => semanError ii "error interno: referencia inválida (3)" )
   | otracosa => otracosa
 
 fun typeMatch ii t1 t2 = case (t1, t2) of
@@ -156,7 +156,7 @@ fun seman vt tt exp =
         val sorted_flds = Listsort.sort fldcmp flds
         val sorted_names = map (#1) sorted_flds
         val rectype = case tabFind tt typ of
-                        SOME t => ( case tipoReal t of
+                        SOME t => ( case tipoReal ii t of
                                       TRecord rrr => rrr
                                       | _ => semanError ii (typ^": no es de tipo record")
                                   )
@@ -250,7 +250,7 @@ fun seman vt tt exp =
   | BreakE ii => if !labelStack = [] then semanError ii "break fuera de bucle" else (SCAF, TUnit)
   | ArrayE ({typ,size,init}, ii) =>
     let val (elemt, uq) = case tabFind tt typ of
-                            SOME t => ( case tipoReal t of
+                            SOME t => ( case tipoReal ii t of
                                           TArray (t,uq) => (t,uq)
                                           | _ => semanError ii (typ^": no es de tipo array")
                                       )
@@ -269,7 +269,8 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
                                            | NONE => semanError ii (s^": variable no definida")
                                            | _ => semanError ii (s^": no es variable") )
   | varSeman vt tt (IndexVar (arr,idx, ii)) =
-        let val elemt = case tipoReal (#2 (varSeman vt tt arr)) of
+        let val (_, arrt) = varSeman vt tt arr
+            val elemt = case tipoReal ii arrt of
                           TArray (e,_) => e
                           | _ => semanError ii ("subscript a elementno no array")
             val (_,idxt) = seman vt tt idx
@@ -278,7 +279,8 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
              else semanError ii "subscript no es de tipo entero"
        end
   | varSeman vt tt (FieldVar (record,fld, ii)) =
-      let val flds = case tipoReal (#2 (varSeman vt tt record)) of
+      let val (_, recordt) = varSeman vt tt record
+          val flds = case tipoReal ii recordt of
                        TRecord (flds,_) => flds
                        | _ => semanError ii ("field a elemento no record")
           val fldt = case List.filter (fn (s,_) => s = fld) flds of
@@ -290,7 +292,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of
                              SOME typename => ( case tabFind tt typename of
-                                                  SOME t => tipoReal t
+                                                  SOME t => tipoReal ii t
                                                   | NONE => semanError ii (typename^": no existe el tipo (en inicialización)")
                                               )
                              | NONE => initt
@@ -308,7 +310,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
           fun add_one (fd, ii) =
               let fun type_lookup typ =
                        case tabFind tt typ of
-                         SOME t => tipoReal t
+                         SOME t => tipoReal ii t
                          | NONE => semanError ii (typ^": no existe el tipo")
                   val argstypes = map (type_lookup o #typ) (#params fd)
                   val rettype = case #result fd of
@@ -321,7 +323,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
           fun proc_one (fd, ii) =
               let val localvt = tabCopy newvt
                   fun argtype arg = case tabFind tt (#typ arg) of
-                                      SOME t => tipoReal t
+                                      SOME t => tipoReal ii t
                                       | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
                   fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
                   val         _ = List.app arg2env (#params fd)
