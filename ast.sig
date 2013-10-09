@@ -5,6 +5,7 @@ type symbol = string
 type info
 
 val info2str : info -> string
+val infoline : info -> int
 val makeinfo : int -> info (* line number *)
 
 datatype exp = VarE of var * info

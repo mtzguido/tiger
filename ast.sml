@@ -5,6 +5,7 @@ type symbol = string
 type info = { pos: int } 
 
 fun info2str ({pos}) = "(linea: "^(makestring pos)^")"
+fun infoline ({pos}) = pos
 fun makeinfo nl = {pos=nl}
 
 datatype exp = VarE of var * info

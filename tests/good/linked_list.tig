@@ -1,0 +1,5 @@
+let
+ type intlist = { h:int, t:intlist }
+in
+ intlist{h=23,t=nil}
+end

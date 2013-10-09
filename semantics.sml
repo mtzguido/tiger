@@ -16,11 +16,32 @@ fun pushLoopLabel () = labelStack := ()::(!labelStack)
 fun popLoopLabel  () = labelStack := tl (!labelStack)
 fun peekLoopLabel () = hd (!labelStack)
 
+val last_fun_label = ref 0
+
+fun mklabel (name, lineno) = 
+    (name^"_"^(makestring lineno)^"_"^(makestring (!last_fun_label)))
+    before last_fun_label := !last_fun_label + 1
+
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
 val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
-val _ = tabInsertList init_venv [("x", Var TIntRO)]
+val _ = tabInsertList init_venv
+    [("chr",       Func{formals=[TInt], ret=TString, extern=true, label="_tiger_chr"}),
+     ("concat",    Func{formals=[TString,TString], ret=TString, extern=true, label="_tiger_concat"}),
+     ("exit",      Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_exit"}),
+     ("flush",     Func{formals=[], ret=TUnit, extern=true, label="_tiger_flush"}),
+     ("getchar",   Func{formals=[], ret=TString, extern=true, label="_tiger_getchar"}),
+     ("not",       Func{formals=[TInt], ret=TInt, extern=true, label="_tiger_not"}),
+     ("ord",       Func{formals=[TString], ret=TInt, extern=true, label="_tiger_ord"}),
+     ("print",     Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print"}),
+     ("print_err", Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print_err"}),
+     ("print_int", Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_print_int"}),
+     ("size",      Func{formals=[TString], ret=TInt, extern=true, label="_tiger_size"}),
+     ("strcmp",    Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_strcmp"}),
+     ("streq",     Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_streq"}),
+     ("substring", Func{formals=[TString,TInt,TInt], ret=TString, extern=true, label="_tiger_substring"})
+    ]
 
 fun elem x [] = false
   | elem x (e::es) = x = e orelse elem x es
@@ -273,18 +294,19 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       end
   | declSeman vt tt (FuncDecl fun_dec_list) =
       let val newvt = tabCopy vt
-          val _ = if checkDups (map (#name o #1) fun_dec_list) then raise Fail "funciones duplicadas en batch" else ()
-          fun add_one (fd, info) =
-              let fun type_lookup typ = case tabFind tt typ of
-                                          SOME t => tipoReal t
-                                          | NONE => raise Fail "tipo no existente en param"
+          val _ = if checkDups (map (#name o #1) fun_dec_list)
+                   then semanError (#2 (hd fun_dec_list)) "funciones duplicadas en el batch" 
+                   else ()
+          fun add_one (fd, ii) =
+              let fun type_lookup typ =
+                       case tabFind tt typ of
+                         SOME t => tipoReal t
+                         | NONE => semanError ii (typ^": no existe el tipo")
                   val argstypes = map (type_lookup o #typ) (#params fd)
                   val rettype = case #result fd of
-                                  SOME t => ( case tabFind tt t of
-                                                SOME ttt => tipoReal ttt
-                                                | NONE => raise Fail "asdasd123" )
+                                  SOME t => type_lookup t
                                   | NONE => TUnit
-                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label="??"}
+                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label=mklabel (#name fd, infoline ii)}
               in
                   tabReplace newvt (#name fd, functype)
               end
@@ -292,20 +314,20 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
               let val localvt = tabCopy newvt
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal t
-                                      | NONE => raise Fail "no existe tipo de argumento (no deberia ocurrir)"
+                                      | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
                   fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
-                  val _ = map arg2env (#params fd)
+                  val         _ = List.app arg2env (#params fd)
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
                   val rettype = case tabTake newvt (#name fd) of
                                   Func {ret,...} => ret
-                                  | _ => raise Fail "imposible"
+                                  | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
                   then  ()
-                  else raise Fail "formal return type and body type differ"
+                  else semanError ii "el cuerpo de la función no tipa al retorno de la función"
               end
       in
          ( List.app add_one fun_dec_list ;
-           map proc_one fun_dec_list ;
+           List.app proc_one fun_dec_list ;
            (newvt, tt) )
       end
   | declSeman vt tt (TypeDecl typ_dec_list) =
@@ -320,11 +342,11 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                     | _ => [(name,t2)] )
                   | RecordTy _ => []
           val dep_pairs = List.concat (map dep typ_dec_list)
-          val _ = List.app (fn (a,b) => print ("dep: ("^a^", "^b^")\n")) dep_pairs
-          val typ_list = map (fn td => #name (#1 td)) typ_dec_list
-          val _ = List.app (fn t => print ("tipo: "^t^"\n")) typ_list
+          val _ = List.app (fn (a,b) => print ("___dep: ("^a^", "^b^")\n")) dep_pairs
+          val typ_list = map (fn (td,ii) => #name td) typ_dec_list
+          val _ = List.app (fn t => print ("___tipo: "^t^"\n")) typ_list
           val ordered_types = topSort dep_pairs typ_list
-          val _ = List.app (fn t => print ("TIPO: "^t^"\n")) ordered_types
+          val _ = List.app (fn t => print ("___TIPO: "^t^"\n")) ordered_types
           val circular_fix = ref []
           fun proc_one name =
               let val ty = case List.filter (fn (td,_) => (#name td) = name) typ_dec_list of

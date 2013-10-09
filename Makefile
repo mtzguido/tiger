@@ -84,15 +84,15 @@ testbad: tiger
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
+main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
+semantics.uo: semantics.ui topsort.ui types.uo common.uo ast.ui hash.ui 
+parser.uo: parser.ui ast.ui lineno.uo 
+parser.ui: ast.ui 
+hash.uo: hash.ui 
+lexer.uo: parser.ui lineno.uo 
+semantics.ui: ast.ui 
+common.uo: ast.ui 
+escape.uo: escape.ui common.uo ast.ui hash.ui 
 topsort.uo: topsort.ui hash.ui 
 escape.ui: ast.ui 
 ast.uo: ast.ui 
-lexer.uo: parser.ui lineno.uo 
-escape.uo: escape.ui common.uo ast.ui hash.ui 
-common.uo: ast.ui 
-parser.uo: parser.ui ast.ui lineno.uo 
-main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
-hash.uo: hash.ui 
-semantics.ui: ast.ui 
-parser.ui: ast.ui 
-semantics.uo: semantics.ui topsort.ui types.uo common.uo ast.ui hash.ui 
