@@ -57,15 +57,8 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 	$(MOSMLTOOLS)/cutdeps < Makefile.bak > Makefile
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
-test: testgood testbad
-
-testgood: tiger
-	$(SHELL) scripts/test_good.sh
-
-testbad: tiger
-	$(SHELL) scripts/test_bad.sh
-
-
+test: tiger
+	$(SHELL) scripts/run_tests.sh
 
 # Dependencias autogeneradas:
 #

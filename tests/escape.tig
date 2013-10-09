@@ -1,7 +1,0 @@
-let var i := 10
-
-in for i := 1 to i+1 do
-	let function f () = 
-		print (chr(i+69))
-	in end
-end
