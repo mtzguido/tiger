@@ -49,9 +49,9 @@ fun elem x [] = false
 fun checkDups [] = false
   | checkDups (e::es) = if elem e es then true else checkDups es
 
-fun semanError info s = ( print ("Semantics: Error en "^(info2str info)^".\nSemantic: "^s^".\n") ;
+fun semanError info s = ( print ("Semantics: Error en "^(info2str info)^".\nSemantics: "^s^".\n") ;
                           raise SemanFail )
-fun semanErrorNoThrow info s = print ("Semantics: Error en "^(info2str info)^".\nSemantic: "^s^".\n")
+fun semanErrorNoThrow info s = print ("Semantics: Error en "^(info2str info)^".\nSemantics: "^s^".\n")
 
 fun uncurry f (x,y) = f x y
 
@@ -402,8 +402,10 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       in
           ( check_dups () ;
 	    ( case find_empty_types () of
-	        SOME t => semanError trucho_ii (t^": tipo inhabitable")
-	        | NONE => () ) ;
+	        NONE => () 
+	        | SOME (h::t) => let val cicle_str = foldl (fn (n, a) => n^", "^a) h t
+                             in semanError trucho_ii (cicle_str^": tipos inhabitables") end
+            | SOME _ => semanError trucho_ii "error interno 6" ) ;
             List.app add_one typ_dec_list ;
             List.app proc_one typ_dec_list ;
             (vt, newtt) )

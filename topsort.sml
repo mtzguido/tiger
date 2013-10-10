@@ -6,7 +6,7 @@ struct
     val loop = ref NONE
 
     datatype ''a result = OK of ''a list
-                        | CICLE of ''a
+                        | CICLE of ''a list
 
     fun elem x [] = false
       | elem x (e::es) = x = e orelse elem x es
@@ -17,7 +17,14 @@ struct
     fun topSort' deps [] = []
       | topSort' deps verts =
         let fun leaf v visited = 
-                let val _ = if elem v visited then ( loop := SOME v ; raise Ciclo ) else ()
+                let val _ = if elem v visited
+                            then let fun takeUntil e [] = []
+                                       | takeUntil e (f::t) =
+                                          if e = f then [e] else f::(takeUntil e t)
+                                     val cicle = takeUntil v visited
+                                  in ( loop := SOME cicle ; raise Ciclo )
+                                 end
+                            else ()
                     val preds = List.filter (fn (l,h) => l = v) deps
                 in case preds of
                      [] => v
