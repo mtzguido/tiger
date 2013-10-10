@@ -1,0 +1,3 @@
+/* debe fallar porque el cuerpo no tipa a unit
+   no por no estar i definida */
+   for i := 1 to 10 do i = i-1

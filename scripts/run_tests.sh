@@ -3,7 +3,7 @@
 for i in tests/bad/*.tig; do
 	if ./tiger "$i" &>/dev/null; then
 		echo
-		echo "Test $i FALLADO!" ;
+		echo "Test $i FAILED" ;
 		exit 1 ;
 	else
 		echo -n "." ;
@@ -14,10 +14,9 @@ for i in tests/good/*.tig; do
 		echo -n "." ;
 	else
 		echo
-		echo "Test $i FALLADO!" ;
+		echo "Test $i FAILED" ;
 		exit 1 ;
 	fi
 done
 
-
-echo -e '\nall good'
+echo -e '\nAll tests OK'
