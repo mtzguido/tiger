@@ -58,20 +58,20 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
 test: tiger
-	$(SHELL) scripts/run_tests.sh
+	. scripts/run_tests.sh
 
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
-lexer.uo: parser.ui lineno.uo 
-hash.uo: hash.ui 
-escape.ui: ast.ui 
-semantics.ui: ast.ui 
-topsort.uo: topsort.ui hash.ui 
-common.uo: ast.ui 
-parser.uo: parser.ui ast.ui lineno.uo 
-semantics.uo: semantics.ui topsort.ui types.uo common.uo ast.ui hash.ui 
 main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
-escape.uo: escape.ui common.uo ast.ui hash.ui 
-ast.uo: ast.ui 
+semantics.uo: semantics.ui topsort.ui types.uo common.uo ast.ui hash.ui 
+parser.uo: parser.ui ast.ui lineno.uo 
 parser.ui: ast.ui 
+hash.uo: hash.ui 
+lexer.uo: parser.ui lineno.uo 
+semantics.ui: ast.ui 
+common.uo: ast.ui 
+escape.uo: escape.ui common.uo ast.ui hash.ui 
+topsort.uo: topsort.ui hash.ui 
+escape.ui: ast.ui 
+ast.uo: ast.ui 

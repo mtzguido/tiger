@@ -44,6 +44,7 @@ val fakeinfo = makeinfo ~123
 
 %nonassoc THEN
 %left ELSE
+%nonassoc OF
 %nonassoc FOR TO DO
 %nonassoc DOSPIG
 %left PIPE
@@ -51,7 +52,6 @@ val fakeinfo = makeinfo ~123
 %nonassoc GEQ LEQ NEQ EQ LT GT
 %left PLUS MINUS
 %left DIV MULT
-%nonassoc OF
 
 %start prog
 
