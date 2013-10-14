@@ -1,4 +1,4 @@
-.PHONY: all clean re depend run trim test testgood testbad
+.PHONY: all clean re depend run trim test 
 
 SHELL=/bin/bash
 MOSML=${HOME}/mosml
