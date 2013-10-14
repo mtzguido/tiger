@@ -356,7 +356,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                            ( case List.filter (fn ({name,ty},_) => name = t2) typ_dec_list of
                                [] => []
                                | _ => [(name,t2)]
-			   )
+                           )
                         | RecordTy _ => []
               val dep_pairs = List.concat (map dep typ_dec_list)
               val typ_list = map (fn (td,ii) => #name td) typ_dec_list
@@ -374,8 +374,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                               end
           fun add_one ({name,ty},_) = tabReplace newtt (name, TReference (ref NONE))
           fun proc_one ({name,ty},ii) =
-              let val _ = print ("procesando : "^name^"\n")
-                  val rr = case tabFind newtt name of
+              let val rr = case tabFind newtt name of
                              SOME (TReference rr) => rr
                              | _ => semanError ii "error interno (5)"
               in
@@ -398,14 +397,15 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   SOME t => (name,t)
                                   | NONE => semanError ii (typ^": no existe el tipo (record)")
                       in rr := SOME (TRecord (map get_type sorted_flds, ref ())) end
-               before print ("agregado tipo: "^name^"\n") end
+              end
       in
           ( check_dups () ;
-	    ( case find_empty_types () of
-	        NONE => () 
-	        | SOME (h::t) => let val cicle_str = foldl (fn (n, a) => n^", "^a) h t
-                             in semanError trucho_ii (cicle_str^": tipos inhabitables") end
-            | SOME _ => semanError trucho_ii "error interno 6" ) ;
+            ( case find_empty_types () of
+                NONE => () 
+                | SOME (h::t) => let val cicle_str = foldl (fn (n, a) => n^", "^a) h t
+                                 in semanError trucho_ii (cicle_str^": tipos inhabitables")
+                                 end
+                | SOME _ => semanError trucho_ii "error interno 6" ) ;
             List.app add_one typ_dec_list ;
             List.app proc_one typ_dec_list ;
             (vt, newtt) )
