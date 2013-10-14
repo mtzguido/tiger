@@ -8,10 +8,12 @@ MOSMLL=${MOSML}/bin/mosmlc
 MOSMLYAC=${MOSML}/bin/mosmlyac
 MOSMLLEX=${MOSML}/bin/mosmllex
 
-all: tiger
+TARGET=dtc
 
-run: tiger
-	./tiger
+all: $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
 
 PARSER=parser.sml
 LEXER=lexer.sml
@@ -20,7 +22,7 @@ MODULES=$(patsubst %.sml,%,$(wildcard *.sml))
 SRCS=   $(patsubst %,%.sml,${MODULES}) parser.y lexer.lex
 OBJS=   $(patsubst %,%.uo,${MODULES}) parser.uo parser.ui lexer.uo lexer.ui
 
-tiger: ${OBJS}
+$(TARGET): ${OBJS}
 	${MOSMLL} main.uo	-o $@
 
 %.sml: %.lex
@@ -36,7 +38,7 @@ tiger: ${OBJS}
 	${MOSMLC} $< 	-o $@
 
 clean: trim
-	rm -f tiger
+	rm -f $(TARGET)
 
 trim:
 	rm -f Makefile.bak
@@ -57,7 +59,7 @@ depend: $(SRCS) parser.sml parser.sig lexer.sml
 	$(MOSMLTOOLS)/cutdeps < Makefile.bak > Makefile
 	$(MOSMLTOOLS)/mosmldep >> Makefile
 
-test: tiger
+test: $(TARGET)
 	. scripts/run_tests.sh
 
 # Dependencias autogeneradas:

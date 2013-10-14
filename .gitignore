@@ -1,7 +1,7 @@
 *.uo
 *.ui
 *.o
-tiger
+dtc
 lexer.sml
 parser.output
 parser.sig
