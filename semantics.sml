@@ -103,7 +103,7 @@ fun seman vt tt exp =
           val seman_args = map seman' args
           val actual_types = map (#2) seman_args
           val _ = if length actual_types <> length formals
-                    then semanError ii (func^": no conincide la cantidad de argumentos")
+                    then semanError ii (func^": no coincide la cantidad de argumentos")
                     else ()
           val pairs = ListPair.zip (actual_types,formals)
           val matches = map (uncurry (typeMatch ii)) pairs
