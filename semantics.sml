@@ -436,7 +436,10 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
             (vt, newtt) )
       end
 
-fun semantics tree = ( seman init_venv init_tenv tree ;
-                       if !verbose then print "Semantics: finalizado ok\n" else () )
+fun semantics tree = 
+    let 
+     in seman init_venv init_tenv tree ;
+        if !verbose then print "Semantics: finalizado ok\n" else ()
+    end
 
 end (* struct *)

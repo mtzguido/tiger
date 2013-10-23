@@ -56,7 +56,23 @@ val fakeinfo = makeinfo ~123
 %start prog
 
 %%
-prog : exp EOF  { $1 }
+prog : exp EOF  { LetE ({ decs= [FuncDecl [({ name= "_tigermain",
+                                                   params= [],
+                                                   result= SOME "int",
+                                                   body= SeqE ([$1, IntE (99, fakeinfo)], fakeinfo)
+                                                 }, fakeinfo)]
+                                     ], body= UnitE fakeinfo}, fakeinfo)
+                }
+
+
+
+
+
+
+
+
+
+
 
 exp : NRO { IntE ($1, getinfo()) }
     | PI PD { UnitE (getinfo()) }
