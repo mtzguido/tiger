@@ -10,7 +10,13 @@ struct
 
     fun elem x [] = false
       | elem x (e::es) = x = e orelse elem x es
-    
+   
+    fun takeUntil e [] = []
+      | takeUntil e (f::t) =
+        if e = f
+        then [e] else
+        f::(takeUntil e t)
+ 
     fun checkDups [] = false
       | checkDups (e::es) = if elem e es then true else checkDups es
 
@@ -18,10 +24,7 @@ struct
       | topSort' deps verts =
         let fun leaf v visited = 
                 let val _ = if elem v visited
-                            then let fun takeUntil e [] = []
-                                       | takeUntil e (f::t) =
-                                          if e = f then [e] else f::(takeUntil e t)
-                                     val cicle = takeUntil v visited
+                            then let val cicle = takeUntil v visited
                                   in ( loop := SOME cicle ; raise Ciclo )
                                  end
                             else ()
