@@ -32,8 +32,12 @@ val verboseOpt   = haveOpt "-v"
 val tokOpt       = haveOpt "-tokens"
 val noEscape     = haveOpt "-noescape"
 val _            = verbose := verboseOpt (* seteamos verbose *)
-val _            = if tokOpt then (printTokens (lexstream entrada); exit success) else ()
-val ast          = prog Tok (lexstream entrada) handle _ => raise ParseError
+val lexbuf       = lexstream entrada
+val _            = if tokOpt then (printTokens lexbuf; exit success) else ()
+val ast          = prog Tok lexbuf handle _ => 
+                       ( print ("Error de parsing en línea "^(makestring (!lineno))^"\n");
+                         print ("Token inesperado: \""^(Lexing.getLexeme lexbuf)^"\"\n");
+                         exit failure )
 
 val run = ( if !verbose then print "Parsing finalizado OK.\n" else ();
             if print_ast then printAst ast else () ;
