@@ -1,4 +1,5 @@
 dtc - Dogui's Tiger Compiler
 ====
 
-Compilador de Tiger para la materia "compiladores" de LCC. 
+Compilador de Tiger para la materia "compiladores" de LCC.
+Arquitectura de target indefinida.
