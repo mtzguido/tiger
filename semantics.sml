@@ -8,13 +8,31 @@ exception SemanFail
 datatype IR = SCAF
 datatype EnvEntry =
     Var of TigerType
-  | Func of {formals:TigerType list, ret:TigerType, extern:bool, label:string}
+  | Func of { formals : TigerType list,
+              ret : TigerType,
+              extern : bool,
+              label : string,
+              level : int }
 
 val labelStack = ref []
+val curLevel = ref 0
 
 fun pushLoopLabel () = labelStack := ()::(!labelStack)
 fun popLoopLabel  () = labelStack := tl (!labelStack)
 fun peekLoopLabel () = hd (!labelStack)
+
+(*
+fun semanDbg venv = 
+let fun print_one_fun (name,Func {formals,ret,extern,label,level}) =
+	print ("Función ("^name^"): {extern="^(if extern then "yes" else "no")^", label="^label^", level="^(makestring level)^"}\n")
+      | print_one_fun (name,_) = print (name^": no es func\n")
+in
+	print "--------------------------------------------\n";
+	List.app print_one_fun (tabToList venv);
+	print "--------------------------------------------\n"
+end
+*)
+fun semanDbg _ = ()
 
 val last_fun_label = ref 0
 
@@ -27,20 +45,20 @@ val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
 val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
 val _ = tabInsertList init_venv
-    [("chr",       Func{formals=[TInt], ret=TString, extern=true, label="_tiger_chr"}),
-     ("concat",    Func{formals=[TString,TString], ret=TString, extern=true, label="_tiger_concat"}),
-     ("exit",      Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_exit"}),
-     ("flush",     Func{formals=[], ret=TUnit, extern=true, label="_tiger_flush"}),
-     ("getchar",   Func{formals=[], ret=TString, extern=true, label="_tiger_getchar"}),
-     ("not",       Func{formals=[TInt], ret=TInt, extern=true, label="_tiger_not"}),
-     ("ord",       Func{formals=[TString], ret=TInt, extern=true, label="_tiger_ord"}),
-     ("print",     Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print"}),
-     ("print_err", Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print_err"}),
-     ("print_int", Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_print_int"}),
-     ("size",      Func{formals=[TString], ret=TInt, extern=true, label="_tiger_size"}),
-     ("strcmp",    Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_strcmp"}),
-     ("streq",     Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_streq"}),
-     ("substring", Func{formals=[TString,TInt,TInt], ret=TString, extern=true, label="_tiger_substring"})
+    [("chr",       Func{formals=[TInt], ret=TString, extern=true, label="_tiger_chr", level=0}),
+     ("concat",    Func{formals=[TString,TString], ret=TString, extern=true, label="_tiger_concat", level=0}),
+     ("exit",      Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_exit", level=0}),
+     ("flush",     Func{formals=[], ret=TUnit, extern=true, label="_tiger_flush", level=0}),
+     ("getchar",   Func{formals=[], ret=TString, extern=true, label="_tiger_getchar", level=0}),
+     ("not",       Func{formals=[TInt], ret=TInt, extern=true, label="_tiger_not", level=0}),
+     ("ord",       Func{formals=[TString], ret=TInt, extern=true, label="_tiger_ord", level=0}),
+     ("print",     Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print", level=0}),
+     ("print_err", Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print_err", level=0}),
+     ("print_int", Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_print_int", level=0}),
+     ("size",      Func{formals=[TString], ret=TInt, extern=true, label="_tiger_size", level=0}),
+     ("strcmp",    Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_strcmp", level=0}),
+     ("streq",     Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_streq", level=0}),
+     ("substring", Func{formals=[TString,TInt,TInt], ret=TString, extern=true, label="_tiger_substring", level=0})
     ]
 
 fun elem x [] = false
@@ -88,6 +106,7 @@ fun typeMatch ii t1 t2 = case (t1, t2) of
 
 fun seman vt tt exp =
  let fun seman' e = seman vt tt e
+     val _ = semanDbg vt
  in case exp of
     UnitE _ => (SCAF, TUnit)
   | VarE (v,_) => varSeman vt tt v
@@ -316,7 +335,11 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                   val rettype = case #result fd of
                                   SOME t => type_lookup t
                                   | NONE => TUnit
-                  val functype = Func{formals=argstypes,ret=rettype,extern=false,label=mklabel (#name fd, infoline ii)}
+                  val functype  =  Func { formals=argstypes,
+                                        ret = rettype,
+                                        extern = false,
+                                        label = mklabel (#name fd, infoline ii),
+                                        level = !curLevel }
               in
                   tabReplace newvt (#name fd, functype)
               end
@@ -337,7 +360,9 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
               end
       in
          ( List.app add_one fun_dec_list ;
+           curLevel := !curLevel + 1 ;
            List.app proc_one fun_dec_list ;
+           curLevel := !curLevel - 1 ;
            (newvt, tt) )
       end
   | declSeman vt tt (TypeDecl typ_dec_list) =

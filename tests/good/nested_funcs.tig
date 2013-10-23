@@ -1,0 +1,18 @@
+let function a (x:int) : int = 
+    let function b (x:int) : int = 
+        let function c (x:int) : int = 
+            let function d (x:int) : int = 
+                let function e (x:int) : int = 
+                    let function f (x:int) : int = 
+                        let function g (x:int) : int = 
+                            let function h (x:int) : int = 
+                                x
+                            in h (x) end
+                        in g (x) end
+                    in f (x) end
+                in e (x) end
+            in d (x) end
+        in c (x) end
+    in b (x) end
+in a (1) end
+                        
