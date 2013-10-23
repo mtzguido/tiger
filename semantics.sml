@@ -331,6 +331,9 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                        case tabFind tt typ of
                          SOME t => tipoReal ii t
                          | NONE => semanError ii (typ^": no existe el tipo")
+                  val _ = if checkDups (map (#name) (#params fd))
+                             then semanError ii "Argumentos duplicados en declaración de función"
+                             else ()
                   val argstypes = map (type_lookup o #typ) (#params fd)
                   val rettype = case #result fd of
                                   SOME t => type_lookup t
@@ -437,8 +440,13 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       end
 
 fun semantics tree = 
-    let 
-     in seman init_venv init_tenv tree ;
+    let fun wrap exp = LetE ({ decs= [FuncDecl [({ name= "_tigermain",
+                                                   params= [],
+                                                   result= NONE,
+                                                   body= SeqE ([exp, CallE ({func="exit", args=[IntE (0,fakeinfo)]},fakeinfo)], fakeinfo)
+                                                 }, fakeinfo)]
+                                     ], body= UnitE fakeinfo}, fakeinfo)
+     in seman init_venv init_tenv (wrap tree) ;
         if !verbose then print "Semantics: finalizado ok\n" else ()
     end
 

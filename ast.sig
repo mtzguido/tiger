@@ -4,6 +4,8 @@ sig
 type symbol = string
 type info
 
+val fakeinfo : info
+
 val info2str : info -> string
 val infoline : info -> int
 val makeinfo : int -> info (* line number *)

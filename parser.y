@@ -16,8 +16,6 @@ fun typeDecMerge(FuncDecl [fd], (FuncDecl list)::rest) =
 fun nombre (SimpleVar (s,_)) = s
   | nombre _ = raise Fail "Parser: Error interno 1"
 
-val fakeinfo = makeinfo ~123
-
 
 %}
 
@@ -56,23 +54,7 @@ val fakeinfo = makeinfo ~123
 %start prog
 
 %%
-prog : exp EOF  { LetE ({ decs= [FuncDecl [({ name= "_tigermain",
-                                                   params= [],
-                                                   result= SOME "int",
-                                                   body= SeqE ([$1, IntE (99, fakeinfo)], fakeinfo)
-                                                 }, fakeinfo)]
-                                     ], body= UnitE fakeinfo}, fakeinfo)
-                }
-
-
-
-
-
-
-
-
-
-
+prog : exp EOF { $1 }
 
 exp : NRO { IntE ($1, getinfo()) }
     | PI PD { UnitE (getinfo()) }

@@ -4,6 +4,8 @@ struct
 type symbol = string
 type info = { pos: int } 
 
+val fakeinfo = { pos= ~123 }
+
 fun info2str ({pos}) = "(linea: "^(makestring pos)^")"
 fun infoline ({pos}) = pos
 fun makeinfo nl = {pos=nl}
