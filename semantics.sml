@@ -440,7 +440,8 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       end
 
 fun semantics tree = 
-    let fun wrap exp = LetE ({ decs= [FuncDecl [({ name= "_tigermain",
+    let fun wrap exp = 
+        LetE ({ decs= [FuncDecl [({ name= "_tigermain",
                                                    params= [],
                                                    result= NONE,
                                                    body= SeqE ([exp, CallE ({func="exit", args=[IntE (0,fakeinfo)]},fakeinfo)], fakeinfo)
