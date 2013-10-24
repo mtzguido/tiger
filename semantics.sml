@@ -315,11 +315,13 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                                   | NONE => semanError ii (typename^": no existe el tipo (en inicialización)")
                                               )
                              | NONE => initt
-      in if typeMatch ii formaltype initt
-           then let val newvt = tabCopy vt
-                    val _ = tabReplace newvt (name, Var formaltype)
-                in (newvt, tt) end
-           else semanError ii "tipo inferido y declarado difieren"
+      in if initt = TNil andalso typ = NONE
+         then semanError ii "no se puede inicializar a nil sin explicitar el tipo de record"
+         else if typeMatch ii formaltype initt
+              then let val newvt = tabCopy vt
+                       val _ = tabReplace newvt (name, Var formaltype)
+                   in (newvt, tt) end
+              else semanError ii "tipo inferido y declarado difieren"
       end
   | declSeman vt tt (FuncDecl fun_dec_list) =
       let val newvt = tabCopy vt
