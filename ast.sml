@@ -27,6 +27,7 @@ datatype exp = VarE of var * info
              | LetE of { decs: decl list, body:exp } * info
              | BreakE of info
              | ArrayE of { typ: symbol, size:exp, init:exp } * info
+             | DebugE of exp
 
 and var = SimpleVar of symbol * info
         | FieldVar of var * symbol * info

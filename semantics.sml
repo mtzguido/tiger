@@ -1,11 +1,10 @@
 structure semantics :> semantics =
 struct
 
-open ast hash types common topsort
+open ast hash types common topsort ir
 
 exception SemanFail
 
-datatype IR = SCAF
 datatype EnvEntry =
     Var of TigerType
   | Func of { formals : TigerType list,
@@ -20,19 +19,6 @@ val curLevel = ref 0
 fun pushLoopLabel () = labelStack := ()::(!labelStack)
 fun popLoopLabel  () = labelStack := tl (!labelStack)
 fun peekLoopLabel () = hd (!labelStack)
-
-(*
-fun semanDbg venv = 
-let fun print_one_fun (name,Func {formals,ret,extern,label,level}) =
-	print ("Función ("^name^"): {extern="^(if extern then "yes" else "no")^", label="^label^", level="^(makestring level)^"}\n")
-      | print_one_fun (name,_) = print (name^": no es func\n")
-in
-	print "--------------------------------------------\n";
-	List.app print_one_fun (tabToList venv);
-	print "--------------------------------------------\n"
-end
-*)
-fun semanDbg _ = ()
 
 val last_fun_label = ref 0
 
@@ -106,9 +92,33 @@ fun typeMatch ii t1 t2 = case (t1, t2) of
 
 fun seman vt tt exp =
  let fun seman' e = seman vt tt e
-     val _ = semanDbg vt
  in case exp of
-    UnitE _ => (SCAF, TUnit)
+   (* arrancamos con lo mas importante *)
+    DebugE ee =>
+        let
+            fun pr1_type (n, ty) = 
+                print ("\t("^n^", "^(typeToString ty)^")\n")
+            fun pr1_val (n, Var t) = 
+                print ("\t("^n^", Var "^(typeToString t)^")\n")
+              | pr1_val (n, Func {formals,ret,extern,label,level}) =
+                let in
+                    print ("\t("^n^", Func\n") ;
+                    print ("\t\targs=bleh\n") ;
+                    print ("\t\treturn=bleh\n") ;
+                    print ("\t\textern="^(if extern then "yes" else "no")^"\n") ;
+                    print ("\t\tlabel="^label^"\n") ;
+                    print ("\t\tlevel="^(makestring level)^"\n")
+                end
+            val _ = print "Evaluando expresión con value env:\n"
+            val _ = List.app pr1_val (tabToList vt)
+            val _ = print "Evaluando expresión con type env:\n"
+            val _ = List.app pr1_type (tabToList tt)
+            val (ir, ty) = seman' ee
+        in
+            print ("Resultado: (ir= "^(irToString ir)^", ty= "^(typeToString ty)^")\n") ;
+            (ir, ty)
+        end
+  | UnitE _ => (SCAF, TUnit)
   | VarE (v,_) => varSeman vt tt v
   | NilE _ => (SCAF, TNil)
   | IntE (i,_) => (SCAF, TInt)

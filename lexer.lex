@@ -38,6 +38,7 @@ fun id_or_keyword "type" = TYPE
 |	id_or_keyword "to" = TO
 |	id_or_keyword "break" = BREAK
 |	id_or_keyword "nil" = NIL
+|	id_or_keyword "DEBUG" = NIL
 |	id_or_keyword x = IDENT x
 
 }
@@ -75,6 +76,7 @@ rule Tok =
 	| "-" { MINUS }
 	| "/" { DIV }
 	| "*" { MULT }
+    | "DEBUG" { DEBUG }
 	| D+ { NRO (atoi (getLexeme lexbuf)) }
 	| L LDU* { id_or_keyword (getLexeme lexbuf) }
 	| "\"" { LITERAL (String lexbuf) }

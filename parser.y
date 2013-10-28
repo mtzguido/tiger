@@ -24,7 +24,7 @@ fun nombre (SimpleVar (s,_)) = s
 %token LET IN END IF THEN ELSE WHILE DO FOR TO BREAK
 %token PUNTO DOSP DOSPIG COMA PCOMA EQ PI PD CI CD LI LD
 %token AMPER PIPE LT GT LEQ GEQ EQ NEQ
-%token PLUS MINUS MULT DIV NIL
+%token PLUS MINUS MULT DIV NIL DEBUG
 %token<int> NRO
 %token<string> LITERAL IDENT
 
@@ -50,6 +50,7 @@ fun nombre (SimpleVar (s,_)) = s
 %nonassoc GEQ LEQ NEQ EQ LT GT
 %left PLUS MINUS
 %left DIV MULT
+%left DEBUG
 
 %start prog
 
@@ -64,6 +65,7 @@ exp : NRO { IntE ($1, getinfo()) }
     | IF exp THEN exp ELSE exp { IfE ({test=$2, th=$4, el=SOME $6}, getinfo()) } /* if con else */
     | IF exp THEN exp          { IfE ({test=$2, th=$4, el=NONE   }, getinfo()) } /* if sin else */
     | id PI args PD { CallE ({func=$1, args=$3}, getinfo()) } /* llamada a función */
+    | DEBUG exp { DebugE $2 } /* Debug! */
 
     /* operadores aritmeticos y de comparacion */
     | exp PLUS  exp { OpE ({left=$1, oper=PlusOp,  right=$3}, getinfo()) } 

@@ -32,6 +32,7 @@ in
 end
 
 and marcarEscapes' env d (UnitE _) = ()
+  | marcarEscapes' env d (DebugE e) = marcarEscapes' env d e
   | marcarEscapes' env d (NilE _) = ()
   | marcarEscapes' env d (IntE _) = ()
   | marcarEscapes' env d (StringE _) = ()
