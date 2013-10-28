@@ -23,9 +23,15 @@ fun printTokens lbuf =
     in onetok () end
 and tokStr tok = case tok of TYPE => "type" | ARRAY => "array" | OF => "of" | VAR => "var" | FUNCTION => "function" | LET => "let" | IN => "in" | END => "end" | IF => "if" | THEN => "then" | ELSE => "else" | WHILE => "while" | DO => "do" | FOR => "for" | TO => "to" | BREAK => "break" | NIL => "nil" | IDENT x => "IDENT ("^x^")" | DOSPIG => ":=" | DOSP => ":" | PUNTO => "." | PCOMA => ";" | COMA => "," | EQ => "=" | LT => "<" | GT => ">" | GEQ => ">=" | LEQ => "<=" | NEQ => "<>" | PI => "(" | PD => ")" | LI => "{" | LD => "}" | CI => "[" | CD => "]" | AMPER => "&" | PIPE => "|" | PLUS => "+" | MINUS => "-" | DIV => "/" | MULT => "*" | NRO n => "NUM ("^(makestring n)^")" | LITERAL s => "LITERAL ("^s^")" | _ => raise Fail "Token no reconocido"
 
-val (opts,files) = partition (fn s => hd (explode s) = #"-") (CommandLine.arguments())
-val _ = if length files > 1 then raise Fail "solo puedo compilar de a un archivo!" else ()
-val entrada      = if files = [] then std_in else open_in (hd files)
+val (opts,files) = partition (fn s => hd (explode s) = #"-" andalso s <> "-") (CommandLine.arguments())
+val entrada      = if length files > 1 then
+                       raise Fail "solo puedo compilar de a un archivo!"
+                   else if length files = 0 then
+                       raise Fail (CommandLine.name()^": no input files.")
+                   else if hd files = "-" then
+                        std_in
+                   else
+                        open_in (hd files)
 fun haveOpt s    = exists (fn e => e = s) opts
 val print_ast    = haveOpt "-ast"
 val verboseOpt   = haveOpt "-v"
