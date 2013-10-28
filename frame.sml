@@ -23,7 +23,7 @@ struct
     fun frameFormals (fr:Frame) = #formals fr
     fun frameAllocLocal (fr:Frame) b =
         if b
-            then InMem (!(#localoffset fr)) before (#localoffset fr) := !(#localoffset fr) - wordSize
-            else InReg (temp.newtemp ())
+        then InMem (!(#localoffset fr)) before (#localoffset fr) := !(#localoffset fr) - wordSize
+        else InReg (temp.newtemp ())
 
 end

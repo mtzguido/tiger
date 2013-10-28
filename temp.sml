@@ -1,6 +1,8 @@
 structure temp :> temp = 
 struct
     type temp = string
-    fun newtemp () = "temp"
-    val temp_trucho = "hola"
+
+    val curr = ref 0
+
+    fun newtemp () = ("t"^(makestring (!curr))) before curr := !curr + 1
 end
