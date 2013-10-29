@@ -13,7 +13,7 @@ TARGET=dtc
 all: $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) -
 
 PARSER=parser.sml
 LEXER=lexer.sml
