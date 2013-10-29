@@ -201,7 +201,7 @@ fun seman vt tt exp =
           | check_flds ((na,_)::_) [] = ( semanErrorNoThrow ii (typ^": el campo "^na^" no pertenece al tipo") ; false )
           | check_flds ((na,ta)::aa) ((nf,tf)::fs) =
              if na < nf
-             then semanError ii (typ^": el campo "^na^" no pertenece al tipo") (* esto esta mal, puede ser na o nf *)
+             then semanError ii (typ^": el campo "^na^" no pertenece al tipo")
              else if na > nf
              then semanError ii (typ^": falta el campo "^nf)
              else (* na = nf *)
