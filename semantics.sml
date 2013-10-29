@@ -103,14 +103,18 @@ fun seman vt tt exp =
               | pr1_val (n, Func {formals,ret,extern,label,level}) =
                 let in
                     print ("\t("^n^", Func\n") ;
-                    print ("\t\targs=bleh\n") ;
+                    print ("\t\targs=\n") ;
+                    List.app (fn t => print ("\t\t\t"^(typeToString t)^"\n")) formals ;
                     print ("\t\treturn=bleh\n") ;
+                    print ("\t\t\t"^(typeToString ret)^"\n") ;
                     print ("\t\textern="^(if extern then "yes" else "no")^"\n") ;
                     print ("\t\tlabel="^label^"\n") ;
                     print ("\t\tlevel="^(makestring level)^"\n")
                 end
             val _ = print "Evaluando expresión con value env:\n"
-            val _ = List.app pr1_val (tabToList vt)
+            fun not_extern (_,(Func {extern,...})) = not extern
+              | not_extern (_,_) = true
+            val _ = List.app pr1_val (List.filter not_extern (tabToList vt))
             val _ = print "Evaluando expresión con type env:\n"
             val _ = List.app pr1_type (tabToList tt)
             val (ir, ty) = seman' ee
