@@ -13,16 +13,15 @@ struct
         let fun add_one (esc, (off,l)) = 
                     if esc then (off+wordSize, (InMem off)::l)
                            else (off, (InReg (temp.newtemp ()))::l)
-             val args_access = case foldl add_one (0,[]) formals of
-                                   (_,ll) => ll
+             val (_, args_access) = foldl add_one (0,[]) formals
         in
             {name=name, formals=args_access, localoffset=ref 0}
         end
 
     fun frameName (fr:Frame) = #name fr
     fun frameFormals (fr:Frame) = #formals fr
-    fun frameAllocLocal (fr:Frame) b =
-        if b
+    fun frameAllocLocal (fr:Frame) e =
+        if e
         then InMem (!(#localoffset fr)) before (#localoffset fr) := !(#localoffset fr) - wordSize
         else InReg (temp.newtemp ())
 
