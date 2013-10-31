@@ -15,7 +15,7 @@ fun err (VarNoDec name) = print ("Error: variable no definida ("^name^").\n")
   | err  ParseError     = print "Error de parsing.\n"
   | err  SemanFail      = print "Error de semántica.\n"
   | err  NoInput        = print (CommandLine.name()^": no input files\n")
-  | err x = print "Excepción no reconocida!"
+  | err x = print "Excepción no reconocida!\n"
 
 fun printTokens lbuf = 
     let fun onetok _ = let val tt = Tok lbuf

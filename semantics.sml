@@ -1,51 +1,34 @@
 structure semantics :> semantics =
 struct
 
-open ast hash types common topsort ir
+open ast hash types common topsort ir temp frame translate
 
 exception SemanFail
 
 datatype EnvEntry =
-    Var of TigerType
-  | Func of { formals : TigerType list,
-              ret : TigerType,
+    Var of { ty:TigerType, acc:frame.Access, level:int }
+  | Func of { formals : types.TigerType list,
+              ret : types.TigerType,
               extern : bool,
               label : string,
               level : int }
 
-val labelStack = ref []
+val frameStack = ref []
 val curLevel = ref 0
+(* curLevel debería ser siempre igual a
+   length frameStack *)
+
+val labelStack = ref []
 
 fun pushLoopLabel () = labelStack := ()::(!labelStack)
 fun popLoopLabel  () = labelStack := tl (!labelStack)
 fun peekLoopLabel () = hd (!labelStack)
 
-val last_fun_label = ref 0
-
-fun mklabel (name, lineno) =
-    (name^"_"^(makestring lineno)^"_"^(makestring (!last_fun_label)))
-    before last_fun_label := !last_fun_label + 1
-
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
 val _ = tabInsertList init_tenv [("int", TInt), ("string", TString)]
-val _ = tabInsertList init_venv
-    [("chr",       Func{formals=[TInt], ret=TString, extern=true, label="_tiger_chr", level=0}),
-     ("concat",    Func{formals=[TString,TString], ret=TString, extern=true, label="_tiger_concat", level=0}),
-     ("exit",      Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_exit", level=0}),
-     ("flush",     Func{formals=[], ret=TUnit, extern=true, label="_tiger_flush", level=0}),
-     ("getchar",   Func{formals=[], ret=TString, extern=true, label="_tiger_getchar", level=0}),
-     ("not",       Func{formals=[TInt], ret=TInt, extern=true, label="_tiger_not", level=0}),
-     ("ord",       Func{formals=[TString], ret=TInt, extern=true, label="_tiger_ord", level=0}),
-     ("print",     Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print", level=0}),
-     ("print_err", Func{formals=[TString], ret=TUnit, extern=true, label="_tiger_print_err", level=0}),
-     ("print_int", Func{formals=[TInt], ret=TUnit, extern=true, label="_tiger_print_int", level=0}),
-     ("size",      Func{formals=[TString], ret=TInt, extern=true, label="_tiger_size", level=0}),
-     ("strcmp",    Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_strcmp", level=0}),
-     ("streq",     Func{formals=[TString,TString], ret=TInt, extern=true, label="_tiger_streq", level=0}),
-     ("substring", Func{formals=[TString,TInt,TInt], ret=TString, extern=true, label="_tiger_substring", level=0})
-    ]
+val _ = tabInsertList init_venv (map (fn (s,t) => (s, Func t)) runtime.func_list)
 
 fun elem x [] = false
   | elem x (e::es) = x = e orelse elem x es
@@ -98,15 +81,14 @@ fun seman vt tt exp =
         let
             fun pr1_type (n, ty) = 
                 print ("\t("^n^", "^(typeToString ty)^")\n")
-            fun pr1_val (n, Var t) = 
-                print ("\t("^n^", Var "^(typeToString t)^")\n")
+            fun pr1_val (n, Var {ty, acc, level}) = 
+                print ("\t("^n^", Var {ty="^(typeToString ty)^", level="^(makestring level)^"}\n")
               | pr1_val (n, Func {formals,ret,extern,label,level}) =
                 let in
                     print ("\t("^n^", Func\n") ;
                     print ("\t\targs=\n") ;
                     List.app (fn t => print ("\t\t\t"^(typeToString t)^"\n")) formals ;
-                    print ("\t\treturn=bleh\n") ;
-                    print ("\t\t\t"^(typeToString ret)^"\n") ;
+                    print ("\t\treturn= "^(typeToString ret)^"\n") ;
                     print ("\t\textern="^(if extern then "yes" else "no")^"\n") ;
                     print ("\t\tlabel="^label^"\n") ;
                     print ("\t\tlevel="^(makestring level)^"\n")
@@ -267,7 +249,7 @@ fun seman vt tt exp =
         val _ = if not (typeMatch ii lot TInt) then semanError ii "el 'low' del for no tipa a int" else ()
         val _ = if not (typeMatch ii hit TInt) then semanError ii "el 'high' del for no tipa a int" else ()
         val newvt = tabCopy vt
-        val _ = tabReplace newvt (index, Var TIntRO)
+        val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=raise Fail "", level= !curLevel})
         val _ = pushLoopLabel ()
         val (bodyir, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
@@ -298,7 +280,7 @@ fun seman vt tt exp =
         end
 end
 and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
-                                           SOME (Var t) => (SCAF, t)
+                                           SOME (Var {ty, acc, level}) => (SCAF, ty) (* hacer algo con acc y level *)
                                            | NONE => semanError ii (s^": variable no definida")
                                            | _ => semanError ii (s^": no es variable") )
   | varSeman vt tt (IndexVar (arr,idx, ii)) =
@@ -333,7 +315,9 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
          then semanError ii "no se puede inicializar a nil sin explicitar el tipo de record"
          else if typeMatch ii formaltype initt
               then let val newvt = tabCopy vt
-                       val _ = tabReplace newvt (name, Var formaltype)
+                       val curframe = hd (!frameStack)
+                       val varacc = frameAllocLocal curframe (!escape)
+                       val _ = tabReplace newvt (name, Var {ty=formaltype, acc=varacc, level= !curLevel})
                    in (newvt, tt) end
               else semanError ii "tipo inferido y declarado difieren"
       end
@@ -355,26 +339,36 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   SOME t => type_lookup t
                                   | NONE => TUnit
                   val functype  =  Func { formals=argstypes,
-                                        ret = rettype,
-                                        extern = false,
-                                        label = mklabel (#name fd, infoline ii),
-                                        level = !curLevel }
+                                          ret = rettype,
+                                          extern = false,
+                                          label = mklabel (#name fd, infoline ii),
+                                          level = !curLevel }
               in
                   tabReplace newvt (#name fd, functype)
               end
           fun proc_one (fd, ii) =
               let val localvt = tabCopy newvt
+                  val label = ( case tabTake newvt (#name fd) of
+                                  Func {label,...} => label
+                                  | _ => raise Fail ""
+                              ) handle _ => semanError ii "error interno muy podrido"
+                  val argescape = map ((!) o (#escape)) (#params fd)
+                  val frame = mkFrame {name=label, formals=argescape}
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal ii t
                                       | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
-                  fun arg2env a = tabReplace localvt (#name a, Var (argtype a))
+                  fun arg2env a = tabReplace localvt (#name a, Var {ty=argtype a, acc=raise Fail "123", level= !curLevel} )
+                  val         _ = frameStack := frame::(!frameStack)
                   val         _ = List.app arg2env (#params fd)
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
                   val rettype = case tabTake newvt (#name fd) of
                                   Func {ret,...} => ret
                                   | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
-                  then  ()
+                  then (
+                         translate bodyir frame ;
+                         frameStack := tl (!frameStack)
+                       )
                   else semanError ii "el cuerpo de la función no tipa al retorno de la función"
               end
       in
@@ -457,12 +451,13 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
 
 fun semantics tree = 
     let fun wrap exp = 
-        LetE ({ decs= [FuncDecl [({ name= "_tigermain",
-                                                   params= [],
-                                                   result= NONE,
-                                                   body= SeqE ([exp, CallE ({func="exit", args=[IntE (0,fakeinfo)]},fakeinfo)], fakeinfo)
-                                                 }, fakeinfo)]
-                                     ], body= UnitE fakeinfo}, fakeinfo)
+        LetE ({ decs= [ FuncDecl [({ name= "_tigermain",
+                                     params= [],
+                                     result= NONE,
+                                     body= SeqE ([exp, CallE ({func="exit", args=[IntE (0,fakeinfo)]},fakeinfo)], fakeinfo)
+                                   }, fakeinfo)]
+                      ], body= UnitE fakeinfo
+              }, fakeinfo)
      in seman init_venv init_tenv (wrap tree) ;
         if !verbose then print "Semantics: finalizado ok\n" else ()
     end

@@ -4,7 +4,7 @@ struct
 type symbol = string
 type info = { pos: int } 
 
-val fakeinfo = { pos= ~123 }
+val fakeinfo = { pos= 0 }
 
 fun info2str ({pos}) = "(linea: "^(makestring pos)^")"
 fun infoline ({pos}) = pos

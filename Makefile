@@ -65,19 +65,22 @@ test: $(TARGET)
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
-main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
-semantics.uo: semantics.ui ir.ui topsort.ui types.uo common.uo ast.ui \
-    hash.ui 
-parser.uo: parser.ui ast.ui lineno.uo 
-parser.ui: ast.ui 
-frame.uo: frame.ui temp.ui 
-hash.uo: hash.ui 
-lexer.uo: parser.ui lineno.uo 
-semantics.ui: ast.ui 
-temp.uo: temp.ui 
-common.uo: ast.ui 
-escape.uo: escape.ui common.uo ast.ui hash.ui 
 topsort.uo: topsort.ui hash.ui 
 escape.ui: ast.ui 
+temp.uo: temp.ui 
 ir.uo: ir.ui 
 ast.uo: ast.ui 
+lexer.uo: parser.ui lineno.uo 
+runtime.uo: types.uo 
+escape.uo: escape.ui common.uo ast.ui hash.ui 
+translate.ui: ir.ui frame.ui 
+common.uo: ast.ui 
+translate.uo: translate.ui ir.ui frame.ui common.uo 
+parser.uo: parser.ui ast.ui lineno.uo 
+main.uo: parser.ui lexer.uo common.uo ast.ui semantics.ui escape.ui 
+hash.uo: hash.ui 
+semantics.ui: ast.ui 
+frame.uo: frame.ui temp.ui 
+parser.ui: ast.ui 
+semantics.uo: semantics.ui ir.ui translate.ui temp.ui topsort.ui types.uo \
+    frame.ui common.uo ast.ui hash.ui runtime.uo 
