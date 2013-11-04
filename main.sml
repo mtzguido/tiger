@@ -6,15 +6,18 @@ fun lexstream(is: instream) =
     Lexing.createLexer(fn b => fn n => buff_input is b 0 n);
 
 exception NoInput
+exception ParseErr of int * string
 
 fun printAst ast = print "Aca va el AST...\n"
 
-fun err (VarNoDec name) = print ("Error: variable no definida ("^name^").\n")
-  | err (Fail s)        = print ("Error: "^s^".\n")
-  | err (SysErr (s,_))  = print ("Error del sistema: "^s^".\n")
-  | err  ParseError     = print "Error de parsing.\n"
-  | err  SemanFail      = print "Error de semántica.\n"
-  | err  NoInput        = print (CommandLine.name()^": no input files\n")
+fun err (VarNoDec name)  = print ("Error: variable no definida ("^name^").\n")
+  | err (Fail s)         = print ("Error: "^s^".\n")
+  | err (SysErr (s,_))   = print ("Error del sistema: "^s^".\n")
+  | err (ParseErr (l,t)) = ( print ("Error de parsing en línea "^(makestring l)^"\n");
+                             print ("Token inesperado: \""^t^"\"\n")
+                           )
+  | err  SemanFail       = print "Error de semántica.\n"
+  | err  NoInput         = print (CommandLine.name()^": no input files\n")
   | err x = print "Excepción no reconocida!\n"
 
 fun printTokens lbuf = 
@@ -48,14 +51,11 @@ let
     val _            = verbose := verboseOpt (* seteamos verbose *)
     val lexbuf       = lexstream entrada
     val _            = if tokOpt then (printTokens lexbuf; exit success) else ()
-    val ast          = prog Tok lexbuf handle _ => 
-                           ( print ("Error de parsing en línea "^(makestring (!lineno))^"\n");
-                             print ("Token inesperado: \""^(Lexing.getLexeme lexbuf)^"\"\n");
-                             exit failure )
-    
+    val ast          = prog Tok lexbuf handle _ => raise ParseErr (!lineno, Lexing.getLexeme lexbuf)
 in if !verbose then print "Parsing finalizado OK.\n" else ();
    if print_ast then printAst ast else () ;
    if not noEscape then marcarEscapes ast else () ;
    if !verbose then print "Escapes marcados\n" else () ;
-   semantics ast
-end handle x => (err x ; Process.exit failure)
+   semantics ast ;
+   print "COMPILATION OK\n"
+end handle x => (err x ; print "COMPILATION FAILED\n"; Process.exit failure)
