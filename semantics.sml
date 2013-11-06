@@ -18,6 +18,9 @@ val curLevel = ref 0
 (* curLevel debería ser siempre igual a
    length frameStack *)
 
+
+fun procesarFrame frm = print ("procesando: "^(frameName frm)^" (nargs="^(makestring (length(frameFormals(frm))))^")\n")
+
 val labelStack = ref []
 
 fun pushLoopLabel () = labelStack := ()::(!labelStack)
@@ -217,7 +220,7 @@ fun seman vt tt exp =
                      else semanError ii "las ramas del if tipan distinto"
                end
          else
-           raise semanError ii "el test del if no es de tipo entero"
+           semanError ii "el test del if no es de tipo entero"
     end
   | IfE ({test,th, el=NONE}, ii) =>
     let val (_, testtip) = seman' test
@@ -228,7 +231,7 @@ fun seman vt tt exp =
                      else semanError ii "la rama del if imperativo no tipa a unit"
                end
          else
-           raise semanError ii "el test del if no es de tipo entero"
+           semanError ii "el test del if no es de tipo entero"
     end
   | WhileE ({test,body}, ii) =>
     let val (_, testt) = seman' test
@@ -243,13 +246,15 @@ fun seman vt tt exp =
          else
            semanError ii "el test del while no tipa a entero"
       end
-  | ForE ({index,lo,hi,body,...}, ii) =>
+  | ForE ({index,lo,hi,body,escape}, ii) =>
     let val (_,lot) = seman' lo
         val (_,hit) = seman' hi
         val _ = if not (typeMatch ii lot TInt) then semanError ii "el 'low' del for no tipa a int" else ()
         val _ = if not (typeMatch ii hit TInt) then semanError ii "el 'high' del for no tipa a int" else ()
         val newvt = tabCopy vt
-        val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=raise Fail "", level= !curLevel})
+        val curframe = hd (!frameStack)
+        val index_acc = frameAllocLocal curframe (!escape)
+        val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=index_acc, level= !curLevel})
         val _ = pushLoopLabel ()
         val (bodyir, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
@@ -357,7 +362,18 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal ii t
                                       | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
-                  fun arg2env a = tabReplace localvt (#name a, Var {ty=argtype a, acc=raise Fail "123", level= !curLevel} )
+                  fun arg2env a = let
+                                    val arg_name = #name a
+                                    val arg_acc = frameAllocLocal frame (!(#escape a))
+                                    val arg_type = argtype a
+                                  in
+                                    tabReplace localvt
+                                        (arg_name, Var { ty    = arg_type,
+                                                         acc   = arg_acc,
+                                                         level = !curLevel
+                                                       } )
+                                  end
+
                   val         _ = frameStack := frame::(!frameStack)
                   val         _ = List.app arg2env (#params fd)
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
@@ -367,6 +383,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
               in if typeMatch ii bodyt rettype
                   then (
                          translate bodyir frame ;
+                         procesarFrame (hd (!frameStack)) ;
                          frameStack := tl (!frameStack)
                        )
                   else semanError ii "el cuerpo de la función no tipa al retorno de la función"
