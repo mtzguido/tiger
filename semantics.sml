@@ -18,8 +18,8 @@ val curLevel = ref 0
 (* curLevel debería ser siempre igual a
    length frameStack *)
 
-
-fun procesarFrame frm = print ("procesando: "^(frameName frm)^" (nargs="^(makestring (length(frameFormals(frm))))^")\n")
+fun procesarFrame frm =
+    print ("procesando: "^(frameName frm)^" (nargs="^(makestring (length(frameFormals(frm))))^")\n")
 
 val labelStack = ref []
 
@@ -107,11 +107,11 @@ fun seman vt tt exp =
             print ("Resultado: (ir= "^(irToString ir)^", ty= "^(typeToString ty)^")\n") ;
             (ir, ty)
         end
-  | UnitE _ => (SCAF, TUnit)
+  | UnitE _ => (Const 0, TUnit)
   | VarE (v,_) => varSeman vt tt v
-  | NilE _ => (SCAF, TNil)
-  | IntE (i,_) => (SCAF, TInt)
-  | StringE (s,_) => (SCAF, TString)
+  | NilE _ => (Const 0, TNil)
+  | IntE (i,_) => (Const i, TInt)
+  | StringE (s,_) => (Const (~1), TString)
   | CallE ({func,args}, ii) =>
       let val (formals, ret) =
             ( case tabFind vt func of
@@ -132,29 +132,29 @@ fun seman vt tt exp =
                (func^": error de tipo en parámetro "^
                (makestring (~1))) ; b )) matches
           val allok = List.all (fn x => x) check
-      in if allok then (SCAF, ret) else raise SemanFail end
+      in if allok then (Const 0, ret) else raise SemanFail end
   | OpE ({left,oper,right}, ii) =>
     let fun arith oo l r =
-          let val (_,lt) = seman' l
-              val (_,rt) = seman' r
+          let val (li,lt) = seman' l
+              val (ri,rt) = seman' r
           in if typeMatch ii lt TInt andalso typeMatch ii rt TInt
-               then (SCAF, TInt)
+               then (Wrap2 (li,ri), TInt)
                else semanError ii "operandos no enteros"
           end
         fun eq oo l r =
-          let val (_,lt) = seman' l
-              val (_,rt) = seman' r
+          let val (li,lt) = seman' l
+              val (ri,rt) = seman' r
           in if typeMatch ii lt rt (* matchean *)
                 andalso not (lt = TNil andalso rt = TNil) (* no son ambos nil *)
                 andalso not (lt = TUnit) (* ninguno es unit *)
-               then (SCAF, TInt)
+               then (Wrap2 (li,ri), TInt)
                else semanError ii "comparación de igualdad inválida"
           end
         fun ord oo l r =
-          let val (_,lt) = seman' l
-              val (_,rt) = seman' r
+          let val (li,lt) = seman' l
+              val (ri,rt) = seman' r
           in if typeMatch ii lt rt andalso (typeMatch ii lt TInt orelse typeMatch ii lt TString)
-               then (SCAF, TInt)
+               then (Wrap2 (li,ri), TInt)
                else semanError ii "comparación de orden inválida"
           end
         val opertype = case oper of
@@ -197,58 +197,58 @@ fun seman vt tt exp =
                           false )
     in
       if check_flds actual_types formal_types
-      then (SCAF, TRecord rectype) else raise SemanFail
+      then (Const 0, TRecord rectype) else raise SemanFail
     end
   | SeqE (es, _) =>
     let val semans = map seman' es
-        val last = List.last semans
-    in (SCAF, #2 last) end
+        val (lastr, lastty) = List.last semans
+    in (lastr, lastty) end
   | AssignE ({l,r}, ii) =>
     let val (li,lt) = varSeman vt tt l
         val (ri,rt) = seman' r
     in if typeMatch ii lt rt andalso lt <> TIntRO
-         then (SCAF, TUnit)
+         then (Const 0, TUnit)
          else semanError ii "asignación inválida"
     end
   | IfE ({test,th,el=SOME el}, ii) =>
-    let val (_, testtip) = seman' test
+    let val (testi, testtip) = seman' test
     in if typeMatch ii testtip TInt
-         then let val (_, lt) = seman' th
-                  val (_, rt) = seman' el
+         then let val (li, lt) = seman' th
+                  val (ri, rt) = seman' el
                in if typeMatch ii lt rt
-                     then (SCAF, lt)
+                     then (Wrap2 (Wrap2 (testi, li),ri), lt)
                      else semanError ii "las ramas del if tipan distinto"
                end
          else
            semanError ii "el test del if no es de tipo entero"
     end
   | IfE ({test,th, el=NONE}, ii) =>
-    let val (_, testtip) = seman' test
+    let val (testi, testtip) = seman' test
     in if typeMatch ii testtip TInt
-         then let val (_, lt) = seman' th
+         then let val (li, lt) = seman' th
                in if typeMatch ii lt TUnit
-                     then (SCAF, TUnit)
+                     then (Wrap2 (testi,li), TUnit)
                      else semanError ii "la rama del if imperativo no tipa a unit"
                end
          else
            semanError ii "el test del if no es de tipo entero"
     end
   | WhileE ({test,body}, ii) =>
-    let val (_, testt) = seman' test
+    let val (testi, testt) = seman' test
         val _ = pushLoopLabel ()
-        val (_, bodyt) = seman' body
+        val (bodyi, bodyt) = seman' body
         val _ = popLoopLabel ()
       in if typeMatch ii testt TInt then
            if typeMatch ii bodyt TUnit
-             then (SCAF, TUnit)
+             then (Wrap2 (bodyi, testi) , TUnit)
            else
              semanError ii "el cuerpo del while no tipa a unit"
          else
            semanError ii "el test del while no tipa a entero"
       end
   | ForE ({index,lo,hi,body,escape}, ii) =>
-    let val (_,lot) = seman' lo
-        val (_,hit) = seman' hi
+    let val (loi,lot) = seman' lo
+        val (hii,hit) = seman' hi
         val _ = if not (typeMatch ii lot TInt) then semanError ii "el 'low' del for no tipa a int" else ()
         val _ = if not (typeMatch ii hit TInt) then semanError ii "el 'high' del for no tipa a int" else ()
         val newvt = tabCopy vt
@@ -256,10 +256,10 @@ fun seman vt tt exp =
         val index_acc = frameAllocLocal curframe (!escape)
         val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=index_acc, level= !curLevel})
         val _ = pushLoopLabel ()
-        val (bodyir, bodyt) = seman newvt tt body
+        val (bodyi, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
      in if typeMatch ii bodyt TUnit
-          then (SCAF, TUnit)
+          then (Wrap2 (Wrap2(loi,hii), bodyi), TUnit)
           else semanError ii "el cuerpo del for no tipa a unit"
      end
   | LetE ({decs, body},_) =>
@@ -267,7 +267,7 @@ fun seman vt tt exp =
         val (newvt, newtt) = foldl proc_decl (vt,tt) decs
     in seman newvt newtt body
     end
-  | BreakE ii => if !labelStack = [] then semanError ii "break fuera de bucle" else (SCAF, TUnit)
+  | BreakE ii => if !labelStack = [] then semanError ii "break fuera de bucle" else (Const 0, TUnit)
   | ArrayE ({typ,size,init}, ii) =>
     let val (elemt, uq) = case tabFind tt typ of
                             SOME t => ( case tipoReal ii t of
@@ -279,13 +279,13 @@ fun seman vt tt exp =
         val (_,sizet) = seman' size
         in if typeMatch ii elemt initt
                then if typeMatch ii sizet TInt
-                    then (SCAF, TArray (elemt, uq))
+                    then (Const 123, TArray (elemt, uq))
                     else semanError ii "el tamaño del array no tipa a entero"
                else semanError ii "la inicialización del array no tipa al tipo del array"
         end
 end
 and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
-                                           SOME (Var {ty, acc, level}) => (SCAF, ty) (* hacer algo con acc y level *)
+                                           SOME (Var {ty, acc, level}) => (Const 99, ty) (* hacer algo con acc y level *)
                                            | NONE => semanError ii (s^": variable no definida")
                                            | _ => semanError ii (s^": no es variable") )
   | varSeman vt tt (IndexVar (arr,idx, ii)) =
@@ -295,7 +295,7 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
                           | _ => semanError ii ("subscript a elementno no array")
             val (_,idxt) = seman vt tt idx
         in if typeMatch ii idxt TInt
-             then (SCAF, elemt)
+             then (Const 101, elemt)
              else semanError ii "subscript no es de tipo entero"
        end
   | varSeman vt tt (FieldVar (record,fld, ii)) =
@@ -307,7 +307,7 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
                        [] => semanError ii (fld^": no existe el campo dentro del tipo del record")
                        | [(_,typ)] => typ
                        | _ => semanError ii "error interno! (1)"
-      in (SCAF, fldt) end
+      in (Const 103, fldt) end
 and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of
