@@ -5,4 +5,5 @@ sig
 
     val newtemp : unit -> temp
     val mklabel : string * int -> label
+    val newlabel : unit -> label
 end

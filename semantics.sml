@@ -13,6 +13,8 @@ datatype EnvEntry =
               label : string,
               level : int }
 
+fun foldl1 ff ll = foldl ff (hd ll) (tl ll)
+
 val frameStack = ref []
 val curLevel = ref 0
 (* curLevel debería ser siempre igual a
@@ -27,6 +29,13 @@ fun pushLoopLabel () = labelStack := ()::(!labelStack)
 fun popLoopLabel  () = labelStack := tl (!labelStack)
 fun peekLoopLabel () = hd (!labelStack)
 
+val glbStrings = ref []
+
+fun addGlobalString s = 
+    let val lab = newlabel ()
+        val _   = glbStrings := (lab, s)::(!glbStrings)
+    in lab end
+
 val init_venv : (symbol, EnvEntry) Tabla  = tabNew ()
 val init_tenv : (symbol, TigerType) Tabla = tabNew ()
 
@@ -39,9 +48,9 @@ fun elem x [] = false
 fun checkDups [] = false
   | checkDups (e::es) = if elem e es then true else checkDups es
 
-fun semanError info s = ( print ("Semantics: Error en "^(info2str info)^".\nSemantics: "^s^".\n") ;
-                          raise SemanFail )
 fun semanErrorNoThrow info s = print ("Semantics: Error en "^(info2str info)^".\nSemantics: "^s^".\n")
+fun semanError info s = ( semanErrorNoThrow info s ;
+                          raise SemanFail )
 
 fun uncurry f (x,y) = f x y
 
@@ -107,11 +116,15 @@ fun seman vt tt exp =
             print ("Resultado: (ir= "^(irToString ir)^", ty= "^(typeToString ty)^")\n") ;
             (ir, ty)
         end
-  | UnitE _ => (Const 0, TUnit)
+  | UnitE _ => (Ex (Const 0), TUnit)
   | VarE (v,_) => varSeman vt tt v
-  | NilE _ => (Const 0, TNil)
-  | IntE (i,_) => (Const i, TInt)
-  | StringE (s,_) => (Const (~1), TString)
+  | NilE _ => (Ex (Const 0), TNil)
+  | IntE (i,_) => (Ex (Const i), TInt)
+  | StringE (s,_) =>
+        let val strlab = addGlobalString s
+            val ir = Ex (Name (strlab))
+        in (ir, TString)
+        end
   | CallE ({func,args}, ii) =>
       let val (formals, ret) =
             ( case tabFind vt func of
@@ -132,13 +145,24 @@ fun seman vt tt exp =
                (func^": error de tipo en parámetro "^
                (makestring (~1))) ; b )) matches
           val allok = List.all (fn x => x) check
-      in if allok then (Const 0, ret) else raise SemanFail end
+      in if not allok
+         then raise SemanFail
+         else let val ir = Ex (Call (Name func, map (unEx o #1) seman_args))
+              in (ir, ret)
+              end
+      end
   | OpE ({left,oper,right}, ii) =>
     let fun arith oo l r =
           let val (li,lt) = seman' l
               val (ri,rt) = seman' r
           in if typeMatch ii lt TInt andalso typeMatch ii rt TInt
-               then (Wrap2 (li,ri), TInt)
+               then let val irop = case oo of 
+                                       PlusOp => Plus
+                                     | MinusOp => Minus
+                                     | MultOp => Mul
+                                     | DivOp => Div
+                    in (Ex (Binop (irop, unEx li, unEx ri)), TInt)
+                    end
                else semanError ii "operandos no enteros"
           end
         fun eq oo l r =
@@ -147,14 +171,28 @@ fun seman vt tt exp =
           in if typeMatch ii lt rt (* matchean *)
                 andalso not (lt = TNil andalso rt = TNil) (* no son ambos nil *)
                 andalso not (lt = TUnit) (* ninguno es unit *)
-               then (Wrap2 (li,ri), TInt)
+               then let val irop = case oo of 
+                                       EqOp => Eq
+                                     | NeqOp => Ne
+                    in (Cx (fn (t,f) =>
+                               CJump (irop, unEx li, unEx ri, t, f)
+                           ), TInt)
+                    end
                else semanError ii "comparación de igualdad inválida"
           end
         fun ord oo l r =
           let val (li,lt) = seman' l
               val (ri,rt) = seman' r
           in if typeMatch ii lt rt andalso (typeMatch ii lt TInt orelse typeMatch ii lt TString)
-               then (Wrap2 (li,ri), TInt)
+               then let val irop = case oo of 
+                                       LtOp => Lt
+                                     | GtOp => Gt
+                                     | GeOp => Ge
+                                     | LeOp => Le
+                    in (Cx (fn (t,f) => 
+                               CJump (irop, unEx li, unEx ri, t, f)
+                           ), TInt)
+                    end
                else semanError ii "comparación de orden inválida"
           end
         val opertype = case oper of
@@ -197,17 +235,18 @@ fun seman vt tt exp =
                           false )
     in
       if check_flds actual_types formal_types
-      then (Const 0, TRecord rectype) else raise SemanFail
+      then (Ex (Const 0), TRecord rectype) else raise SemanFail
     end
   | SeqE (es, _) =>
     let val semans = map seman' es
         val (lastr, lastty) = List.last semans
-    in (lastr, lastty) end
+        val stms = foldl1 Seq (map (unNx o (#1)) semans)
+    in (Ex (Eseq (stms, unEx lastr)), lastty) end
   | AssignE ({l,r}, ii) =>
     let val (li,lt) = varSeman vt tt l
         val (ri,rt) = seman' r
     in if typeMatch ii lt rt andalso lt <> TIntRO
-         then (Const 0, TUnit)
+         then (Nx (Move (unEx li, unEx ri)), TUnit)
          else semanError ii "asignación inválida"
     end
   | IfE ({test,th,el=SOME el}, ii) =>
@@ -216,7 +255,12 @@ fun seman vt tt exp =
          then let val (li, lt) = seman' th
                   val (ri, rt) = seman' el
                in if typeMatch ii lt rt
-                     then (Wrap2 (Wrap2 (testi, li),ri), lt)
+                     then let val lt = newLabel ()
+                              val rt = newLabel () 
+                          in  (SEQ [CJump 
+                                   ]
+                              )
+                          , lt)
                      else semanError ii "las ramas del if tipan distinto"
                end
          else
