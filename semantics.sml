@@ -15,6 +15,8 @@ datatype EnvEntry =
 
 fun foldl1 ff ll = foldl ff (hd ll) (tl ll)
 
+val SEQ = foldl1 Seq
+
 val frameStack = ref []
 val curLevel = ref 0
 (* curLevel debería ser siempre igual a
@@ -25,9 +27,9 @@ fun procesarFrame frm =
 
 val labelStack = ref []
 
-fun pushLoopLabel () = labelStack := ()::(!labelStack)
-fun popLoopLabel  () = labelStack := tl (!labelStack)
-fun peekLoopLabel () = hd (!labelStack)
+fun pushLoopLabel lab = labelStack := lab::(!labelStack)
+fun popLoopLabel  ()  = labelStack := tl (!labelStack)
+fun peekLoopLabel ()  = hd (!labelStack)
 
 val glbStrings = ref []
 
@@ -235,12 +237,12 @@ fun seman vt tt exp =
                           false )
     in
       if check_flds actual_types formal_types
-      then (Ex (Const 0), TRecord rectype) else raise SemanFail
+      then (raise Fail "recordsss", TRecord rectype) else raise SemanFail
     end
   | SeqE (es, _) =>
     let val semans = map seman' es
         val (lastr, lastty) = List.last semans
-        val stms = foldl1 Seq (map (unNx o (#1)) semans)
+        val stms = SEQ (map (unNx o (#1)) semans)
     in (Ex (Eseq (stms, unEx lastr)), lastty) end
   | AssignE ({l,r}, ii) =>
     let val (li,lt) = varSeman vt tt l
@@ -255,12 +257,22 @@ fun seman vt tt exp =
          then let val (li, lt) = seman' th
                   val (ri, rt) = seman' el
                in if typeMatch ii lt rt
-                     then let val lt = newLabel ()
-                              val rt = newLabel () 
-                          in  (SEQ [CJump 
-                                   ]
-                              )
-                          , lt)
+                     then let val tlab = newlabel ()
+                              val elab = newlabel () 
+                              val join = newlabel ()
+                              val t = newtemp ()
+                          in  (Nx (SEQ [unCx testi (tlab, elab),
+                                        Label tlab,
+                                        Move (Temp t, unEx li),
+                                        Jump (Name join, [join]),
+                                        Label elab,
+                                        Move (Temp t, unEx ri),
+                                        Jump (Name join, [join]),
+                                        Label join
+                                       ]
+                                  )
+                              , lt)
+                          end
                      else semanError ii "las ramas del if tipan distinto"
                end
          else
@@ -271,7 +283,15 @@ fun seman vt tt exp =
     in if typeMatch ii testtip TInt
          then let val (li, lt) = seman' th
                in if typeMatch ii lt TUnit
-                     then (Wrap2 (testi,li), TUnit)
+                     then let val tlab = newlabel ()
+                              val join = newlabel ()
+                          in (Nx (SEQ [unCx testi (tlab, join),
+                                       Label tlab,
+                                       unNx li,
+                                       Label join
+                                      ]
+                                 ), TUnit)
+                          end
                      else semanError ii "la rama del if imperativo no tipa a unit"
                end
          else
@@ -279,12 +299,23 @@ fun seman vt tt exp =
     end
   | WhileE ({test,body}, ii) =>
     let val (testi, testt) = seman' test
-        val _ = pushLoopLabel ()
+        val breaklabel = newlabel ()
+        val _ = pushLoopLabel breaklabel
         val (bodyi, bodyt) = seman' body
         val _ = popLoopLabel ()
       in if typeMatch ii testt TInt then
            if typeMatch ii bodyt TUnit
-             then (Wrap2 (bodyi, testi) , TUnit)
+             then let val start = newlabel ()
+                      val cond = newlabel ()
+                      val loopir = SEQ [Label cond,
+                                        unCx testi (start, breaklabel),
+                                        Label start,
+                                        Nx bodyi,
+                                        Jump (Name cond, [cond]),
+                                        Label breaklabel
+                                       ]
+                  in (loopir , TUnit)
+                  end
            else
              semanError ii "el cuerpo del while no tipa a unit"
          else
@@ -299,11 +330,17 @@ fun seman vt tt exp =
         val curframe = hd (!frameStack)
         val index_acc = frameAllocLocal curframe (!escape)
         val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=index_acc, level= !curLevel})
-        val _ = pushLoopLabel ()
+        val breaklabel = newlabel ()
+        val _ = pushLoopLabel breaklabel
         val (bodyi, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
      in if typeMatch ii bodyt TUnit
-          then (Wrap2 (Wrap2(loi,hii), bodyi), TUnit)
+          then let val lowt  = newtemp ()
+                   val hight = newtemp ()
+                   val loopir = SEQ [ ???
+                   
+               in (loopir, TUnit)
+               end
           else semanError ii "el cuerpo del for no tipa a unit"
      end
   | LetE ({decs, body},_) =>

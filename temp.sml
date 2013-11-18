@@ -13,5 +13,5 @@ struct
         before last_fun_label := !last_fun_label + 1
 
     val nn = ref 0
-    fun newlabel = ("STR_"^(makestring (!nn))) before nn := (!nn) + 1
+    fun newlabel () = ("STR_"^(makestring (!nn))) before nn := (!nn) + 1
 end
