@@ -1,12 +1,12 @@
 .PHONY: all clean re depend run trim test 
 
 SHELL=/bin/bash
-MOSML=${HOME}/mosml
-MOSMLTOOLS=${MOSML}/bin/camlrunm ${MOSML}/tools
-MOSMLC=${MOSML}/bin/mosmlc -c -liberal
-MOSMLL=${MOSML}/bin/mosmlc 
-MOSMLYAC=${MOSML}/bin/mosmlyac
-MOSMLLEX=${MOSML}/bin/mosmllex
+MOSML=mosml
+MOSMLTOOLS=camlrunm ${MOSML}/tools
+MOSMLC=${MOSML}c -c -liberal
+MOSMLL=${MOSML}c
+MOSMLYAC=mosmlyac
+MOSMLLEX=mosmllex
 
 TARGET=dtc
 
