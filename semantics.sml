@@ -163,6 +163,7 @@ fun seman vt tt exp =
                                      | MinusOp => Minus
                                      | MultOp => Mul
                                      | DivOp => Div
+                                     | _ => semanError ii "internal error (arith)"
                     in (Ex (Binop (irop, unEx li, unEx ri)), TInt)
                     end
                else semanError ii "operandos no enteros"
@@ -176,6 +177,7 @@ fun seman vt tt exp =
                then let val irop = case oo of 
                                        EqOp => Eq
                                      | NeqOp => Ne
+                                     | _ => semanError ii "internal error (eq)"
                     in (Cx (fn (t,f) =>
                                CJump (irop, unEx li, unEx ri, t, f)
                            ), TInt)
@@ -191,6 +193,7 @@ fun seman vt tt exp =
                                      | GtOp => Gt
                                      | GeOp => Ge
                                      | LeOp => Le
+                                     | _ => semanError ii "internal error (ord)"
                     in (Cx (fn (t,f) => 
                                CJump (irop, unEx li, unEx ri, t, f)
                            ), TInt)
