@@ -2,6 +2,8 @@
 
 structure frame :> frame =
 struct
+    open ir temp
+
     val wordSize = 8 (* 64bit *)
 
     datatype Access = InFrame of int
@@ -30,4 +32,11 @@ struct
              in InFrame (!off) before off := !off - wordSize
              end
         else InReg (temp.newtemp ())
+
+    val FP = Temp (newtemp ())
+    val RV = Temp (newtemp ())
+
+    fun simpleVar (InReg t) = Temp t
+      | simpleVar (InFrame i) =
+              Mem (Binop (Plus, (Const i), FP))
 end

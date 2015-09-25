@@ -71,7 +71,7 @@ semantics.uo: semantics.ui ir.ui translate.ui temp.ui topsort.ui types.uo \
 parser.uo: parser.ui ast.ui lineno.uo
 parser.ui: ast.ui
 translate.uo: translate.ui ir.ui frame.ui common.uo
-frame.ui: temp.ui
+frame.ui: temp.ui ir.ui
 frame.uo: frame.ui
 hash.uo: hash.ui
 translate.ui: ir.ui frame.ui

@@ -1,29 +1,23 @@
 structure semantics :> semantics =
 struct
 
-open ast hash types common topsort ir temp frame translate
+open ast hash types common topsort ir translate temp
 
 exception SemanFail
 
 datatype EnvEntry =
-    Var of { ty:TigerType, acc:frame.Access, level:int }
+    Var of { ty:TigerType, acc:Access, level:Level }
   | Func of { formals : types.TigerType list,
               ret : types.TigerType,
               extern : bool,
               label : string,
-              level : int }
+              level : Level }
 
 fun foldl1 ff ll = foldl ff (hd ll) (tl ll)
 
 val SEQ = foldl1 Seq
 
-val frameStack = ref []
-val curLevel = ref 0
-(* curLevel debería ser siempre igual a
-   length frameStack *)
-
-fun procesarFrame frm =
-    print ("procesando: "^(frameName frm)^" (nargs="^(makestring (length(frameFormals(frm))))^")\n")
+val curLevel : translate.Level ref = ref outermost
 
 val labelStack = ref []
 
@@ -96,7 +90,7 @@ fun seman vt tt exp =
             fun pr1_type (n, ty) =
                 print ("\t("^n^", "^(typeToString ty)^")\n")
             fun pr1_val (n, Var {ty, acc, level}) =
-                print ("\t("^n^", Var {ty="^(typeToString ty)^", level="^(makestring level)^"}\n")
+                print ("\t("^n^", Var {ty="^(typeToString ty)^"}\n")
               | pr1_val (n, Func {formals,ret,extern,label,level}) =
                 let in
                     print ("\t("^n^", Func\n") ;
@@ -104,8 +98,7 @@ fun seman vt tt exp =
                     List.app (fn t => print ("\t\t\t"^(typeToString t)^"\n")) formals ;
                     print ("\t\treturn= "^(typeToString ret)^"\n") ;
                     print ("\t\textern="^(if extern then "yes" else "no")^"\n") ;
-                    print ("\t\tlabel="^label^"\n") ;
-                    print ("\t\tlevel="^(makestring level)^"\n")
+                    print ("\t\tlabel="^label^"\n")
                 end
             val _ = print "Evaluando expresión con value env:\n"
             fun not_extern (_,(Func {extern,...})) = not extern
@@ -325,13 +318,12 @@ fun seman vt tt exp =
            semanError ii "el test del while no tipa a entero"
       end
   | ForE ({index,lo,hi,body,escape}, ii) =>
-    let val (loi,lot) = seman' lo
-        val (hii,hit) = seman' hi
+    let val (loi, lot) = seman' lo
+        val (hii, hit) = seman' hi
         val _ = if not (typeMatch ii lot TInt) then semanError ii "el 'low' del for no tipa a int" else ()
         val _ = if not (typeMatch ii hit TInt) then semanError ii "el 'high' del for no tipa a int" else ()
         val newvt = tabCopy vt
-        val curframe = hd (!frameStack)
-        val index_acc = frameAllocLocal curframe (!escape)
+        val index_acc = allocLocal (!curLevel) (!escape)
         val _ = tabReplace newvt (index, Var {ty=TIntRO, acc=index_acc, level= !curLevel})
         val breaklabel = newlabel ()
         val _ = pushLoopLabel breaklabel
@@ -367,7 +359,7 @@ fun seman vt tt exp =
                else semanError ii "la inicialización del array no tipa al tipo del array"
         end
 end
-and varSeman vt tt (SimpleVar (s,ii)) =
+and varSeman vt tt (SimpleVar (s, ii)) =
        (case tabFind vt s of
                   SOME (Var {ty, acc, level}) =>
                         (Ex (Const 99), ty) (* FIXME *)
@@ -408,8 +400,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
          then semanError ii "no se puede inicializar a nil sin explicitar el tipo de record"
          else if typeMatch ii formaltype initt
               then let val newvt = tabCopy vt
-                       val curframe = hd (!frameStack)
-                       val varacc = frameAllocLocal curframe (!escape)
+                       val varacc = allocLocal (!curLevel) (!escape)
                        val _ = tabReplace newvt (name, Var {ty=formaltype, acc=varacc, level= !curLevel})
                    in (newvt, tt) end
               else semanError ii "tipo inferido y declarado difieren"
@@ -446,13 +437,17 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   | _ => raise Fail ""
                               ) handle _ => semanError ii "error interno muy podrido"
                   val argescape = map ((!) o (#escape)) (#params fd)
-                  val frame = mkFrame {name=label, formals=argescape}
+                  val oldLevel = !curLevel
+                  val level = newLevel {parent=oldLevel, name=label, formals=argescape}
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal ii t
                                       | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
+
+                  val _ = curLevel := level
+
                   fun arg2env a = let
                                     val arg_name = #name a
-                                    val arg_acc = frameAllocLocal frame (!(#escape a))
+                                    val arg_acc = allocLocal level (!(#escape a))
                                     val arg_type = argtype a
                                   in
                                     tabReplace localvt
@@ -462,25 +457,23 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                                        } )
                                   end
 
-                  val         _ = frameStack := frame::(!frameStack)
                   val         _ = List.app arg2env (#params fd)
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
+
+                  val _ = curLevel := oldLevel
+
                   val rettype = case tabTake newvt (#name fd) of
                                   Func {ret,...} => ret
                                   | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
                   then (
                          (* translate bodyir frame ; wat? *)
-                         procesarFrame (hd (!frameStack)) ;
-                         frameStack := tl (!frameStack)
                        )
                   else semanError ii "el cuerpo de la función no tipa al retorno de la función"
               end
       in
          ( List.app add_one fun_dec_list ;
-           curLevel := !curLevel + 1 ;
            List.app proc_one fun_dec_list ;
-           curLevel := !curLevel - 1 ;
            (newvt, tt) )
       end
   | declSeman vt tt (TypeDecl typ_dec_list) =

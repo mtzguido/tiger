@@ -8,4 +8,9 @@ sig
     val frameName : Frame -> temp.label
     val frameFormals : Frame -> Access list
     val frameAllocLocal : Frame -> bool -> Access
+
+    val simpleVar : Access -> ir.IRexp
+
+    val FP : ir.IRexp
+    val RV : ir.IRexp
 end
