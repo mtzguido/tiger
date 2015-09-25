@@ -1,7 +1,7 @@
-structure runtime = 
+structure runtime =
 struct
     open types
-    val func_list = 
+    val func_list =
     [("chr",       {formals=[TInt], ret=TString, extern=true, label="_tiger_chr", level=0}),
      ("concat",    {formals=[TString,TString], ret=TString, extern=true, label="_tiger_concat", level=0}),
      ("exit",      {formals=[TInt], ret=TUnit, extern=true, label="_tiger_exit", level=0}),

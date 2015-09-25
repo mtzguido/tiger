@@ -21,7 +21,7 @@ and typeToString' ll t = case t of
   | TInt => "TInt"
   | TIntRO => "TIntRO"
   | TString => "TString"
-  | TRecord (l,_) => 
+  | TRecord (l,_) =>
         let
             fun pr_fields [] = ""
               | pr_fields [(n,t)] = " n="^(typeToString' ll t)^" "
@@ -31,7 +31,7 @@ and typeToString' ll t = case t of
             "TRecord of {"^(pr_fields l)^"}"
         end
   | TArray (t, _) => "TArray of "^(typeToString' ll t)
-  | TReference r => 
+  | TReference r =>
         if elem r ll
             then "<cicle_ref>"
             else typeToString' (r::ll) (valOf (!r))

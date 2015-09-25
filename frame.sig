@@ -3,9 +3,9 @@ sig
     type Frame
     type Access
 
-    val mkFrame : {name: string, formals: bool list}
+    val mkFrame : {name: temp.label, formals: bool list}
                     -> Frame
-    val frameName : Frame -> string
+    val frameName : Frame -> temp.label
     val frameFormals : Frame -> Access list
     val frameAllocLocal : Frame -> bool -> Access
 end

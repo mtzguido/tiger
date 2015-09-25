@@ -1,7 +1,7 @@
 signature ir =
 sig
 
-    datatype IRexp = 
+    datatype IRexp =
           Const of int
         | Name of temp.label
         | Temp of temp.temp

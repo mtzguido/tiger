@@ -33,7 +33,7 @@ fun peekLoopLabel ()  = hd (!labelStack)
 
 val glbStrings = ref []
 
-fun addGlobalString s = 
+fun addGlobalString s =
     let val lab = newlabel ()
         val _   = glbStrings := (lab, s)::(!glbStrings)
     in lab end
@@ -93,9 +93,9 @@ fun seman vt tt exp =
    (* arrancamos con lo mas importante *)
     DebugE ee =>
         let
-            fun pr1_type (n, ty) = 
+            fun pr1_type (n, ty) =
                 print ("\t("^n^", "^(typeToString ty)^")\n")
-            fun pr1_val (n, Var {ty, acc, level}) = 
+            fun pr1_val (n, Var {ty, acc, level}) =
                 print ("\t("^n^", Var {ty="^(typeToString ty)^", level="^(makestring level)^"}\n")
               | pr1_val (n, Func {formals,ret,extern,label,level}) =
                 let in
@@ -158,7 +158,7 @@ fun seman vt tt exp =
           let val (li,lt) = seman' l
               val (ri,rt) = seman' r
           in if typeMatch ii lt TInt andalso typeMatch ii rt TInt
-               then let val irop = case oo of 
+               then let val irop = case oo of
                                        PlusOp => Plus
                                      | MinusOp => Minus
                                      | MultOp => Mul
@@ -174,7 +174,7 @@ fun seman vt tt exp =
           in if typeMatch ii lt rt (* matchean *)
                 andalso not (lt = TNil andalso rt = TNil) (* no son ambos nil *)
                 andalso not (lt = TUnit) (* ninguno es unit *)
-               then let val irop = case oo of 
+               then let val irop = case oo of
                                        EqOp => Eq
                                      | NeqOp => Ne
                                      | _ => semanError ii "internal error (eq)"
@@ -188,13 +188,13 @@ fun seman vt tt exp =
           let val (li,lt) = seman' l
               val (ri,rt) = seman' r
           in if typeMatch ii lt rt andalso (typeMatch ii lt TInt orelse typeMatch ii lt TString)
-               then let val irop = case oo of 
+               then let val irop = case oo of
                                        LtOp => Lt
                                      | GtOp => Gt
                                      | GeOp => Ge
                                      | LeOp => Le
                                      | _ => semanError ii "internal error (ord)"
-                    in (Cx (fn (t,f) => 
+                    in (Cx (fn (t,f) =>
                                CJump (irop, unEx li, unEx ri, t, f)
                            ), TInt)
                     end
@@ -261,7 +261,7 @@ fun seman vt tt exp =
                   val (ri, rt) = seman' el
                in if typeMatch ii lt rt
                      then let val tlab = newlabel ()
-                              val elab = newlabel () 
+                              val elab = newlabel ()
                               val join = newlabel ()
                               val t = newtemp ()
                           in  (Nx (SEQ [unCx testi (tlab, elab),
@@ -470,7 +470,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
                   then (
-                         translate bodyir frame ;
+                         (* translate bodyir frame ; wat? *)
                          procesarFrame (hd (!frameStack)) ;
                          frameStack := tl (!frameStack)
                        )
@@ -504,7 +504,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
               val dep_pairs = List.concat (map dep typ_dec_list)
               val typ_list = map (fn (td,ii) => #name td) typ_dec_list
            in case topSort dep_pairs typ_list of
-                 OK _ => NONE 
+                 OK _ => NONE
                  | CICLE t => SOME t
            end
 
@@ -544,7 +544,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       in
           ( check_dups () ;
             ( case find_empty_types () of
-                NONE => () 
+                NONE => ()
                 | SOME (h::t) => let val cicle_str = foldl (fn (n, a) => n^", "^a) h t
                                  in semanError trucho_ii (cicle_str^": tipos inhabitables")
                                  end
@@ -554,8 +554,8 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
             (vt, newtt) )
       end
 
-fun semantics tree = 
-    let fun wrap exp = 
+fun semantics tree =
+    let fun wrap exp =
         LetE ({ decs= [ FuncDecl [({ name= "_tigermain",
                                      params= [],
                                      result= NONE,

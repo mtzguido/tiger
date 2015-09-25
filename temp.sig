@@ -1,4 +1,4 @@
-signature temp = 
+signature temp =
 sig
     type temp
     type label = string

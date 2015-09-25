@@ -1,5 +1,5 @@
 /* error : variable not array */
-let 
+let
 	var d :=0
 in
 	d[3]

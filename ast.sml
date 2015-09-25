@@ -2,7 +2,7 @@ structure ast :> ast =
 struct
 
 type symbol = string
-type info = { pos: int } 
+type info = { pos: int }
 
 val fakeinfo = { pos= 0 }
 
@@ -35,10 +35,10 @@ and var = SimpleVar of symbol * info
 
 and decl = FuncDecl of ({ name:symbol, params: argument list,
                           result: symbol option, body:exp } * info) list
-         | VarDecl of { name:symbol, escape:bool ref, 
+         | VarDecl of { name:symbol, escape:bool ref,
                         typ:symbol option, init: exp } * info
          | TypeDecl of ({name:symbol, ty:ty} * info) list
-             
+
 and ty = NameTy of symbol
        | RecordTy of field list
        | ArrayTy of symbol

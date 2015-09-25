@@ -4,7 +4,7 @@ structure frame :> frame =
 struct
     val wordSize = 8 (* 64bit *)
 
-    datatype Access = InMem of int
+    datatype Access = InFrame of int
                     | InReg of temp.temp
 
     type Frame = {
@@ -15,7 +15,7 @@ struct
 
     fun mkFrame {name, formals} =
         let fun add_one (esc, (off, l)) =
-                    if esc then (off + wordSize, (InMem off)::l)
+                    if esc then (off - wordSize, (InFrame off)::l)
                            else (off, (InReg (temp.newtemp ()))::l)
             val (_, args_access) = foldl add_one (0, []) formals
         in
@@ -27,7 +27,7 @@ struct
     fun frameAllocLocal (fr:Frame) e =
         if e
         then let val off = #localoffset fr
-             in InMem (!off) before off := !off - wordSize
+             in InFrame (!off) before off := !off - wordSize
              end
         else InReg (temp.newtemp ())
 end

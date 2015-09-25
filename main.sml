@@ -20,11 +20,11 @@ fun err (VarNoDec name)  = print ("Error: variable no definida ("^name^").\n")
   | err  NoInput         = print (CommandLine.name()^": no input files\n")
   | err x = print "Excepción no reconocida!\n"
 
-fun printTokens lbuf = 
+fun printTokens lbuf =
     let fun onetok _ = let val tt = Tok lbuf
-                       in if tt <> EOF then                                                   
-                             ( (print o tokStr)(tt); print "  "; onetok () )                   
-                          else () 
+                       in if tt <> EOF then
+                             ( (print o tokStr)(tt); print "  "; onetok () )
+                          else ()
                        end
     in onetok () end
 and tokStr tok = case tok of TYPE => "type" | ARRAY => "array" | OF => "of" | VAR => "var" | FUNCTION => "function" | LET => "let" | IN => "in" | END => "end" | IF => "if" | THEN => "then" | ELSE => "else" | WHILE => "while" | DO => "do" | FOR => "for" | TO => "to" | BREAK => "break" | NIL => "nil" | IDENT x => "IDENT ("^x^")" | DOSPIG => ":=" | DOSP => ":" | PUNTO => "." | PCOMA => ";" | COMA => "," | EQ => "=" | LT => "<" | GT => ">" | GEQ => ">=" | LEQ => "<=" | NEQ => "<>" | PI => "(" | PD => ")" | LI => "{" | LD => "}" | CI => "[" | CD => "]" | AMPER => "&" | PIPE => "|" | PLUS => "+" | MINUS => "-" | DIV => "/" | MULT => "*" | NRO n => "NUM ("^(makestring n)^")" | LITERAL s => "LITERAL ("^s^")" | _ => raise Fail "Token no reconocido"

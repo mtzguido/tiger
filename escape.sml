@@ -1,7 +1,7 @@
-structure escape :> escape = 
+structure escape :> escape =
 struct
 
-open hash ast common 
+open hash ast common
 
 val nescapes = ref 0
 val escape_names = ref []
@@ -10,13 +10,13 @@ fun found (s, info) = ( nescapes := !nescapes + 1;
                         escape_names := (s, info)::(!escape_names) )
 
 
-fun marcarEscapes tree = 
+fun marcarEscapes tree =
 let
     fun listar [] = ""
       | listar [(s,info)] =    s^" "^(info2str info)
       | listar ((s,info)::t) = s^" "^(info2str info)^", "^(listar t)
 in
-    ( nescapes := 0 ; 
+    ( nescapes := 0 ;
      marcarEscapes' (tabNew ()) 0 tree ;
      if !verbose then print
       ("Escape: encontradas "
@@ -73,7 +73,7 @@ and marcarDecls env d [] = env
                                      in marcarDecls newenv d decls end
 
 and marcarDecl env d (FuncDecl declist) =
-            let fun proc1 ({params, body, ...},_) = 
+            let fun proc1 ({params, body, ...},_) =
                          let fun add_fld_to_tab (fld, tab) = (tabReplace tab (#name fld, ((d+1),(#escape fld))); tab)
                              fun combine flds tab = foldl add_fld_to_tab tab flds
                              val newenv = combine params (tabCopy env)

@@ -100,18 +100,18 @@ and StrSplit =
     | "\\f"    { String lexbuf }
 
 
-and StrEscape = 
+and StrEscape =
 	parse eof { raise Fail "Scanner: EOF en string literal." }
 	| "n" { "\n"^(String lexbuf) }
 	| "t" { "\t"^(String lexbuf) }
 	| "\\" { "\\"^(String lexbuf) }
 	| "\"" { "\""^(String lexbuf) }
 	| "^"[`@`-`_`] { (escape1 (getLexeme lexbuf))^(String lexbuf) }
-	| D D D { (escape2 (getLexeme lexbuf))^(String lexbuf) } 
+	| D D D { (escape2 (getLexeme lexbuf))^(String lexbuf) }
 	| _ { raise Fail ("Scanner: Escape no reconocido ("^(getLexeme lexbuf)^").") }
 
 
-and Com = 
+and Com =
 	parse "/*" { inc comment_level; Com lexbuf }
 	| "*/" { (if dec comment_level = 0 then Tok else Com) lexbuf }
 	| "\n" { inc lineno ; Com lexbuf}

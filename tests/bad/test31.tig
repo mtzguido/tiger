@@ -1,5 +1,5 @@
 /* error : type constraint and init value differ */
-let 
+let
 	var a : int := " "
 in
 	a

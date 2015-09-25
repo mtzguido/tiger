@@ -1,6 +1,6 @@
 structure ir :> ir =
 struct
-    datatype IRexp = 
+    datatype IRexp =
           Const of int
         | Name of temp.label
         | Temp of temp.temp
@@ -25,10 +25,10 @@ struct
     datatype IR = Ex of IRexp
                 | Nx of IRstm
                 | Cx of temp.label * temp.label -> IRstm
-    
+
     fun unEx _ = raise Fail "aa"
     fun unNx _ = raise Fail "bb"
     fun unCx _ = raise Fail "cc"
-    
+
     fun irToString _ = "IR"
 end

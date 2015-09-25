@@ -1,4 +1,4 @@
-structure temp :> temp = 
+structure temp :> temp =
 struct
     datatype temp = Temp of int
     type label = string

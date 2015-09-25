@@ -68,16 +68,16 @@ exp : NRO { IntE ($1, getinfo()) }
     | DEBUG exp { DebugE $2 } /* Debug! */
 
     /* operadores aritmeticos y de comparacion */
-    | exp PLUS  exp { OpE ({left=$1, oper=PlusOp,  right=$3}, getinfo()) } 
-    | exp MINUS exp { OpE ({left=$1, oper=MinusOp, right=$3}, getinfo()) } 
-    | exp MULT  exp { OpE ({left=$1, oper=MultOp,  right=$3}, getinfo()) } 
-    | exp DIV   exp { OpE ({left=$1, oper=DivOp,   right=$3}, getinfo()) } 
-    | exp GEQ   exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) } 
-    | exp LEQ   exp { OpE ({left=$1, oper=LeOp,    right=$3}, getinfo()) } 
-    | exp GT    exp { OpE ({left=$1, oper=GtOp,    right=$3}, getinfo()) } 
-    | exp LT    exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) } 
-    | exp EQ    exp { OpE ({left=$1, oper=EqOp,    right=$3}, getinfo()) } 
-    | exp NEQ   exp { OpE ({left=$1, oper=NeqOp,   right=$3}, getinfo()) } 
+    | exp PLUS  exp { OpE ({left=$1, oper=PlusOp,  right=$3}, getinfo()) }
+    | exp MINUS exp { OpE ({left=$1, oper=MinusOp, right=$3}, getinfo()) }
+    | exp MULT  exp { OpE ({left=$1, oper=MultOp,  right=$3}, getinfo()) }
+    | exp DIV   exp { OpE ({left=$1, oper=DivOp,   right=$3}, getinfo()) }
+    | exp GEQ   exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) }
+    | exp LEQ   exp { OpE ({left=$1, oper=LeOp,    right=$3}, getinfo()) }
+    | exp GT    exp { OpE ({left=$1, oper=GtOp,    right=$3}, getinfo()) }
+    | exp LT    exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) }
+    | exp EQ    exp { OpE ({left=$1, oper=EqOp,    right=$3}, getinfo()) }
+    | exp NEQ   exp { OpE ({left=$1, oper=NeqOp,   right=$3}, getinfo()) }
 
     | exp PIPE exp { IfE ({test=$1, th=(IntE (1,fakeinfo)), el=SOME $3}, getinfo()) } /* O lógico */
     | exp AMPER exp { IfE ({test=$1, th=$3, el=SOME (IntE (0,fakeinfo))}, getinfo()) } /* Y lógico */
@@ -86,7 +86,7 @@ exp : NRO { IntE ($1, getinfo()) }
 
     /* array creation */
     /* si aca ponemos id en vez de lvalue hay un conflicto shift-reduce, por qué? */
-    | lvalue CI exp CD OF exp { ArrayE ({typ=nombre $1, size=$3, init=$6}, getinfo()) } 
+    | lvalue CI exp CD OF exp { ArrayE ({typ=nombre $1, size=$3, init=$6}, getinfo()) }
     | PI exp PCOMA seq PD { SeqE ($2::$4, getinfo()) } /* sequencing no vacio */
     | PI exp PD { $2 }  /* cambio de precedencia */
 

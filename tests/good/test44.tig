@@ -1,5 +1,5 @@
 /* valid nil initialization and assignment */
-let 
+let
 
 	type rectype = {name : string, id : int}
 	var b : rectype := nil
