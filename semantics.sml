@@ -13,10 +13,6 @@ datatype EnvEntry =
               label : string,
               level : Level }
 
-fun foldl1 ff ll = foldl ff (hd ll) (tl ll)
-
-val SEQ = foldl1 Seq
-
 val curLevel : translate.Level ref = ref outermost
 
 val labelStack = ref []

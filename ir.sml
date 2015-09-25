@@ -22,13 +22,32 @@ struct
     and relop = Eq | Ne | Lt | Gt | Le | Ge
               | Ult | Ule | Ugt | Uge
 
+    val SEQ = common.foldl1 Seq
+
     datatype IR = Ex of IRexp
                 | Nx of IRstm
                 | Cx of temp.label * temp.label -> IRstm
 
-    fun unEx _ = raise Fail "aa"
-    fun unNx _ = raise Fail "bb"
-    fun unCx _ = raise Fail "cc"
+    fun unEx (Ex e) = e
+      | unEx (Nx s) = Eseq (s, Const 0)
+      | unEx (Cx t) =
+        let val r = temp.newtemp ()
+            val s = temp.newlabel ()
+            val f = temp.newlabel ()
+            val prep = SEQ [Move (Temp r, Const 0),
+                            t (s, f),
+                            Label s,
+                            Move (Temp r, Const 1),
+                            Label f]
+         in Eseq (prep, Temp r) end
+
+    fun unNx (Nx s) = s
+      | unNx (Ex e) = Exp e
+      | unNx (Cx t) = let val l = temp.newlabel () in SEQ [t (l, l), Label l] end
+
+    fun unCx (Cx t) = t
+      | unCx (Ex e) = (fn (t, f) => CJump (Ne, e, Const 0, t, f))
+      | unCx (Nx _) = raise Fail "unCx of Nx??"
 
     fun irToString _ = "IR"
 end
