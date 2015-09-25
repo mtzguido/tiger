@@ -3,5 +3,5 @@ sig
     datatype ''a result = OK of ''a list
                         | CICLE of ''a list
 
-    val topSort : (''a * ''a) list -> ''a list -> ''a result
+    val topSort : (string * string) list -> string list -> string result
 end
