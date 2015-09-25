@@ -313,11 +313,11 @@ fun seman vt tt exp =
                       val loopir = SEQ [Label cond,
                                         unCx testi (start, breaklabel),
                                         Label start,
-                                        Nx bodyi,
+                                        unNx bodyi,
                                         Jump (Name cond, [cond]),
                                         Label breaklabel
                                        ]
-                  in (loopir , TUnit)
+                  in (Nx loopir , TUnit)
                   end
            else
              semanError ii "el cuerpo del while no tipa a unit"
@@ -338,11 +338,8 @@ fun seman vt tt exp =
         val (bodyi, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
      in if typeMatch ii bodyt TUnit
-          then let val lowt  = newtemp ()
-                   val hight = newtemp ()
-                   val loopir = SEQ [ ???
-                   
-               in (loopir, TUnit)
+          then let val loopir = Skip
+               in (Nx loopir, TUnit)
                end
           else semanError ii "el cuerpo del for no tipa a unit"
      end
@@ -351,7 +348,9 @@ fun seman vt tt exp =
         val (newvt, newtt) = foldl proc_decl (vt,tt) decs
     in seman newvt newtt body
     end
-  | BreakE ii => if !labelStack = [] then semanError ii "break fuera de bucle" else (Const 0, TUnit)
+  | BreakE ii => if !labelStack = []
+                 then semanError ii "break fuera de bucle"
+                 else (Nx Skip, TUnit)
   | ArrayE ({typ,size,init}, ii) =>
     let val (elemt, uq) = case tabFind tt typ of
                             SOME t => ( case tipoReal ii t of
@@ -363,15 +362,20 @@ fun seman vt tt exp =
         val (_,sizet) = seman' size
         in if typeMatch ii elemt initt
                then if typeMatch ii sizet TInt
-                    then (Const 123, TArray (elemt, uq))
+                    then (Ex (Const 123), TArray (elemt, uq))
                     else semanError ii "el tamaño del array no tipa a entero"
                else semanError ii "la inicialización del array no tipa al tipo del array"
         end
 end
-and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
-                                           SOME (Var {ty, acc, level}) => (Const 99, ty) (* hacer algo con acc y level *)
-                                           | NONE => semanError ii (s^": variable no definida")
-                                           | _ => semanError ii (s^": no es variable") )
+and varSeman vt tt (SimpleVar (s,ii)) =
+       (case tabFind vt s of
+                  SOME (Var {ty, acc, level}) =>
+                        (Ex (Const 99), ty) (* FIXME *)
+                | SOME _ =>
+                        semanError ii (s^": no es variable")
+                | NONE =>
+                        semanError ii (s^": variable no definida")
+       )
   | varSeman vt tt (IndexVar (arr,idx, ii)) =
         let val (_, arrt) = varSeman vt tt arr
             val elemt = case tipoReal ii arrt of
@@ -379,7 +383,7 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
                           | _ => semanError ii ("subscript a elementno no array")
             val (_,idxt) = seman vt tt idx
         in if typeMatch ii idxt TInt
-             then (Const 101, elemt)
+             then (Ex (Const 101), elemt) (* FIXME *)
              else semanError ii "subscript no es de tipo entero"
        end
   | varSeman vt tt (FieldVar (record,fld, ii)) =
@@ -391,7 +395,7 @@ and varSeman vt tt (SimpleVar (s,ii)) = ( case tabFind vt s of
                        [] => semanError ii (fld^": no existe el campo dentro del tipo del record")
                        | [(_,typ)] => typ
                        | _ => semanError ii "error interno! (1)"
-      in (Const 103, fldt) end
+      in (Ex (Const 103), fldt) end (* FIXME *)
 and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of

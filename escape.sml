@@ -3,8 +3,6 @@ struct
 
 open hash ast common 
 
-fun S _ = ()
-
 val nescapes = ref 0
 val escape_names = ref []
 

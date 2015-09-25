@@ -15,6 +15,7 @@ struct
         | CJump of relop * IRexp * IRexp * temp.label * temp.label
         | Seq of IRstm * IRstm
         | Label of temp.label
+        | Skip
     and binop = Plus | Minus | Mul | Div
               | And | Or | LShift | RShift
               | ARShift | Xor
