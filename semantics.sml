@@ -266,17 +266,16 @@ fun seman vt tt exp =
                               val elab = newlabel ()
                               val join = newlabel ()
                               val t = newtemp ()
-                          in  (Nx (SEQ [unCx testi (tlab, elab),
-                                        Label tlab,
-                                        Move (Temp t, unEx li),
-                                        Jump (Name join, [join]),
-                                        Label elab,
-                                        Move (Temp t, unEx ri),
-                                        Jump (Name join, [join]),
-                                        Label join
-                                       ]
-                                  )
-                              , lt)
+                              val prep = SEQ [unCx testi (tlab, elab),
+                                              Label tlab,
+                                              Move (Temp t, unEx li),
+                                              Jump (Name join, [join]),
+                                              Label elab,
+                                              Move (Temp t, unEx ri),
+                                              Jump (Name join, [join]),
+                                              Label join
+                                             ]
+                          in  (Ex (Eseq (prep, Temp t)), lt)
                           end
                      else semanError ii "las ramas del if tipan distinto"
                end
