@@ -23,6 +23,15 @@ fun peekLoopLabel ()  = hd (!labelStack)
 
 val glbStrings = ref []
 
+fun opt_bind f NONE = NONE
+  | opt_bind f (SOME v) = f v
+
+fun find_idx n [] = NONE
+  | find_idx n ((a,_)::xs) = if a = n then SOME 0 else opt_bind (fn x => SOME (x + 1)) (find_idx n xs)
+
+(* FIXME: This shouldn't be here *)
+fun indexVar a i = Ex (Mem (Binop (Plus, a, Binop (Mul, i, Const 8))))
+
 fun addGlobalString s =
     let val lab = newlabel ()
         val _   = glbStrings := (lab, s)::(!glbStrings)
@@ -212,11 +221,14 @@ fun seman vt tt exp =
                                   )
                         | NONE => semanError ii (typ^": no existe el tipo")
         val formal_types = #1 rectype
-        val actual_types = map (fn (n,e) => (n, #2 (seman' e))) sorted_flds
+
+        val flds_seman = map (fn (n,e) => (n, seman' e)) sorted_flds
+        val flds_expr = map (fn (_,(e,_)) => unEx e) flds_seman
+
         fun check_flds [] [] = true
           | check_flds [] ((nf,_)::_) = ( semanErrorNoThrow ii (typ^": falta el campo "^nf) ; false)
           | check_flds ((na,_)::_) [] = ( semanErrorNoThrow ii (typ^": el campo "^na^" no pertenece al tipo") ; false )
-          | check_flds ((na,ta)::aa) ((nf,tf)::fs) =
+          | check_flds ((na,(_,ta))::aa) ((nf,tf)::fs) =
              if na < nf
              then semanError ii (typ^": el campo "^na^" no pertenece al tipo")
              else if na > nf
@@ -228,8 +240,9 @@ fun seman vt tt exp =
                           check_flds aa fs ;
                           false )
     in
-      if check_flds actual_types formal_types
-      then (raise Fail "recordsss", TRecord rectype) else raise SemanFail
+      if check_flds flds_seman formal_types
+      then (Ex (Call (Name "__mk_record", flds_expr)), TRecord rectype)
+      else raise SemanFail
     end
   | SeqE (es, _) =>
     let val semans = map seman' es
@@ -358,32 +371,35 @@ end
 and varSeman vt tt (SimpleVar (s, ii)) =
        (case tabFind vt s of
                   SOME (Var {ty, acc, level}) =>
-                        (Ex (Const 99), ty) (* FIXME *)
+                        (Ex (simpleVar acc (!curLevel)), ty)
                 | SOME _ =>
                         semanError ii (s^": no es variable")
                 | NONE =>
                         semanError ii (s^": variable no definida")
        )
-  | varSeman vt tt (IndexVar (arr,idx, ii)) =
-        let val (_, arrt) = varSeman vt tt arr
+  | varSeman vt tt (IndexVar (arr, idx, ii)) =
+        let val (arre, arrt) = varSeman vt tt arr
             val elemt = case tipoReal ii arrt of
-                          TArray (e,_) => e
-                          | _ => semanError ii ("subscript a elementno no array")
-            val (_,idxt) = seman vt tt idx
-        in if typeMatch ii idxt TInt
-             then (Ex (Const 101), elemt) (* FIXME *)
-             else semanError ii "subscript no es de tipo entero"
+                          TArray (e, _) => e
+                          | _ => semanError ii ("subscript a elemento no array")
+            val (idxe, idxt) = seman vt tt idx
+            val _ = if typeMatch ii idxt TInt then ()
+                        else semanError ii "subscript no es de tipo entero"
+
+        in (indexVar (unEx arre) (unEx idxe), elemt)
        end
+
   | varSeman vt tt (FieldVar (record,fld, ii)) =
-      let val (_, recordt) = varSeman vt tt record
+      let val (recorde, recordt) = varSeman vt tt record
           val flds = case tipoReal ii recordt of
                        TRecord (flds,_) => flds
                        | _ => semanError ii ("field a elemento no record")
+          val idx = valOf (find_idx fld flds)
           val fldt = case List.filter (fn (s,_) => s = fld) flds of
                        [] => semanError ii (fld^": no existe el campo dentro del tipo del record")
                        | [(_,typ)] => typ
                        | _ => semanError ii "error interno! (1)"
-      in (Ex (Const 103), fldt) end (* FIXME *)
+      in (indexVar (unEx recorde) (Const idx), fldt) end
 and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of

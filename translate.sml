@@ -19,5 +19,4 @@ struct
         frame.simpleVar acc (* FIXME: Take static links into account *)
       | simpleVar (Outermost, _) _ =
         raise Fail "wrong simpleVar"
-
 end
