@@ -350,7 +350,8 @@ fun seman vt tt exp =
     end
   | BreakE ii => if !labelStack = []
                  then semanError ii "break fuera de bucle"
-                 else (Nx Skip, TUnit)
+                 else let val label = hd (!labelStack)
+                       in (Nx (Jump (Name label, [label])), TUnit) end
   | ArrayE ({typ,size,init}, ii) =>
     let val (elemt, uq) = case tabFind tt typ of
                             SOME t => ( case tipoReal ii t of
