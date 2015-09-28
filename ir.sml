@@ -94,6 +94,8 @@ struct
       | unNx (Cx t) = let val l = temp.newlabel () in SEQ [t (l, l), Label l] end
 
     fun unCx (Cx t) = t
+      | unCx (Ex (Const 0)) = (fn (_,f) => Jump (Name f,[f]))
+      | unCx (Ex (Const _)) = (fn (t,_) => Jump (Name t,[t]))
       | unCx (Ex e) = (fn (t, f) => CJump (Ne, e, Const 0, t, f))
       | unCx (Nx n) = raise Fail ("unCx of Nx??: " ^ irToString (Nx n))
 end
