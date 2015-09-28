@@ -60,7 +60,9 @@ struct
       | p_expr (Mem e) = "Mem " ^ p_expr e
       | p_expr (Call (n, a)) = "Call (" ^ p_expr n ^ ", " ^ p_exprlist a ^ ")"
       | p_expr (Eseq (s, e)) = "Eseq (" ^ p_stmt s ^ ", " ^ p_expr e ^ ")"
-    and p_exprlist l = "[" ^ (foldl (fn (e, a) => a ^ "," ^ p_expr e) "" l) ^ "]"
+    and p_exprlist [] = "[]"
+      | p_exprlist [e] = "[" ^ p_expr e ^ "]"
+      | p_exprlist (h::t) = "[" ^ p_expr h ^ (foldl (fn (e, a) => a ^ "," ^ p_expr e) "" t) ^ "]"
     and p_stmt (Move (l,e)) = "Move (" ^ p_expr l ^ ", " ^ p_expr e ^")"
       | p_stmt (Exp e) = "Exp " ^ p_expr e
       | p_stmt (Jump (e,_)) = "Jump " ^ p_expr e
