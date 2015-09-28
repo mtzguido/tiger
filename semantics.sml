@@ -410,12 +410,13 @@ and varSeman vt tt (SimpleVar (s, ii)) =
           val flds = case tipoReal ii recordt of
                        TRecord (flds,_) => flds
                        | _ => semanError ii ("field a elemento no record")
-          val idx = valOf (find_idx fld flds)
           val fldt = case List.filter (fn (s,_) => s = fld) flds of
                        [] => semanError ii (fld^": no existe el campo dentro del tipo del record")
                        | [(_,typ)] => typ
                        | _ => semanError ii "error interno! (1)"
+          val idx = valOf (find_idx fld flds)
       in (indexVar (unEx recorde) (Const idx), fldt) end
+
 and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       let val (initir,initt) = seman vt tt init
           val formaltype = case typ of
