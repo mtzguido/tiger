@@ -341,22 +341,21 @@ fun seman vt tt exp =
         val _ = pushLoopLabel breaklabel
         val (bodyi, bodyt) = seman newvt tt body
         val _ = popLoopLabel ()
-        val lbl_out = newlabel ()
         val lbl_body = newlabel ()
         val lbl_t1 = newlabel ()
         val lbl_inc = newlabel ()
         val idx_expr = simpleVar index_acc (!curLevel)
      in if typeMatch ii bodyt TUnit
-          then let val loopir = SEQ [CJump (Gt, unEx loi, unEx hii, lbl_out, lbl_t1),
+          then let val loopir = SEQ [CJump (Gt, unEx loi, unEx hii, breaklabel, lbl_t1),
                                      Label lbl_t1,
                                      Move (idx_expr, unEx loi),
                                      Label lbl_body,
                                      unNx bodyi,
-                                     CJump (Eq, idx_expr, unEx hii, lbl_out, lbl_inc),
+                                     CJump (Eq, idx_expr, unEx hii, breaklabel, lbl_inc),
                                      Label lbl_inc,
                                      Move (idx_expr, Binop (Plus, Const 1, idx_expr)),
                                      Jump (Name lbl_body, [lbl_body]),
-                                     Label lbl_out
+                                     Label breaklabel
                                      ]
                in (Nx loopir, TUnit)
                end
@@ -373,7 +372,7 @@ fun seman vt tt exp =
     end
   | BreakE ii => if !labelStack = []
                  then semanError ii "break fuera de bucle"
-                 else let val label = hd (!labelStack)
+                 else let val label = peekLoopLabel ()
                        in (Nx (Jump (Name label, [label])), TUnit) end
   | ArrayE ({typ,size,init}, ii) =>
     let val (elemt, uq) = case tabFind tt typ of
