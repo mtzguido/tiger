@@ -9,4 +9,6 @@ sig
     val allocLocal : Level -> bool -> Access
 
     val simpleVar : Access -> Level -> ir.IRexp
+
+    val RV : ir.IRexp
 end

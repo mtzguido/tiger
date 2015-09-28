@@ -497,6 +497,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
 
                   val         _ = List.app arg2env (#params fd)
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
+                  val bodyir = Nx (Move (RV, unEx bodyir))
 
                   val _ = curLevel := oldLevel
 
