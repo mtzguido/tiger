@@ -379,11 +379,12 @@ fun seman vt tt exp =
                                           | _ => semanError ii (typ^": no es de tipo array")
                                       )
                             | NONE => semanError ii ("no existe el tipo "^typ)
-        val (_,initt) = seman' init
-        val (_,sizet) = seman' size
+        val (init_e, initt) = seman' init
+        val (size_e, sizet) = seman' size
         in if typeMatch ii elemt initt
                then if typeMatch ii sizet TInt
-                    then (Ex (Const 123), TArray (elemt, uq))
+                    then (Ex (Call (Name "__mk_array", [unEx init_e, unEx size_e])),
+                            TArray (elemt, uq))
                     else semanError ii "el tamaño del array no tipa a entero"
                else semanError ii "la inicialización del array no tipa al tipo del array"
         end
