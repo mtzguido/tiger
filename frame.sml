@@ -33,6 +33,7 @@ struct
              end
         else InReg (temp.newtemp ())
 
+    (* FIXME: these need to be the real registers *)
     val FP = Temp (newtemp ())
     val RV = Temp (newtemp ())
 

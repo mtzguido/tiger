@@ -3,7 +3,7 @@ struct
     datatype temp = Temp of int
     type label = string
 
-    val curr = ref 0
+    val curr = ref 100
     fun newtemp () = Temp (!curr) before curr := !curr + 1
 
     val last_fun_label = ref 0

@@ -360,9 +360,13 @@ fun seman vt tt exp =
           else semanError ii "el cuerpo del for no tipa a unit"
      end
   | LetE ({decs, body},_) =>
-    let fun proc_decl (dec,(vt', tt')) = declSeman vt' tt' dec
-        val (newvt, newtt) = foldl proc_decl (vt,tt) decs
-    in seman newvt newtt body
+    let fun proc_decl (dec,(exps, vt', tt')) =
+            let val (e, vt', tt') = declSeman vt' tt' dec
+            in (e::exps, vt', tt') end
+        val (exps, newvt, newtt) = foldl proc_decl ([], vt,tt) decs
+        val exps' = rev exps
+        val (body_ir, body_t) = seman newvt newtt body
+    in (Ex (Eseq (SEQ exps', unEx body_ir)), body_t)
     end
   | BreakE ii => if !labelStack = []
                  then semanError ii "break fuera de bucle"
@@ -418,7 +422,7 @@ and varSeman vt tt (SimpleVar (s, ii)) =
       in (indexVar (unEx recorde) (Const idx), fldt) end
 
 and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
-      let val (initir,initt) = seman vt tt init
+      let val (initir, initt) = seman vt tt init
           val formaltype = case typ of
                              SOME typename => ( case tabFind tt typename of
                                                   SOME t => tipoReal ii t
@@ -431,7 +435,8 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
               then let val newvt = tabCopy vt
                        val varacc = allocLocal (!curLevel) (!escape)
                        val _ = tabReplace newvt (name, Var {ty=formaltype, acc=varacc, level= !curLevel})
-                   in (newvt, tt) end
+                   in (Move (simpleVar varacc (!curLevel), unEx initir),
+                           newvt, tt) end
               else semanError ii "tipo inferido y declarado difieren"
       end
   | declSeman vt tt (FuncDecl fun_dec_list) =
@@ -503,7 +508,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
       in
          ( List.app add_one fun_dec_list ;
            List.app proc_one fun_dec_list ;
-           (newvt, tt) )
+           (Skip, newvt, tt) )
       end
   | declSeman vt tt (TypeDecl typ_dec_list) =
       let val newtt = tabCopy tt
@@ -573,7 +578,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                 | SOME _ => semanError trucho_ii "error interno 6" ) ;
             List.app add_one typ_dec_list ;
             List.app proc_one typ_dec_list ;
-            (vt, newtt) )
+            (Skip, vt, newtt) )
       end
 
 fun semantics tree =
