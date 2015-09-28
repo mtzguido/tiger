@@ -21,6 +21,9 @@ fun pushLoopLabel lab = labelStack := lab::(!labelStack)
 fun popLoopLabel  ()  = labelStack := tl (!labelStack)
 fun peekLoopLabel ()  = hd (!labelStack)
 
+fun eseq (Skip, e) = e
+  | eseq (s, e) = Eseq (s, e)
+
 val glbStrings = ref []
 
 fun opt_bind f NONE = NONE
@@ -249,7 +252,7 @@ fun seman vt tt exp =
         val (lastr, lastty) = List.last semans
         val init = List.take (semans, length semans - 1)
         val stms = SEQ (map (unNx o (#1)) init)
-    in (Ex (Eseq (stms, unEx lastr)), lastty) end
+    in (Ex (eseq (stms, unEx lastr)), lastty) end
   | AssignE ({l,r}, ii) =>
     let val (li,lt) = varSeman vt tt l
         val (ri,rt) = seman' r
@@ -276,7 +279,7 @@ fun seman vt tt exp =
                                               Jump (Name join, [join]),
                                               Label join
                                              ]
-                          in  (Ex (Eseq (prep, Temp t)), lt)
+                          in  (Ex (eseq (prep, Temp t)), lt)
                           end
                      else semanError ii "las ramas del if tipan distinto"
                end
@@ -366,7 +369,7 @@ fun seman vt tt exp =
         val (exps, newvt, newtt) = foldl proc_decl ([], vt,tt) decs
         val exps' = rev exps
         val (body_ir, body_t) = seman newvt newtt body
-    in (Ex (Eseq (SEQ exps', unEx body_ir)), body_t)
+    in (Ex (eseq (SEQ exps', unEx body_ir)), body_t)
     end
   | BreakE ii => if !labelStack = []
                  then semanError ii "break fuera de bucle"

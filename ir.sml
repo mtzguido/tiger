@@ -22,7 +22,11 @@ struct
     and relop = Eq | Ne | Lt | Gt | Le | Ge
               | Ult | Ule | Ugt | Uge
 
-    val SEQ = common.foldl1 (fn (i,a) => Seq (a,i))
+    fun sseq (Skip, s) = s
+      | sseq (s, Skip) = s
+      | sseq (l, r) = Seq (l, r)
+
+    val SEQ = common.foldl1 (fn (i,a) => sseq (a,i))
 
     datatype IR = Ex of IRexp
                 | Nx of IRstm
