@@ -124,9 +124,8 @@ fun seman vt tt exp =
   | NilE _ => (Ex (Const 0), TNil)
   | IntE (i,_) => (Ex (Const i), TInt)
   | StringE (s,_) =>
-        let val strlab = addGlobalString s
-            val ir = Ex (Name (strlab))
-        in (ir, TString)
+        let val ir = translate.addString s
+        in (Ex ir, TString)
         end
   | CallE ({func,args}, ii) =>
       let val (formals, ret) =

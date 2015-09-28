@@ -21,4 +21,6 @@ struct
         raise Fail "wrong simpleVar"
 
     val RV = frame.RV
+
+    fun addString s = frame.addString s
 end

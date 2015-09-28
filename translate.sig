@@ -11,4 +11,6 @@ sig
     val simpleVar : Access -> Level -> ir.IRexp
 
     val RV : ir.IRexp
+
+    val addString : string -> ir.IRexp
 end

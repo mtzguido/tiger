@@ -40,4 +40,10 @@ struct
     fun simpleVar (InReg t) = Temp t
       | simpleVar (InFrame i) =
               Mem (Binop (Plus, (Const i), FP))
+
+    fun addString s =
+        let val l = newlabel ()
+         in print ("We should be generating code for string: <" ^ s ^ ">\n");
+            Name l
+        end
 end
