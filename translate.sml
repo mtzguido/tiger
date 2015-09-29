@@ -24,6 +24,10 @@ struct
 
     fun addString s = frame.addString s
 
+    fun formals (Frame (f, l)) =
+            map (fn a => (Frame (f,l), a)) (frame.frameFormals f)
+      | formals _ = raise Fail "formals unimplemented"
+
     fun wrapFun body (Frame (f, _)) = frame.wrapFun1 body f
       | wrapFun _ _ = raise Fail "wrapFun unimplemented"
 end

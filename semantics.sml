@@ -481,19 +481,18 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
 
                   val _ = curLevel := level
 
-                  fun arg2env a = let
-                                    val arg_name = #name a
-                                    val arg_acc = allocLocal level (!(#escape a))
-                                    val arg_type = argtype a
+                  fun arg2env (arg, acc) = let
+                                    val arg_name = #name arg
+                                    val arg_type = argtype arg
                                   in
                                     tabReplace localvt
                                         (arg_name, Var { ty    = arg_type,
-                                                         acc   = arg_acc,
+                                                         acc   = acc,
                                                          level = !curLevel
                                                        } )
                                   end
 
-                  val         _ = List.app arg2env (#params fd)
+                  val _ = List.app arg2env (ListPair.zip (#params fd, formals level))
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
                   val bodyir = wrapFun bodyir (!curLevel)
 
