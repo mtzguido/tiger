@@ -15,6 +15,26 @@ struct
         localoffset: int ref
     }
 
+    datatype reg = rax | rbx | rcx | rdx | rsi | rdi | rbp | rsp
+                 | r8 | r9 | r10 | r11 | r12 | r13 | r14 | r15
+
+    fun regToString rax = "rax"
+      | regToString rbx = "rbx"
+      | regToString rcx = "rcx"
+      | regToString rdx = "rdx"
+      | regToString rsi = "rsi"
+      | regToString rdi = "rdi"
+      | regToString rbp = "rbp"
+      | regToString rsp = "rsp"
+      | regToString r8  = "r8"
+      | regToString r9  = "r9"
+      | regToString r10 = "r10"
+      | regToString r11 = "r11"
+      | regToString r12 = "r12"
+      | regToString r13 = "r13"
+      | regToString r14 = "r14"
+      | regToString r15 = "r15"
+
     fun mkFrame {name, formals} =
         let fun add_one (esc, (off, l)) =
                     if esc then (off - wordSize, (InFrame off)::l)
