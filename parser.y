@@ -23,7 +23,7 @@ fun nombre (SimpleVar (s,_)) = s
 %token TYPE ARRAY OF VAR FUNCTION
 %token LET IN END IF THEN ELSE WHILE DO FOR TO BREAK
 %token PUNTO DOSP DOSPIG COMA PCOMA EQ PI PD CI CD LI LD
-%token AMPER PIPE LT GT LEQ GEQ EQ NEQ
+%token AMPER PIPE LT GT LEQ GEQ NEQ
 %token PLUS MINUS MULT DIV NIL DEBUG
 %token<int> NRO
 %token<string> LITERAL IDENT
@@ -31,11 +31,12 @@ fun nombre (SimpleVar (s,_)) = s
 %type<ast.exp> exp prog
 %type<ast.exp list> args
 %type<ast.symbol> id
+%type<ast.symbol list> ids
 %type<(ast.symbol * ast.exp) list> flds
 %type<ast.exp list> seq
 %type<ast.decl list> decs
 %type<ast.field list> tyflds
-%type<ast.argument list> argsdec
+%type<ast.argument list> argsdec argsdec1
 %type<ast.decl> dec tydec vardec fundec
 %type<ast.var> lvalue
 %type<ast.ty> ty
@@ -129,9 +130,14 @@ fundec : FUNCTION id PI argsdec PD EQ exp { FuncDecl [({name=$2, params=$4, resu
        | FUNCTION id PI argsdec PD DOSP id EQ exp { FuncDecl [({name=$2, params=$4, result=SOME $7, body=$9}, getinfo())] }
        ;
 
-argsdec :                          { [] }
-        |  id DOSP id              { [{name=$1, typ=$3, escape=ref false}] }
-        |  id DOSP id COMA argsdec {  {name=$1, typ=$3, escape=ref false}::$5 }
+ids : id     { [$1] }
+    | id ids { $1::$2 }
+
+argsdec1 : ids DOSP id           { map (fn n => {name=n, typ=$3, escape=ref false}) $1 }
+
+argsdec :                        { [] }
+        |  argsdec1              { $1 }
+        |  argsdec1 COMA argsdec { $1@$3 }
         ;
 
 lvalue : id { SimpleVar ($1, getinfo ()) }

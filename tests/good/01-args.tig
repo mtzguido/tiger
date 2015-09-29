@@ -1,0 +1,12 @@
+let
+	function f1 (a1 : int) : int =
+		a1
+	function f2 (a1 a2 : int) : int =
+		a1 + a2
+	function f3 (a1 a2 a3 : int) : int =
+		a1 + a2 + a3
+	function f4 (a1 a2 a3 a4 : int) : int =
+		a1 + a2 + a3 + a4
+in
+	9
+end
