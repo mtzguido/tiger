@@ -4,6 +4,8 @@ sig
     type label = string
 
     val newtemp : unit -> temp
+    val real : string -> temp
+
     val mklabel : string * int -> label
     val newlabel : unit -> label
 

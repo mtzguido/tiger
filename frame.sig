@@ -2,7 +2,6 @@ signature frame =
 sig
     type Frame
     type Access
-    type reg
 
     val mkFrame : {name: temp.label, formals: bool list}
                     -> Frame
@@ -14,7 +13,6 @@ sig
 
     val FP : ir.IRexp
     val RV : ir.IRexp
-    val regToString : reg -> string
 
     val addString : string -> ir.IRexp
 

@@ -15,25 +15,27 @@ struct
         localoffset: int ref
     }
 
-    datatype reg = rax | rbx | rcx | rdx | rsi | rdi | rbp | rsp
-                 | r8 | r9 | r10 | r11 | r12 | r13 | r14 | r15
+    val rax = real "rax"
+    val rbx = real "rbx"
+    val rcx = real "rcx"
+    val rdx = real "rdx"
+    val rsi = real "rsi"
+    val rdi = real "rdi"
+    val rbp = real "rbp"
+    val rsp = real "rsp"
+    val r8  = real "r8"
+    val r9  = real "r9"
+    val r10 = real "r10"
+    val r11 = real "r11"
+    val r12 = real "r12"
+    val r13 = real "r13"
+    val r14 = real "r14"
+    val r15 = real "r15"
 
-    fun regToString rax = "rax"
-      | regToString rbx = "rbx"
-      | regToString rcx = "rcx"
-      | regToString rdx = "rdx"
-      | regToString rsi = "rsi"
-      | regToString rdi = "rdi"
-      | regToString rbp = "rbp"
-      | regToString rsp = "rsp"
-      | regToString r8  = "r8"
-      | regToString r9  = "r9"
-      | regToString r10 = "r10"
-      | regToString r11 = "r11"
-      | regToString r12 = "r12"
-      | regToString r13 = "r13"
-      | regToString r14 = "r14"
-      | regToString r15 = "r15"
+    val arg_regs = [rdi, rsi, rdx, rcx, r8, r9]
+    val callee_save_regs = [rbx, r12, r13, r14, r15]
+    val special_regs = [rsp, rbp]
+    val caller_saved = [rax, r10, r11]
 
     fun mkFrame {name, formals} =
         let fun add_one (esc, (off, l)) =
@@ -53,9 +55,8 @@ struct
              end
         else InReg (temp.newtemp ())
 
-    (* FIXME: these need to be the real registers *)
-    val FP = Temp (newtemp ())
-    val RV = Temp (newtemp ())
+    val FP = Temp rbp
+    val RV = Temp rax
 
     fun simpleVar (InReg t) = Temp t
       | simpleVar (InFrame i) =
@@ -67,15 +68,12 @@ struct
             Name l
         end
 
-    (* basura *)
-    val amd64_arg_regs = [Temp (newtemp ()), Temp (newtemp ())]
-
     fun wrapFun1 body (frame:Frame) =
         let val body = Nx (Move (RV, unEx body))
             val args = #formals frame
             fun assign_arg (acc, reg) =
                 Move (simpleVar acc, reg)
 
-            val assign_args = ListPair.map assign_arg (args, amd64_arg_regs)
+            val assign_args = ListPair.map assign_arg (args, map Temp arg_regs)
         in Nx (SEQ (assign_args @ [unNx body])) end
 end

@@ -1,6 +1,7 @@
 structure temp :> temp =
 struct
     datatype temp = Temp of int
+                  | Real of string
     type label = string
 
     val curr = ref 100
@@ -15,4 +16,7 @@ struct
     fun newlabel () = ("STR_"^(makestring (!nn))) before nn := (!nn) + 1
 
     fun toString (Temp t) = "Temp " ^ makestring t
+      | toString (Real s) = "Real " ^ s
+
+    fun real s = Real s
 end
