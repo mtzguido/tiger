@@ -74,6 +74,18 @@ struct
             fun assign_arg (acc, reg) =
                 Move (simpleVar acc, reg)
 
+            fun save_reg r =
+                let val t = newtemp ()
+                 in (t, Move (Temp t, Temp r)) end
+
+            fun restore_one (r, t) =
+                Move (Temp r, Temp t)
+
             val assign_args = ListPair.map assign_arg (args, map Temp arg_regs)
-        in Nx (SEQ (assign_args @ [unNx body])) end
+            val (save_temps, do_save_regs) =
+                    ListPair.unzip (List.map save_reg callee_save_regs)
+
+            val do_restore_regs = List.map restore_one (ListPair.zip (callee_save_regs, save_temps))
+
+        in Nx (SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs)) end
 end
