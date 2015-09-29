@@ -68,7 +68,7 @@ struct
       | p_stmt (Jump (e,_)) = "Jump " ^ p_expr e
       | p_stmt (CJump (relop,l,r,t,f)) = "CJump (" ^ p_relop relop ^ ", " ^ p_expr l
                                     ^ ", " ^ p_expr r ^ ", " ^ t ^ ", " ^ f ^ ")"
-      | p_stmt (Seq (l,r)) = p_stmt l ^ "; " ^ p_stmt r
+      | p_stmt (Seq (l,r)) = p_stmt l ^ "\n" ^ p_stmt r
       | p_stmt (Label l) = "Label " ^ l
       | p_stmt Skip = "Skip"
     and p_cond _ = "cond"

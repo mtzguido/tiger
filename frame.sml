@@ -4,7 +4,7 @@ structure frame :> frame =
 struct
     open ir temp
 
-    val wordSize = 8 (* 64bit *)
+    val wordSize = 8
 
     datatype Access = InFrame of int
                     | InReg of temp.temp
