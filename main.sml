@@ -8,8 +8,6 @@ fun lexstream(is: instream) =
 exception NoInput
 exception ParseErr of int * string
 
-fun printAst ast = print "Aca va el AST...\n"
-
 fun err (VarNoDec name)  = print ("Error: variable no definida ("^name^").\n")
   | err (Fail s)         = print ("Error: "^s^".\n")
   | err (SysErr (s,_))   = print ("Error del sistema: "^s^".\n")
@@ -44,7 +42,6 @@ let
                        else
                             open_in (hd files)
     fun haveOpt s    = exists (fn e => e = s) opts
-    val print_ast    = haveOpt "-ast"
     val verboseOpt   = haveOpt "-v"
     val tokOpt       = haveOpt "-tokens"
     val noEscape     = haveOpt "-noescape"
@@ -53,7 +50,6 @@ let
     val _            = if tokOpt then (printTokens lexbuf; exit success) else ()
     val ast          = prog Tok lexbuf handle _ => raise ParseErr (!lineno, Lexing.getLexeme lexbuf)
 in if !verbose then print "Parsing finalizado OK.\n" else ();
-   if print_ast then printAst ast else () ;
    if not noEscape then marcarEscapes ast else () ;
    if !verbose then print "Escapes marcados\n" else () ;
    semantics ast ;
