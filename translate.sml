@@ -23,4 +23,7 @@ struct
     val RV = frame.RV
 
     fun addString s = frame.addString s
+
+    fun wrapFun body (Frame (f, _)) = frame.wrapFun1 body f
+      | wrapFun _ _ = raise Fail "wrapFun unimplemented"
 end

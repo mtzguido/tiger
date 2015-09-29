@@ -17,4 +17,6 @@ sig
     val regToString : reg -> string
 
     val addString : string -> ir.IRexp
+
+    val wrapFun1 : ir.IR -> Frame -> ir.IR
 end

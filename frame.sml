@@ -66,4 +66,16 @@ struct
          in print ("We should be generating code for string: <" ^ s ^ ">\n");
             Name l
         end
+
+    (* basura *)
+    val amd64_arg_regs = [Temp (newtemp ()), Temp (newtemp ())]
+
+    fun wrapFun1 body (frame:Frame) =
+        let val body = Nx (Move (RV, unEx body))
+            val args = #formals frame
+            fun assign_arg (acc, reg) =
+                Move (simpleVar acc, reg)
+
+            val assign_args = ListPair.map assign_arg (args, amd64_arg_regs)
+        in Nx (SEQ (assign_args @ [unNx body])) end
 end
