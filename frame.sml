@@ -43,7 +43,7 @@ struct
                            else (off, (InReg (temp.newtemp ()))::l)
             val (_, args_access) = foldl add_one (0, []) formals
         in
-            { name = name, formals = args_access, localoffset = ref 0 }
+            { name = name, formals = rev args_access, localoffset = ref 0 }
         end
 
     fun frameName (fr:Frame) = #name fr
