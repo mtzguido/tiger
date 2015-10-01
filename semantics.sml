@@ -124,7 +124,7 @@ fun seman vt tt exp =
   | NilE _ => (Ex (Const 0), TNil)
   | IntE (i,_) => (Ex (Const i), TInt)
   | StringE (s,_) =>
-        let val ir = translate.addString s
+        let val ir = translate.stringExp s
         in (Ex ir, TString)
         end
   | CallE ({func,args}, ii) =>
@@ -508,8 +508,8 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
                   then (
-                         print ("Generated IR for '" ^  #name fd ^"': " ^ irToString bodyir ^ "\n")
-                         (* translate bodyir frame ; wat? *)
+                         print ("Generated IR for '" ^  #name fd ^"': " ^ irToString bodyir ^ "\n");
+                         funcDecl level bodyir
                        )
                   else semanError ii "el cuerpo de la función no tipa al retorno de la función"
               end

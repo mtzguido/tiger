@@ -88,4 +88,7 @@ struct
             val do_restore_regs = List.map restore_one (ListPair.zip (callee_save_regs, save_temps))
 
         in Nx (SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs)) end
+
+    fun funcDecl f b =
+        ()
 end

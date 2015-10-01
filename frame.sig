@@ -17,4 +17,6 @@ sig
     val addString : string -> ir.IRexp
 
     val wrapFun1 : ir.IR -> Frame -> ir.IR
+
+    val funcDecl : Frame -> ir.IR -> unit
 end

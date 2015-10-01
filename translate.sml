@@ -45,8 +45,6 @@ struct
 
     fun simpleVar acc cf = simpleVar' acc cf FP
 
-    fun addString s = frame.addString s
-
     fun formals (Frame ff) =
             map (fn a => (Frame ff, a)) (frame.frameFormals (#frame ff))
       | formals _ = raise Fail "formals unimplemented"
@@ -73,4 +71,10 @@ struct
       | trCall _ _ _ _ _ =
           raise Fail "trCall unimplemented"
 
+    fun funcDecl (Frame f) b =
+        frame.funcDecl (#frame f) b
+      | funcDecl _ _ =
+        raise Fail "funcDecl unimplemented"
+
+    fun stringExp s = frame.addString s
 end
