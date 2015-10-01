@@ -41,7 +41,7 @@ struct
         let fun add_one (esc, (off, l)) =
                     if esc then (off - wordSize, (InFrame off)::l)
                            else (off, (InReg (temp.newtemp ()))::l)
-            val (_, args_access) = foldl add_one (0, []) formals
+            val (_, args_access) = foldl add_one (~8, []) formals
         in
             { name = name, formals = rev args_access, localoffset = ref 0 }
         end
