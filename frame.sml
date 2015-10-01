@@ -91,6 +91,11 @@ struct
 
     fun funcDecl (f : Frame) b =
         let val b = canon b
-            val tb = concat (List.map (fn s => (irToString (Nx s) ^ "\n")) b)
-         in print ("canonized form of " ^ (#name f) ^":\n" ^ tb) end
+            fun p_stmts ss = concat (List.map (fn s => (irToString (Nx s) ^ "\n")) ss)
+            val tb = p_stmts b
+            val _ = print ("canonized form of " ^ (#name f) ^":\n" ^ tb)
+            val blocks = bblocks b
+            fun pr1 b = print ("basic block:\n" ^ p_stmts b)
+            val _ = List.app pr1 blocks
+         in () end
 end
