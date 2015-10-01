@@ -63,22 +63,26 @@ struct
     fun canon s =
         canon_stm s
 
-    fun bblocks [] = []
-      | bblocks ((Label l)::ss) =
-        bblocks_in [Label l] ss
-      | bblocks ss =
+    fun bblocks ss =
+        let val d = temp.newlabel ()
+        in (bblocks_out ss (temp.newlabel ()), d) end
+
+    and bblocks_out [] d = []
+      | bblocks_out ((Label l)::ss) d =
+        bblocks_in [Label l] ss d
+      | bblocks_out ss d =
         let val l = temp.newlabel ()
-         in bblocks_in [Label l] ss end
-    and bblocks_in b ((Label k)::ss) =
-        (b @ [Jump (Name k, [k])]) :: bblocks_in [Label k] ss
-      | bblocks_in b ((Jump (e,labs))::ss) =
-        (b @ [Jump (e, labs)]) :: bblocks ss
-      | bblocks_in b ((CJump (bop,l,r,t,f))::ss) =
-        (b @ [CJump (bop,l,r,t,f)]) :: bblocks ss
-      | bblocks_in b (s::ss) =
-        bblocks_in (b@[s]) ss
-      | bblocks_in b [] =
-        let val don = temp.newlabel ()
-         in [b @ [Jump (Name don, [don])]] end
+         in bblocks_in [Label l] ss d end
+
+    and bblocks_in b ((Label k)::ss) d =
+        (b @ [Jump (Name k, [k])]) :: bblocks_in [Label k] ss d
+      | bblocks_in b ((Jump (e,labs))::ss) d =
+        (b @ [Jump (e, labs)]) :: bblocks_out ss d
+      | bblocks_in b ((CJump (bop,l,r,t,f))::ss) d =
+        (b @ [CJump (bop,l,r,t,f)]) :: bblocks_out ss d
+      | bblocks_in b (s::ss) d =
+        bblocks_in (b@[s]) ss d
+      | bblocks_in b [] d =
+         [b @ [Jump (Name d, [d])]]
 
 end

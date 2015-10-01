@@ -3,5 +3,8 @@ sig
     type stmlist = ir.IRstm list
 
     val canon : ir.IRstm -> stmlist
-    val bblocks : stmlist -> stmlist list
+
+    (* the label is the one to transfer control to after
+       executing the function *)
+    val bblocks : stmlist -> stmlist list * temp.label
 end
