@@ -8,6 +8,7 @@ struct
         | Mem of IRexp
         | Call of IRexp * IRexp list
         | Eseq of IRstm * IRexp
+        | Anot of string * IRexp
     and IRstm =
           Move of IRexp * IRexp
         | Exp of IRexp
@@ -60,6 +61,7 @@ struct
       | p_expr (Mem e) = "Mem " ^ p_expr e
       | p_expr (Call (n, a)) = "Call (" ^ p_expr n ^ ", " ^ p_exprlist a ^ ")"
       | p_expr (Eseq (s, e)) = "Eseq (" ^ p_stmt s ^ ", " ^ p_expr e ^ ")"
+      | p_expr (Anot (s, e)) = "Anot: <"^s^"> " ^ p_expr e
     and p_exprlist [] = "[]"
       | p_exprlist [e] = "[" ^ p_expr e ^ "]"
       | p_exprlist (h::t) = "[" ^ p_expr h ^ (foldl (fn (e, a) => a ^ "," ^ p_expr e) "" t) ^ "]"

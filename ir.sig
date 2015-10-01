@@ -9,6 +9,7 @@ sig
         | Mem of IRexp
         | Call of IRexp * IRexp list
         | Eseq of IRstm * IRexp
+        | Anot of string * IRexp
     and IRstm =
           Move of IRexp * IRexp
         | Exp of IRexp
