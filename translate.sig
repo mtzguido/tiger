@@ -15,10 +15,10 @@ sig
 
     val RV : ir.IRexp
 
-    val wrapFun : ir.IR -> Level -> ir.IR
+    val wrapFun : ir.IR -> Level -> ir.IRstm
 
     val trCall : bool -> Level -> Level -> string -> ir.IRexp list -> ir.IRexp
 
-    val funcDecl : Level -> ir.IR -> unit
+    val funcDecl : Level -> ir.IRstm -> unit
     val stringExp : string -> ir.IRexp
 end

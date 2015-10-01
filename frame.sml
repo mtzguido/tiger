@@ -2,7 +2,7 @@
 
 structure frame :> frame =
 struct
-    open ir temp
+    open ir temp canon
 
     val wordSize = 8
 
@@ -87,8 +87,9 @@ struct
 
             val do_restore_regs = List.map restore_one (ListPair.zip (callee_save_regs, save_temps))
 
-        in Nx (SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs)) end
+        in SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
     fun funcDecl f b =
-        ()
+        let val b = canon b
+         in () end
 end
