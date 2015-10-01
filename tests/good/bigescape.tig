@@ -1,0 +1,10 @@
+let 
+	var y := 2
+	function f () : int =
+		let function g () : int =
+			let function h () : int =
+				let function i () : int = y
+				in i () end
+			in h () end
+		in g () end
+	in f () end

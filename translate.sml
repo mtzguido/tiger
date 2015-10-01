@@ -25,17 +25,25 @@ struct
     fun allocLocal (Frame ff) e = (Frame ff, frame.frameAllocLocal (#frame ff) e)
     |   allocLocal Outermost _ = raise Fail "wrong allocLocal"
 
+
+    fun unFrame (Frame x) = x
+      | unFrame _ = raise Fail "unFrame unimplemented"
+    val FP = frame.FP
+    val RV = frame.RV
+
     (*
      * Returns an expression for the var represented by acc
      * in frame _#frame ff_ from frame _l2_, traversing static links
      * as needed.
      *)
-    fun simpleVar (Frame ff, acc) l2 =
-        frame.simpleVar acc (* FIXME: Take static links into account *)
-      | simpleVar (Outermost, _) _ =
+    fun simpleVar' (Frame tt, acc) (Frame cc) fp=
+        if #uniq tt = #uniq cc
+        then frame.simpleVar acc fp
+        else simpleVar' (Frame tt, acc) (#parent cc) (frame.simpleVar (#sl cc) fp)
+      | simpleVar' _ _ _ =
         raise Fail "wrong simpleVar"
 
-    val RV = frame.RV
+    fun simpleVar acc cf = simpleVar' acc cf FP
 
     fun addString s = frame.addString s
 

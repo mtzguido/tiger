@@ -58,9 +58,9 @@ struct
     val FP = Temp rbp
     val RV = Temp rax
 
-    fun simpleVar (InReg t) = Temp t
-      | simpleVar (InFrame i) =
-              Mem (Binop (Plus, (Const i), FP))
+    fun simpleVar (InReg t) fp = Temp t
+      | simpleVar (InFrame i) fp =
+              Mem (Binop (Plus, Const i, fp))
 
     fun addString s =
         let val l = newlabel ()
@@ -72,7 +72,7 @@ struct
         let val body = Nx (Move (RV, unEx body))
             val args = #formals frame
             fun assign_arg (acc, reg) =
-                Move (simpleVar acc, reg)
+                Move (simpleVar acc FP, reg)
 
             fun save_reg r =
                 let val t = newtemp ()
