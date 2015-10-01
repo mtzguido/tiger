@@ -4,6 +4,14 @@ struct
 
     type stmlist = IRstm list
 
+    fun conmute1 (Exp _) _ = raise Fail "exp on left?"
+      | conmute1 _ (Const _) = true
+      | conmute1 _ (Name _) = true
+      | conmute1 s (Anot (_, e)) = conmute1 s e
+      | conmute1 _ _ = false
+
+    fun conmute ss e = List.all (fn s => conmute1 s e) ss
+
     fun canon_stm s =
     case s of
         Seq (l,r) => (canon_stm l)@(canon_stm r)
@@ -28,12 +36,15 @@ struct
         Const i => ([], Const i)
       | Name n  => ([], Name n)
       | Temp t  => ([], Temp t)
-      (* TODO: check for conmuting expressions to save the temp *)
       | Binop (bop, l, r) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r
-                val t = Temp (temp.newtemp ())
-             in (lp @ [Move (t, le)] @ rp, Binop (bop, t, re)) end
+             in if conmute rp le
+                then (lp @ rp, Binop (bop, le, re))
+                else let val t = Temp (temp.newtemp ())
+                      in (lp @ [Move (t, le)] @ rp, Binop (bop, t, re))
+                      end
+            end
       | Mem l =>
             let val (lp, le) = canon_expr l
              in (lp, Mem le) end
