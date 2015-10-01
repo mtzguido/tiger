@@ -53,4 +53,24 @@ struct
 
     fun wrapFun body (Frame ff) = frame.wrapFun1 body (#frame ff)
       | wrapFun _ _ = raise Fail "wrapFun unimplemented"
+
+    (* There are esentially three cases for a call:
+     * - Callee is nested directly in our frame
+     * - Callee is at our same level (same block of decls, or recursion)
+     * - Callee is N levels above us
+     *
+     * In each case, we find the frame pointer for the callee frame
+     * using simpleVar, which already handles fetching a variable
+     * from another frame. The variable we need is (#sl f) in frame
+     * (Frame f), so make an access from that and use it.
+     *)
+
+    fun trCall true _ _ fname args =
+        Call (Name fname, args)
+      | trCall false (Frame f) (Frame us) fname args =
+        let val sl = simpleVar (Frame f, #sl f) (Frame us)
+        in Call (Name fname, sl :: args) end
+      | trCall _ _ _ _ _ =
+          raise Fail "trCall unimplemented"
+
 end

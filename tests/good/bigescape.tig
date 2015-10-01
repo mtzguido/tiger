@@ -3,7 +3,7 @@ let
 	function f () : int =
 		let function g () : int =
 			let function h () : int =
-				let function i () : int = y
+				let function i () : int = f ()
 				in i () end
 			in h () end
 		in g () end

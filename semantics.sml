@@ -128,11 +128,15 @@ fun seman vt tt exp =
         in (Ex ir, TString)
         end
   | CallE ({func,args}, ii) =>
-      let val (formals, ret) =
-            ( case tabFind vt func of
+      let val finfo =
+              (case tabFind vt func of
                   NONE => semanError ii (func^": no existe")
-                | SOME (Func {formals,ret,...}) => (formals,ret)
-                | SOME _ => semanError ii (func^": no es función") )
+                | SOME (Func info) => info
+                | SOME _ => semanError ii (func^": no es función"))
+          val formals = #formals finfo
+          val ret     = #ret finfo
+          val func_level = #level finfo
+          val extern = #extern finfo
           val seman_args = map seman' args
           val actual_types = map (#2) seman_args
           val _ = if length actual_types <> length formals
@@ -149,8 +153,9 @@ fun seman vt tt exp =
           val allok = List.all (fn x => x) check
       in if not allok
          then raise SemanFail
-         else let val ir = Ex (Call (Name func, map (unEx o #1) seman_args))
-              in (ir, ret)
+         else let val args_e = map (unEx o #1) seman_args
+                  val ir = trCall extern func_level (!curLevel) func args_e
+              in (Ex ir, ret)
               end
       end
   | OpE ({left,oper,right}, ii) =>

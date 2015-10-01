@@ -17,4 +17,6 @@ sig
 
     val addString : string -> ir.IRexp
     val wrapFun : ir.IR -> Level -> ir.IR
+
+    val trCall : bool -> Level -> Level -> string -> ir.IRexp list -> ir.IRexp
 end
