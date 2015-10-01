@@ -89,7 +89,8 @@ struct
 
         in SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
-    fun funcDecl f b =
+    fun funcDecl (f : Frame) b =
         let val b = canon b
-         in () end
+            val tb = concat (List.map (fn s => (irToString (Nx s) ^ "\n")) b)
+         in print ("canonized form of " ^ (#name f) ^":\n" ^ tb) end
 end
