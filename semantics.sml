@@ -254,7 +254,7 @@ fun seman vt tt exp =
   | SeqE (es, _) =>
     let val semans = map seman' es
         val (lastr, lastty) = List.last semans
-        val init = List.take (semans, length semans - 1)
+        val init = init semans
         val stms = SEQ (map (unNx o (#1)) init)
     in (Ex (eseq (stms, unEx lastr)), lastty) end
   | AssignE ({l,r}, ii) =>

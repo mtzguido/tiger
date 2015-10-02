@@ -85,4 +85,4 @@ escape.ui: ast.ui
 runtime.uo: types.uo
 ir.uo: ir.ui
 ast.uo: ast.ui
-canon.uo: canon.ui
+canon.uo: canon.ui common.uo

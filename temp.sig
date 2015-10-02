@@ -1,6 +1,6 @@
 signature temp =
 sig
-    type temp
+    eqtype temp
     type label = string
 
     val newtemp : unit -> temp
