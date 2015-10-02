@@ -37,13 +37,14 @@ struct
     val special_regs = [rsp, rbp]
     val caller_saved = [rax, r10, r11]
 
+    (* FIXME: coallesce this duplication in here and frameAllocLocal *)
     fun mkFrame {name, formals} =
         let fun add_one (esc, (off, l)) =
                     if esc then (off - wordSize, (InFrame off)::l)
                            else (off, (InReg (temp.newtemp ()))::l)
-            val (_, args_access) = foldl add_one (~8, []) formals
+            val (off, args_access) = foldl add_one (~wordSize, []) formals
         in
-            { name = name, formals = rev args_access, localoffset = ref 0 }
+            { name = name, formals = rev args_access, localoffset = ref off }
         end
 
     fun frameName (fr:Frame) = #name fr
