@@ -33,43 +33,44 @@ struct
                 | Nx of IRstm
                 | Cx of temp.label * temp.label -> IRstm
 
-    fun p_relop Eq  = "Eq"
-      | p_relop Ne  = "Ne"
-      | p_relop Lt  = "Lt"
-      | p_relop Gt  = "Gt"
-      | p_relop Le  = "Le"
-      | p_relop Ge  = "Ge"
-      | p_relop Ult = "Ult"
-      | p_relop Ule = "Ule"
-      | p_relop Ugt = "Ugt"
-      | p_relop Uge = "Uge"
-    and p_binop Plus    = "Plus"
-      | p_binop Minus   = "Minus"
-      | p_binop Mul     = "Mul"
-      | p_binop Div     = "Div"
-      | p_binop And     = "And"
-      | p_binop Or      = "Or"
-      | p_binop LShift  = "LShift"
-      | p_binop RShift  = "RShift"
-      | p_binop ARShift = "ARShift"
-      | p_binop Xor     = "Xor"
-    and p_expr (Const n) = "Const " ^ makestring n
+    fun paren s = "(" ^ s ^ ")"
+
+    fun p_relop Eq  = "=="
+      | p_relop Ne  = "!="
+      | p_relop Lt  = "<"
+      | p_relop Gt  = ">"
+      | p_relop Le  = "<="
+      | p_relop Ge  = ">="
+      | p_relop Ult = "U<"
+      | p_relop Ule = "U<="
+      | p_relop Ugt = "U>"
+      | p_relop Uge = "U>="
+    and p_binop Plus    = "+"
+      | p_binop Minus   = "-"
+      | p_binop Mul     = "*"
+      | p_binop Div     = "/"
+      | p_binop And     = "&"
+      | p_binop Or      = "|"
+      | p_binop LShift  = "<<"
+      | p_binop RShift  = ">>"
+      | p_binop ARShift = ">>>"
+      | p_binop Xor     = "^"
+    and p_expr (Const n) = makestring n
       | p_expr (Name n) = "Name " ^ n
       | p_expr (Temp t) = temp.toString t
-      | p_expr (Binop (binop,l,r)) = "Binop (" ^ p_binop binop ^ ", " ^ p_expr l ^ ", " ^
-                                     p_expr r ^ ")"
-      | p_expr (Mem e) = "Mem " ^ p_expr e
-      | p_expr (Call (n, a)) = "Call (" ^ p_expr n ^ ", " ^ p_exprlist a ^ ")"
+      | p_expr (Binop (binop,l,r)) = paren (p_expr l ^ " " ^ p_binop binop ^ p_expr r)
+      | p_expr (Mem e) = "MEM[" ^ p_expr e ^ "]"
+      | p_expr (Call (n, a)) = p_expr n ^ paren (p_exprlist a)
       | p_expr (Eseq (s, e)) = "Eseq (" ^ p_stmt s ^ ", " ^ p_expr e ^ ")"
       | p_expr (Anot (s, e)) = "Anot: <"^s^"> " ^ p_expr e
     and p_exprlist [] = "[]"
       | p_exprlist [e] = "[" ^ p_expr e ^ "]"
       | p_exprlist (h::t) = "[" ^ p_expr h ^ (foldl (fn (e, a) => a ^ "," ^ p_expr e) "" t) ^ "]"
-    and p_stmt (Move (l,e)) = "Move (" ^ p_expr l ^ ", " ^ p_expr e ^")"
+    and p_comp (relop, l, r) = p_expr l ^ " " ^ p_relop relop ^ " " ^ p_expr r
+    and p_stmt (Move (l,e)) = p_expr l ^ " <- " ^ p_expr e
       | p_stmt (Exp e) = "Exp " ^ p_expr e
       | p_stmt (Jump (e,_)) = "Jump " ^ p_expr e
-      | p_stmt (CJump (relop,l,r,t,f)) = "CJump (" ^ p_relop relop ^ ", " ^ p_expr l
-                                    ^ ", " ^ p_expr r ^ ", " ^ t ^ ", " ^ f ^ ")"
+      | p_stmt (CJump (relop,l,r,t,f)) = "CJump " ^ p_comp (relop, l, r) ^ " ? " ^ t ^ " : " ^ f
       | p_stmt (Seq (l,r)) = p_stmt l ^ "\n" ^ p_stmt r
       | p_stmt (Label l) = "Label " ^ l
       | p_stmt Skip = "Skip"
