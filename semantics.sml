@@ -349,13 +349,17 @@ fun seman vt tt exp =
         val lbl_t1 = newlabel ()
         val lbl_inc = newlabel ()
         val idx_expr = simpleVar index_acc (!curLevel)
+        val lo_r = Temp (newtemp ())
+        val hi_r = Temp (newtemp ())
      in if typeMatch ii bodyt TUnit
-          then let val loopir = SEQ [CJump (Gt, unEx loi, unEx hii, breaklabel, lbl_t1),
+          then let val loopir = SEQ [Move (lo_r, unEx loi),
+                                     Move (hi_r, unEx hii),
+                                     CJump (Gt, lo_r, hi_r, breaklabel, lbl_t1),
                                      Label lbl_t1,
-                                     Move (idx_expr, unEx loi),
+                                     Move (idx_expr, lo_r),
                                      Label lbl_body,
                                      unNx bodyi,
-                                     CJump (Eq, idx_expr, unEx hii, breaklabel, lbl_inc),
+                                     CJump (Eq, idx_expr, hi_r, breaklabel, lbl_inc),
                                      Label lbl_inc,
                                      Move (idx_expr, Binop (Plus, Const 1, idx_expr)),
                                      Jump (Name lbl_body, [lbl_body]),
