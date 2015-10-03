@@ -1,4 +1,4 @@
-structure ast :> ast =
+structure ast =
 struct
 
 type symbol = string
