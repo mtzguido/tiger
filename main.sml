@@ -16,6 +16,7 @@ fun err (VarNoDec name)  = print ("Error: variable no definida ("^name^").\n")
                            )
   | err  SemanFail       = print "Error de semántica.\n"
   | err  NoInput         = print (CommandLine.name()^": no input files\n")
+  | err  Subscript       = print "Error interno: Subscript\n"
   | err x = print "Excepción no reconocida!\n"
 
 fun printTokens lbuf =

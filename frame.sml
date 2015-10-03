@@ -2,7 +2,7 @@
 
 structure frame :> frame =
 struct
-    open ir temp canon
+    open ir temp canon codegen
 
     val wordSize = 8
 
@@ -90,11 +90,17 @@ struct
 
         in SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
-    fun funcDecl (f : Frame) b =
+    fun funcDecl f b =
         let val b = canon b
             fun p_stmts ss = concat (List.map (fn s => "  " ^ (irToString (Nx s) ^ "\n")) ss)
             val (blocks, done_label) = bblocks b
             val trace = traceSched blocks
             val _ = print ("Trace: \n" ^ p_stmts trace)
+            val _ = print "111\n"
+            val asm = List.concat (map codegen trace)
+            val _ = print "222\n"
+            val texts = map (asm.print temp.toString) asm
+            val _ = print "333\n"
+            val _ = map (fn s => print (s ^ "\n")) texts
          in () end
 end

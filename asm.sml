@@ -12,4 +12,23 @@ struct
                    | MOVE of { asm: string,
                                dst: temp,
                                src: temp }
+
+    fun replace [] _ _ _ = []
+      | replace (#"'"::s::i::t) regprint dst src =
+        let val l = case s of
+                        #"d" => dst
+                      | #"s" => src
+                      | _ => raise Fail "wat"
+            val idx = valOf (Int.fromString (str i))
+         in (explode (regprint (List.nth (l, idx)))) @
+            (replace t regprint dst src)
+         end
+      | replace (h::t) regprint dst src =
+        h :: (replace t regprint dst src)
+
+    fun print regstring (LABEL {asm, lab}) = lab ^ ":"
+      | print regstring (OPER {asm, dst, src, jump}) =
+        implode (replace (explode asm) regstring dst src)
+      | print regstring (MOVE {asm, dst, src}) =
+        implode (replace (explode asm) regstring [dst] [src])
 end

@@ -72,7 +72,7 @@ parser.uo: parser.ui ast.uo lineno.uo
 parser.ui: ast.uo
 translate.uo: translate.ui ir.ui frame.ui common.uo
 frame.ui: temp.ui ir.ui
-frame.uo: frame.ui canon.ui
+frame.uo: frame.ui canon.ui codegen.ui asm.ui
 hash.uo: hash.ui
 translate.ui: ir.ui frame.ui
 lexer.uo: parser.ui lineno.uo
@@ -85,3 +85,5 @@ escape.ui: ast.uo
 runtime.uo: types.uo
 ir.uo: ir.ui
 canon.uo: canon.ui common.uo
+codegen.uo: codegen.ui
+codegen.ui: asm.ui
