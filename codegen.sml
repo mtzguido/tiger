@@ -69,7 +69,10 @@ struct
     fun gen_call f args =
         let val args' = List.map gen_e args
             val aregs = List.take (arg_regs, length args)
-         in emit (OPER { asm = "call " ^ f, src = [], dst = caller_saved,
+         in
+             List.app (fn (a,r) => emit (MOVE { asm = "movq 's0, 'd0", dst = r, src = a}))
+                    (ListPair.zip (args', aregs));
+             emit (OPER { asm = "call " ^ f, src = [], dst = caller_saved,
                          jump = []}) end
 
     fun gen_cjump relop l r tl fl =
