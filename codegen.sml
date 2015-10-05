@@ -39,7 +39,7 @@ struct
         val ll = gen_e l
         val rr = gen_e r
     in emit (MOVE { asm = "movq 's0, 'd0", src = ll, dst = t });
-       emit (OPER { asm = "addq 's0, 'd0", src = [rr, t], dst = [t], jump = []});
+       emit (OPER { asm = text ^ " 's0, 'd0", src = [rr, t], dst = [t], jump = []});
        t end
 
     and gen_e e =
