@@ -96,11 +96,8 @@ struct
             val (blocks, done_label) = bblocks b
             val trace = traceSched blocks
             val _ = print ("Trace: \n" ^ p_stmts trace)
-            val _ = print "111\n"
             val asm = List.concat (map codegen trace)
-            val _ = print "222\n"
             val texts = map (asm.print temp.toString) asm
-            val _ = print "333\n"
             val _ = map (fn s => print (s ^ "\n")) texts
          in () end
 end
