@@ -90,6 +90,10 @@ struct
 
         in SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
+    fun wrapFun2 (frame:Frame) body =
+        body @ [asm.OPER { asm = "", src = rsp :: callee_save_regs,
+                           dst = [], jump = []}]
+
     fun funcDecl f b =
         let val b = canon b
             fun p_stmts ss = concat (List.map (fn s => "  " ^ (irToString (Nx s) ^ "\n")) ss)
@@ -97,6 +101,7 @@ struct
             val trace = traceSched blocks
             val _ = print ("Trace: \n" ^ p_stmts trace)
             val asm = List.concat (map codegen trace)
+            val asm = wrapFun2 f asm
             val texts = map (asm.print temp.toString) asm
             val _ = map (fn s => print (s ^ "\n")) texts
          in () end
