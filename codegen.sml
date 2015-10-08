@@ -137,7 +137,7 @@ struct
                           dst = gen_e l,
                           src = gen_e r})
 
-      | Jump (_, labs) => (* ?? *)
+      | Jump (_, labs) => (* FIXME: this ok? *)
             emit (OPER { asm = "jmp "^(hd labs),
                          dst = [], src = [],
                          jump = labs })
