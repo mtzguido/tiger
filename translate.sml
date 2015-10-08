@@ -45,6 +45,9 @@ struct
 
     fun simpleVar acc cf = simpleVar' acc cf FP
 
+    fun indexVar base i =
+        Ex (Mem (Binop (Plus, base, Binop (Mul, i, Const frame.wordSize))))
+
     fun formals (Frame ff) =
             map (fn a => (Frame ff, a)) (tl (frame.frameFormals (#frame ff)))
       | formals _ = raise Fail "formals unimplemented"

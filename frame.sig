@@ -3,6 +3,8 @@ sig
     type Frame
     type Access
 
+    val wordSize : int
+
     val mkFrame : {name: temp.label, formals: bool list} -> Frame
 
     val frameName : Frame -> temp.label

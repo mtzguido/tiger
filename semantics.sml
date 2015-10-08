@@ -32,9 +32,6 @@ fun opt_bind f NONE = NONE
 fun find_idx n [] = NONE
   | find_idx n ((a,_)::xs) = if a = n then SOME 0 else opt_bind (fn x => SOME (x + 1)) (find_idx n xs)
 
-(* FIXME: This shouldn't be here *)
-fun indexVar a i = Ex (Mem (Binop (Plus, a, Binop (Mul, i, Const 8))))
-
 fun addGlobalString s =
     let val lab = newlabel ()
         val _   = glbStrings := (lab, s)::(!glbStrings)
