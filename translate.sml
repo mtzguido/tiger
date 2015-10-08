@@ -46,7 +46,7 @@ struct
     fun simpleVar acc cf = simpleVar' acc cf FP
 
     fun formals (Frame ff) =
-            map (fn a => (Frame ff, a)) (frame.frameFormals (#frame ff))
+            map (fn a => (Frame ff, a)) (tl (frame.frameFormals (#frame ff)))
       | formals _ = raise Fail "formals unimplemented"
 
     fun wrapFun body (Frame ff) = frame.wrapFun1 body (#frame ff)
