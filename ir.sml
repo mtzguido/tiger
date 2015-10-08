@@ -27,7 +27,7 @@ struct
       | sseq (s, Skip) = s
       | sseq (l, r) = Seq (l, r)
 
-    val SEQ = common.foldl1 (fn (i,a) => sseq (a,i))
+    val SEQ = foldl (fn (i,a) => sseq (a,i)) Skip
 
     datatype IR = Ex of IRexp
                 | Nx of IRstm
