@@ -33,6 +33,7 @@ sig
     val unCx : IR -> temp.label * temp.label -> IRstm
 
     val irToString : IR -> string
+    val p_binop : binop -> string
 
     val SEQ : IRstm list -> IRstm
 end

@@ -72,7 +72,8 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        frame.funcDecl (#frame f) b
+        let val _ = print ("funcDecl : " ^ frame.frameName (#frame f) ^ "\n") in
+        frame.funcDecl (#frame f) b end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
 

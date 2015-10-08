@@ -30,17 +30,43 @@ struct
 
     fun emit i = O := i::(!O)
 
-    fun gen_binop binop l r =
+    fun gen_binop_simpl binop l r =
     let val text = case binop of
         Plus => "addq"
       | Minus => "subq"
-      | _ => "otro op"
+      | _ => raise Fail "Internal error on gen_binop_simpl"
         val t = newtemp ()
         val ll = gen_e l
         val rr = gen_e r
     in emit (MOVE { asm = "movq 's0, 'd0", src = ll, dst = t });
        emit (OPER { asm = text ^ " 's0, 'd0", src = [rr, t], dst = [t], jump = []});
        t end
+
+    and gen_binop_rdx_rax binop l r =
+    let val text = case binop of
+        Mul => "imulq"
+      | Div => "idivq"
+      | _ => raise Fail "Internal error on gen_binop_rdx_rax"
+        val ll = gen_e l
+        val rr = gen_e r
+    in emit (MOVE { asm = "movq 's0, 'd0", src = ll, dst = rax });
+       emit (OPER { asm = text ^ " 's0", src = [rr, rax], dst = [rax, rdx], jump = []});
+       rax end
+
+    and gen_binop Plus l r =
+        gen_binop_simpl Plus l r
+
+      | gen_binop Minus l r =
+        gen_binop_simpl Minus l r
+
+      | gen_binop Mul l r =
+        gen_binop_rdx_rax Mul l r
+
+      | gen_binop Div l r =
+        gen_binop_rdx_rax Div l r
+
+      | gen_binop binop _ _ =
+          raise Fail ("unimplemented op: " ^ p_binop binop)
 
     and gen_e e =
     case e of

@@ -75,18 +75,18 @@ rule Tok =
 	| "-" { MINUS }
 	| "/" { DIV }
 	| "*" { MULT }
-    | "DEBUG" { DEBUG }
+	| "DEBUG" { DEBUG }
 	| D+ { NRO (atoi (getLexeme lexbuf)) }
 	| L LDU* { id_or_keyword (getLexeme lexbuf) }
 	| "\"" { LITERAL (String lexbuf) }
-    | _ { raise Fail ("Scanner: WUT ("^(getLexeme lexbuf)^").") }
+	| _ { raise Fail ("Scanner: WUT ("^(getLexeme lexbuf)^").") }
 
 
 and String =
 	parse "\\" { StrEscape lexbuf }
 	| "\"" { "" }
 	| "\n" { raise Fail "Scanner: Newline en string literal." }
-    | "\\f" { StrSplit lexbuf }
+	| "\\f" { StrSplit lexbuf }
 	| eof { raise Fail "Scanner: EOF en string literal." }
 	| _ {	let val c = getLexeme lexbuf in
 				if c > "\^_" then 	c^(String lexbuf)
