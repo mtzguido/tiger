@@ -109,7 +109,10 @@ struct
       | Ge => "jge"
       | Lt => "jlt"
       | Le => "jle"
-      | _ => "jteladebo"
+      | Ult => "jb"
+      | Ule => "jbe"
+      | Ugt => "ja"
+      | Uge => "jae"
     in
     emit (OPER { asm = "cmpq 's0 's1", src = [l, r], dst = [], jump = [] }) ;
     emit (OPER { asm = text ^ " " ^ tl, src = [], dst = [],
