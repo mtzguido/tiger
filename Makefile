@@ -82,9 +82,10 @@ common.uo: ast.uo
 escape.uo: escape.ui common.uo ast.uo hash.ui
 topsort.uo: topsort.ui hash.ui
 escape.ui: ast.uo
-runtime.uo: types.uo
+runtime.uo: types.uo translate.ui
 ir.uo: ir.ui
 canon.uo: canon.ui common.uo
+canon.ui: ir.ui
 codegen.uo: codegen.ui
 codegen.ui: asm.ui
 frame.uo: asm.ui
