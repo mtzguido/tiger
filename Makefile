@@ -88,3 +88,4 @@ canon.uo: canon.ui common.uo
 codegen.uo: codegen.ui
 codegen.ui: asm.ui
 frame.uo: asm.ui
+graph.uo: graph.ui
