@@ -93,19 +93,4 @@ struct
     fun wrapFun2 (frame:Frame) body =
         body @ [asm.OPER { asm = "", src = rsp :: callee_save_regs,
                            dst = [], jump = []}]
-
-    fun funcDecl f b =
-        let val b = canon b
-            fun p_stmts ss = concat (List.map (fn s => "  " ^ (irToString (Nx s) ^ "\n")) ss)
-            val (blocks, done_label) = bblocks b
-            val trace = traceSched blocks
-            val _ = print ("Trace: \n" ^ p_stmts trace)
-            val asm = List.concat (map codegen trace)
-            val asm = wrapFun2 f asm
-            val texts = map (asm.print temp.toString) asm
-            val _ = map (fn s => print (s ^ "\n")) texts
-            val flow = flowcalc asm
-            val FGRAPH cfg = flow
-            val _ = printGraph (#control cfg)
-         in () end
 end

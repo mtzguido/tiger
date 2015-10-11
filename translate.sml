@@ -1,6 +1,6 @@
 structure translate :> translate =
 struct
-    open ir
+    open ir canon codegen flowcalc flow graph
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -52,9 +52,6 @@ struct
             map (fn a => (Frame ff, a)) (tl (frame.frameFormals (#frame ff)))
       | formals _ = raise Fail "formals unimplemented"
 
-    fun wrapFun body (Frame ff) = frame.wrapFun1 body (#frame ff)
-      | wrapFun _ _ = raise Fail "wrapFun unimplemented"
-
     (* There are esentially three cases for a call:
      * - Callee is nested directly in our frame
      * - Callee is at our same level (same block of decls, or recursion)
@@ -75,8 +72,20 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        let val _ = print ("funcDecl : " ^ frame.frameName (#frame f) ^ "\n") in
-        frame.funcDecl (#frame f) b end
+        let val b = frame.wrapFun1 b (#frame f)
+            val b = canon b
+            val (blocks, done_label) = bblocks b
+            val trace = traceSched blocks
+            fun p_stmts ss = concat (List.map (fn s => "  " ^ (irToString (Nx s) ^ "\n")) ss)
+            val _ = print ("Trace: \n" ^ p_stmts trace)
+            val asm = List.concat (map codegen trace)
+            val asm = frame.wrapFun2 (#frame f) asm
+            val texts = map (asm.print temp.toString) asm
+            val _ = map (fn s => print (s ^ "\n")) texts
+            val flow = flowcalc asm
+            val FGRAPH cfg = flow
+            val _ = printGraph (#control cfg)
+         in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
 

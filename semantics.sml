@@ -500,7 +500,6 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
 
                   val _ = List.app arg2env (ListPair.zip (#params fd, formals level))
                   val (bodyir, bodyt) = seman localvt tt (#body fd)
-                  val bodyir = wrapFun bodyir (!curLevel)
 
                   val _ = curLevel := oldLevel
 
@@ -509,7 +508,7 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                                   | _ => semanError ii "error interno re podrido"
               in if typeMatch ii bodyt rettype
                   then (
-                         print ("Generated IR for '" ^  #name fd ^"': " ^ irToString (Nx bodyir) ^ "\n");
+                         print ("Generated IR for '" ^  #name fd ^"': " ^ irToString bodyir ^ "\n");
                          funcDecl level bodyir
                        )
                   else semanError ii "el cuerpo de la función no tipa al retorno de la función"
