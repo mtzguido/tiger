@@ -2,7 +2,7 @@
 
 structure frame :> frame =
 struct
-    open ir temp canon codegen flowcalc
+    open ir temp canon codegen flowcalc flow graph
 
     val wordSize = 8
 
@@ -105,5 +105,7 @@ struct
             val texts = map (asm.print temp.toString) asm
             val _ = map (fn s => print (s ^ "\n")) texts
             val flow = flowcalc asm
+            val FGRAPH cfg = flow
+            val _ = printGraph (#control cfg)
          in () end
 end
