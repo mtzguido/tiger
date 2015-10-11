@@ -93,3 +93,4 @@ graph.uo: graph.ui
 flowcalc.uo: flowcalc.ui graph.ui flow.ui
 flowcalc.ui: flow.ui asm.ui
 flow.ui: graph.ui temp.ui
+set.uo: set.ui
