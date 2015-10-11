@@ -70,7 +70,7 @@ semantics.uo: semantics.ui ir.ui translate.ui temp.ui topsort.ui types.uo \
     frame.ui common.uo ast.uo hash.ui runtime.uo
 parser.uo: parser.ui ast.uo lineno.uo
 parser.ui: ast.uo
-translate.uo: translate.ui ir.ui frame.ui common.uo
+translate.uo: translate.ui ir.ui frame.ui common.uo liv.ui
 frame.ui: temp.ui ir.ui asm.ui
 frame.uo: frame.ui canon.ui codegen.ui asm.ui flowcalc.ui
 hash.uo: hash.ui
@@ -94,3 +94,4 @@ flowcalc.uo: flowcalc.ui graph.ui flow.ui
 flowcalc.ui: flow.ui asm.ui
 flow.ui: graph.ui temp.ui
 set.uo: set.ui
+liv.ui: set.ui graph.ui flow.ui

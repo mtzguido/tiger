@@ -1,6 +1,6 @@
 structure translate :> translate =
 struct
-    open ir canon codegen flowcalc flow graph
+    open ir canon codegen flowcalc flow graph liv
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -83,6 +83,7 @@ struct
             val texts = map (asm.print temp.toString) asm
             val _ = map (fn s => print (s ^ "\n")) texts
             val flow = flowcalc asm
+            val liv = liveness flow
             val FGRAPH cfg = flow
             val _ = printGraph (#control cfg)
          in () end
