@@ -19,4 +19,6 @@ sig
     val rm_edge : node -> node -> unit
 
     val nodename : node -> string
+
+    val printGraph : graph -> unit
 end

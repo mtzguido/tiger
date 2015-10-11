@@ -76,4 +76,12 @@ struct
         end
 
     fun nodename (N n) = "n" ^ (makestring (#id n))
+
+    fun printGraph g =
+        let val ns = nodes g
+            fun p1 n = (print ((nodename n) ^ ": ");
+                       List.app (fn n => print ((nodename n) ^ ", ")) (succ n);
+                       print "\n")
+         in List.app p1 ns end
+
 end
