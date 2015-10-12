@@ -1,6 +1,6 @@
 structure liv :> liv =
 struct
-    open set graph flow
+    open set graph flow common
 
     datatype igraph =
         IGRAPH of { graph : graph.graph,
@@ -8,6 +8,8 @@ struct
                     ntemp : graph.node -> temp.temp,
                     moves: (graph.node * graph.node) list
                   }
+
+    exception Unmapped
 
     fun all e = fn _ => e
     fun oplus m v e = fn x => if x = v then e else m x
@@ -37,13 +39,42 @@ struct
              val (inS, outS) = rep (all emptySet, all emptySet)
           in fn n => (inS n, outS n) end
 
-    fun liveness (FGRAPH {control, def, use, ismove}) =
-        let val inS = all emptySet
+    fun interf_calc flow liv_fun =
+        let val FGRAPH {control, use, def, ismove} = flow
+            val init = IGRAPH {graph = newGraph (),
+                               tnode = fn _ => raise Unmapped,
+                               ntemp = fn _ => raise Unmapped,
+                               moves = []}
+
+            fun temp1 node = (def node) @ (use node)
+            fun temps nodes = List.concat (List.map temp1 nodes)
+
+            fun add_node interf temp =
+                let val IGRAPH {graph, tnode, ntemp, moves} = interf
+                 in (case tnode temp of _ => interf)
+                    handle Unmapped => let val n = newNode graph
+                                        val tnode' = oplus tnode temp n
+                                        val ntemp' = oplus_n ntemp n temp
+                                       in IGRAPH {graph=graph, tnode=tnode',
+                                                  ntemp=ntemp', moves=moves} end
+                end
+
+            fun interf_proc_node interf node =
+                let val IGRAPH {graph, tnode, ntemp, moves} = interf
+                    val defN = map tnode (def node)
+                    val (_, lo') = liv_fun node
+                    val lo = map tnode (tolist lo')
+                in List.app (uncurry mk_edge_sym) (cartesian defN lo) end
+
+            val interf' = foldl (fn (n, s) => add_node s n) init (temps (nodes control))
+         in List.app (interf_proc_node interf') (nodes control);
+            interf' end
+
+    fun liveness flow =
+        let val FGRAPH {control, use, def, ismove} = flow
+            val inS = all emptySet
             val outS = all emptySet
             val liv_fun = fixpoint control use def
-            val interf = IGRAPH {graph = newGraph (),
-                                 tnode = fn _ => raise Fail "a",
-                                 ntemp = fn _ => raise Fail "b",
-                                 moves = []}
+            val interf = interf_calc flow liv_fun
          in (liv_fun, interf) end
 end
