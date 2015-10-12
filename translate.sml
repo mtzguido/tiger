@@ -1,6 +1,6 @@
 structure translate :> translate =
 struct
-    open ir canon codegen flowcalc flow graph liv
+    open ir canon codegen flowcalc flow graph liv common set
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -86,6 +86,14 @@ struct
             val liv = liveness flow
             val FGRAPH cfg = flow
             val _ = printGraph (#control cfg)
+            fun p_liv_1 n =
+                let val (inS, outS) = liv n
+                 in "liveness for " ^ nodename n ^ ":\n" ^
+                    "IN: " ^ list_decor (map temp.toString (tolist inS)) ^ "\n" ^
+                    "OUT: " ^ list_decor (map temp.toString (tolist outS)) ^ "\n"
+                 end
+
+            val _ = List.app (print o p_liv_1) (nodes (#control cfg))
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
