@@ -14,3 +14,9 @@ fun list_decor' [] = ""
   | list_decor' (h::t) = h ^ ", " ^ list_decor' t
 
 fun list_decor l = "[" ^ list_decor' l ^ "]"
+
+fun cartesian l [] = []
+  | cartesian l (h::t) = (List.map (fn l => (l,h)) l) @ (cartesian l t)
+
+fun uncurry f (x, y) = f x y
+fun curry f x y = f (x, y)
