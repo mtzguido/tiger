@@ -69,11 +69,23 @@ struct
                                                 | _ => raise Fail "non-singleton use in move??"
                                          else lo'
                     val interf_list = map tnode (tolist interf_set)
-                in List.app (uncurry mk_edge_sym) (cartesian defN interf_list) end
+                in List.app (uncurry mk_edge_sym) (cartesian defN interf_list);
+                   if ismove node
+                   then let val src = (case use node of
+                                          [h] => tnode h
+                                        | _ => raise Fail "non-singleton use in move??")
+                            val dst = (case defN of
+                                          [h] => h
+                                        | _ => raise Fail "non-singleton def in move??")
+                        in IGRAPH {graph=graph, tnode=tnode,
+                                   ntemp=ntemp, moves=(src,dst)::moves}
+                        end
+                   else interf
+                end
 
-            val interf' = foldl (fn (n, s) => add_node s n) init (temps (nodes control))
-         in List.app (interf_proc_node interf') (nodes control);
-            interf' end
+            val interf'  = foldl (fn (n, s) => add_node s n) init (temps (nodes control))
+            val interf'' = foldl (fn (n,s) => interf_proc_node s n) interf' (nodes control)
+        in interf'' end
 
     fun liveness flow =
         let val FGRAPH {control, use, def, ismove} = flow
