@@ -8,3 +8,9 @@ exception VarNoDec of symbol
 exception ParseError
 
 fun init l = List.take (l, length l - 1)
+
+fun list_decor' [] = ""
+  | list_decor' [x] = x
+  | list_decor' (h::t) = h ^ ", " ^ list_decor' t
+
+fun list_decor l = "[" ^ list_decor' l ^ "]"
