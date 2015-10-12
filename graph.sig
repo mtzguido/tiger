@@ -18,6 +18,8 @@ sig
     val mk_edge : node -> node -> unit
     val rm_edge : node -> node -> unit
 
+    val mk_edge_sym : node -> node -> unit
+
     val nodename : node -> string
 
     val printGraph : graph -> unit

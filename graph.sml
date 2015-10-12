@@ -67,6 +67,10 @@ struct
             then raise GraphFail "mk_edge en grafos distintos"
             else newEdge (G g1) n1 n2
         end
+
+    fun mk_edge_sym n1 n2 =
+        (mk_edge n1 n2; mk_edge n2 n1)
+
     fun rm_edge n1 n2 =
         let val G g1 = ngraph n1
             val G g2 = ngraph n2
