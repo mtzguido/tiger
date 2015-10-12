@@ -83,7 +83,7 @@ struct
             val texts = map (asm.print temp.toString) asm
             val _ = map (fn s => print (s ^ "\n")) texts
             val flow = flowcalc asm
-            val liv = liveness flow
+            val (liv, interf) = liveness flow
             val FGRAPH cfg = flow
             val _ = printGraph (#control cfg)
             fun p_liv_1 n =

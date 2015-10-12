@@ -2,6 +2,13 @@ structure liv :> liv =
 struct
     open set graph flow
 
+    datatype igraph =
+        IGRAPH of { graph : graph.graph,
+                    tnode : temp.temp -> graph.node,
+                    ntemp : graph.node -> temp.temp,
+                    moves: (graph.node * graph.node) list
+                  }
+
     fun all e = fn _ => e
     fun oplus m v e = fn x => if x = v then e else m x
     fun oplus_n m v e = fn x => if eq x v then e else m x
@@ -33,5 +40,10 @@ struct
     fun liveness (FGRAPH {control, def, use, ismove}) =
         let val inS = all emptySet
             val outS = all emptySet
-         in fixpoint control use def end
+            val liv_fun = fixpoint control use def
+            val interf = IGRAPH {graph = newGraph (),
+                                 tnode = fn _ => raise Fail "a",
+                                 ntemp = fn _ => raise Fail "b",
+                                 moves = []}
+         in (liv_fun, interf) end
 end
