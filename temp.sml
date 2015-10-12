@@ -15,8 +15,8 @@ struct
     val nn = ref 0
     fun newlabel () = ("STR_"^(makestring (!nn))) before nn := (!nn) + 1
 
-    fun toString (Temp t) = "Temp " ^ makestring t
-      | toString (Real s) = "Real " ^ s
+    fun toString (Temp t) = "t_" ^ makestring t
+      | toString (Real s) = s
 
     fun real s = Real s
 end
