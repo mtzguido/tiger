@@ -63,8 +63,13 @@ struct
                 let val IGRAPH {graph, tnode, ntemp, moves} = interf
                     val defN = map tnode (def node)
                     val (_, lo') = liv_fun node
-                    val lo = map tnode (tolist lo')
-                in List.app (uncurry mk_edge_sym) (cartesian defN lo) end
+                    val interf_set = if ismove node
+                                         then case use node of
+                                                  [h] => diff lo' (singleton h)
+                                                | _ => raise Fail "non-singleton use in move??"
+                                         else lo'
+                    val interf_list = map tnode (tolist interf_set)
+                in List.app (uncurry mk_edge_sym) (cartesian defN interf_list) end
 
             val interf' = foldl (fn (n, s) => add_node s n) init (temps (nodes control))
          in List.app (interf_proc_node interf') (nodes control);
