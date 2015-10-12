@@ -100,8 +100,11 @@ struct
                    list_decor (map (temp.toString o ntemp) (succ n)) ^ "\n"
                 end
 
+            fun print_move (l,r) = "(" ^ toString (#ntemp itf l) ^ ", " ^ toString (#ntemp itf r) ^ ")"
+
             val _ = List.app (print o p_liv_1) (nodes (#control cfg))
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
+            val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
