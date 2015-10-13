@@ -23,4 +23,6 @@ sig
     val nodename : node -> string
 
     val printGraph : graph -> unit
+
+    val copy : graph -> graph
 end

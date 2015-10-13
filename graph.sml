@@ -88,4 +88,10 @@ struct
                        print "\n")
          in List.app p1 ns end
 
+    fun copy g =
+        let val r = ref { nodes = [], edges = [] }
+            val graph = G r
+            val nodes' = map (fn (N {id, g}) => N {id=id, g=graph}) (nodes g)
+         in r := { nodes = nodes', edges = edges g } ;
+            graph end
 end
