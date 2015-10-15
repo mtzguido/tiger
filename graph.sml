@@ -100,7 +100,9 @@ struct
     fun copy g =
         let val r = ref { nodes = [], edges = [] }
             val graph = G r
-            val nodes' = map (fn (N {id, g}) => N {id=id, g=graph}) (nodes g)
-         in r := { nodes = nodes', edges = edges g } ;
+            fun map_node (N {id, g}) = N {id=id, g=graph}
+            val nodes' = map map_node (nodes g)
+            val edges' = map (fn (a,b) => (map_node a, map_node b)) (edges g)
+         in r := { nodes = nodes', edges = edges' } ;
             graph end
 end
