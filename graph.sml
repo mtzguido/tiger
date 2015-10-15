@@ -88,6 +88,15 @@ struct
 
     fun id (N n) = #id n
 
+    fun rm_node_id (G g) Id =
+        let val n = case List.filter (fn n => (id n) = Id) (#nodes (!g)) of
+                      [] => raise Fail "rm of missing id"
+                    | [x] => x
+                    | _ => raise Fail "repeated ids??"
+            val nodes' = List.filter (fn x => x <> n) (#nodes (!g))
+            val edges' = List.filter (not o anyeq n)  (#edges (!g))
+         in g := { nodes = nodes', edges = edges' } end
+
     fun nodename (N n) = "n" ^ (makestring (#id n))
 
     fun printGraph g =

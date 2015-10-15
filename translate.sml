@@ -106,7 +106,7 @@ struct
             val _ = List.app (print o p_liv_1) (nodes (#control cfg))
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
             val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
-            val c = case color 10 (#graph itf) of OK c => c | _ => raise Fail "color failed"
+            val c = case color 100 (#graph itf) of OK c => c | _ => raise Fail "color failed"
             val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (c n) ^ "\n")) (nodes (#graph itf))
          in () end
       | funcDecl _ _ =

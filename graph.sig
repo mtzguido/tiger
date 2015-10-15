@@ -20,6 +20,8 @@ sig
     val rm_edge : node -> node -> unit
 
     val rm_node : node -> unit
+    val rm_node_id : graph -> int -> unit
+
     val id : node -> int
 
     val mk_edge_sym : node -> node -> unit
