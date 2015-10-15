@@ -22,6 +22,7 @@ struct
 
     fun fsteq x (a,b) = x = a
     fun sndeq x (a,b) = x = b
+    fun anyeq x (a,b) = x = a orelse x = b
 
     fun elem x [] = false
       | elem x (h::t) = x = h orelse elem x t
@@ -78,6 +79,14 @@ struct
             then raise GraphFail "mk_edge en grafos distintos"
             else delEdge (G g1) n1 n2
         end
+
+    fun rm_node n =
+        let val G g = ngraph n
+            val nodes' = List.filter (fn x => x <> n) (#nodes (!g))
+            val edges' = List.filter (not o anyeq n)  (#edges (!g))
+         in g := { nodes = nodes', edges = edges' } end
+
+    fun id (N n) = #id n
 
     fun nodename (N n) = "n" ^ (makestring (#id n))
 

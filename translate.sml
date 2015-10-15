@@ -1,6 +1,7 @@
 structure translate :> translate =
 struct
     open ir canon codegen flowcalc flow graph liv common set temp
+    open color
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -105,6 +106,8 @@ struct
             val _ = List.app (print o p_liv_1) (nodes (#control cfg))
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
             val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
+            val c = case color 10 (#graph itf) of OK c => c | _ => raise Fail "color failed"
+            val _ = List.app (fn n => print (nodename n ^ ": " ^ makestring (c n) ^ "\n")) (nodes (#graph itf))
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"

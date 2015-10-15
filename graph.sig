@@ -14,9 +14,13 @@ sig
 
     val newGraph : unit -> graph
     val newNode : graph -> node
+
     
     val mk_edge : node -> node -> unit
     val rm_edge : node -> node -> unit
+
+    val rm_node : node -> unit
+    val id : node -> int
 
     val mk_edge_sym : node -> node -> unit
 
