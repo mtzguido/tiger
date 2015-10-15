@@ -107,7 +107,7 @@ struct
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
             val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
             val c = case color 10 (#graph itf) of OK c => c | _ => raise Fail "color failed"
-            val _ = List.app (fn n => print (nodename n ^ ": " ^ makestring (c n) ^ "\n")) (nodes (#graph itf))
+            val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (c n) ^ "\n")) (nodes (#graph itf))
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
