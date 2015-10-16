@@ -1,6 +1,6 @@
 open BasicIO Nonstdio Lexing List Process
 
-open lexer parser ast escape common semantics
+open lexer parser ast escape common semantics ofile
 
 fun lexstream(is: instream) =
     Lexing.createLexer(fn b => fn n => buff_input is b 0 n);
@@ -28,31 +28,41 @@ fun printTokens lbuf =
     in onetok () end
 and tokStr tok = case tok of TYPE => "type" | ARRAY => "array" | OF => "of" | VAR => "var" | FUNCTION => "function" | LET => "let" | IN => "in" | END => "end" | IF => "if" | THEN => "then" | ELSE => "else" | WHILE => "while" | DO => "do" | FOR => "for" | TO => "to" | BREAK => "break" | NIL => "nil" | IDENT x => "IDENT ("^x^")" | DOSPIG => ":=" | DOSP => ":" | PUNTO => "." | PCOMA => ";" | COMA => "," | EQ => "=" | LT => "<" | GT => ">" | GEQ => ">=" | LEQ => "<=" | NEQ => "<>" | PI => "(" | PD => ")" | LI => "{" | LD => "}" | CI => "[" | CD => "]" | AMPER => "&" | PIPE => "|" | PLUS => "+" | MINUS => "-" | DIV => "/" | MULT => "*" | NRO n => "NUM ("^(makestring n)^")" | LITERAL s => "LITERAL ("^s^")" | _ => raise Fail "Token no reconocido"
 
+fun output_filename s =
+    let val ss = explode s
+        val t4 = rev (List.take (rev ss, 4))
+        val h  = rev (List.drop (rev ss, 4))
+     in if t4 = explode ".tig"
+        then (implode h) ^ ".s"
+        else s ^ ".s"
+    end
+
 val _ =
 let
     val (opts,files) = partition
                            (fn s => hd (explode s) = #"-" andalso s <> "-")
                            (CommandLine.arguments())
 
-    val entrada      = if length files > 1 then
+    val (entrada,namein) = if length files > 1 then
                            raise Fail "solo puedo compilar de a un archivo!"
                        else if length files = 0 then
                            raise NoInput
                        else if hd files = "-" then
-                           std_in
+                            (std_in, "-")
                        else
-                            open_in (hd files)
+                            (open_in (hd files), hd files)
     fun haveOpt s    = exists (fn e => e = s) opts
     val verboseOpt   = haveOpt "-v"
     val tokOpt       = haveOpt "-tokens"
     val noEscape     = haveOpt "-noescape"
     val _            = verbose := verboseOpt (* seteamos verbose *)
     val lexbuf       = lexstream entrada
-    val _            = if tokOpt then (printTokens lexbuf; exit success) else ()
+    val _            = if tokOpt then (printTokens lexbuf; Process.exit success) else ()
     val ast          = prog Tok lexbuf handle _ => raise ParseErr (!lineno, Lexing.getLexeme lexbuf)
 in if !verbose then print "Parsing finalizado OK.\n" else ();
    if not noEscape then marcarEscapes ast else () ;
    if !verbose then print "Escapes marcados\n" else () ;
+   ofile := open_out (output_filename namein);
    semantics ast ;
    print "COMPILATION OK\n"
 end handle x => (err x ; print "COMPILATION FAILED\n"; Process.exit failure)

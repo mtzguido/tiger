@@ -65,7 +65,7 @@ test: $(TARGET)
 # Dependencias autogeneradas:
 #
 ### DO NOT DELETE THIS LINE
-main.uo: parser.ui lexer.uo common.uo ast.uo semantics.ui escape.ui
+main.uo: parser.ui lexer.uo common.uo ast.uo semantics.ui escape.ui ofile.uo
 semantics.uo: semantics.ui ir.ui translate.ui temp.ui topsort.ui types.uo \
     frame.ui common.uo ast.uo hash.ui runtime.uo
 parser.uo: parser.ui ast.uo lineno.uo
@@ -96,3 +96,4 @@ flow.ui: graph.ui temp.ui
 set.uo: set.ui
 liv.ui: set.ui graph.ui flow.ui
 color.uo: color.ui graph.ui
+ofile.uo: common.uo
