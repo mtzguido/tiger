@@ -28,7 +28,7 @@ struct
 
     fun print regstring (LABEL {asm, lab}) = lab ^ ":"
       | print regstring (OPER {asm, dst, src, jump}) =
-        implode (replace (explode asm) regstring dst src)
+        "   " ^ implode (replace (explode asm) regstring dst src)
       | print regstring (MOVE {asm, dst, src}) =
-        implode (replace (explode asm) regstring [dst] [src])
+        "   " ^ implode (replace (explode asm) regstring [dst] [src])
 end
