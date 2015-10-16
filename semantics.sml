@@ -133,6 +133,7 @@ fun seman vt tt exp =
           val formals = #formals finfo
           val ret     = #ret finfo
           val func_level = #level finfo
+          val label   = #label finfo
           val extern = #extern finfo
           val seman_args = map seman' args
           val actual_types = map (#2) seman_args
@@ -151,7 +152,7 @@ fun seman vt tt exp =
       in if not allok
          then raise SemanFail
          else let val args_e = map (unEx o #1) seman_args
-                  val ir = trCall extern func_level (!curLevel) func args_e
+                  val ir = trCall extern func_level (!curLevel) label args_e
               in (Ex ir, ret)
               end
       end
