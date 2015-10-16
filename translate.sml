@@ -1,7 +1,7 @@
 structure translate :> translate =
 struct
     open ir canon codegen flowcalc flow graph liv common set temp
-    open color
+    open color ofile
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -82,7 +82,7 @@ struct
             val asm = List.concat (map codegen trace)
             val asm = frame.wrapFun2 (#frame f) asm
             val texts = map (asm.print temp.toString) asm
-            val _ = map (fn s => print (s ^ "\n")) texts
+            val _ = map (fn s => out (s ^ "\n")) texts
             val flow = flowcalc asm
             val (liv, interf) = liveness flow
             val FGRAPH cfg = flow
