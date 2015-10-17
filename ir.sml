@@ -58,7 +58,7 @@ struct
     and p_expr (Const n) = makestring n
       | p_expr (Name n) = "Name " ^ n
       | p_expr (Temp t) = temp.toString t
-      | p_expr (Binop (binop,l,r)) = paren (p_expr l ^ " " ^ p_binop binop ^ p_expr r)
+      | p_expr (Binop (binop,l,r)) = paren (p_expr l ^ " " ^ p_binop binop ^ " " ^ p_expr r)
       | p_expr (Mem e) = "MEM[" ^ p_expr e ^ "]"
       | p_expr (Call (n, a)) = p_expr n ^ paren (p_exprlist a)
       | p_expr (Eseq (s, e)) = "Eseq (" ^ p_stmt s ^ ", " ^ p_expr e ^ ")"
