@@ -28,9 +28,9 @@ struct
 
     fun print regstring (LABEL {asm, lab}) = lab ^ ":"
       | print regstring (OPER {asm, dst, src, jump}) =
-        "   " ^ implode (replace (explode asm) regstring dst src)
+        "\t" ^ implode (replace (explode asm) regstring dst src)
       | print regstring (MOVE {asm, dst, src}) =
-        "   " ^ implode (replace (explode asm) regstring [dst] [src])
+        "\t" ^ implode (replace (explode asm) regstring [dst] [src])
 
     fun replace_alloc f is = map (replace_alloc1 f) is
     and replace_alloc1 f i =
