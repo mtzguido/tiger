@@ -122,5 +122,5 @@ int main()
 		chrs[i]->c[0] = i;
 	}
 
-	return tigermain();
+	return tigermain_0_0();
 }
