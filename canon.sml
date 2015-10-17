@@ -12,6 +12,13 @@ struct
 
     fun conmute ss e = List.all (fn s => conmute1 s e) ss
 
+    fun fold_binop bop = case bop of
+        Plus => curry op+
+      | Minus => curry op-
+      | Mul => curry op*
+      | Div => (fn a => fn b => a div b)
+      | _ => raise Fail "can't fold op"
+
     (*
      * FIXME: there is a heavy usage of list concatenation
      * here, which should be slow. We can change this into
@@ -42,6 +49,7 @@ struct
         Const i => ([], Const i)
       | Name n  => ([], Name n)
       | Temp t  => ([], Temp t)
+      | Binop (bop, Const l, Const r) => ([], Const (fold_binop bop l r))
       | Binop (bop, l, Const e) => canon_expr (Binop (bop, Const e, l))
       | Binop (bop, l, r) =>
             let val (lp, le) = canon_expr l
