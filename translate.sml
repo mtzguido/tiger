@@ -81,8 +81,6 @@ struct
             val _ = print ("Trace: \n" ^ p_stmts trace)
             val asm = List.concat (map codegen trace)
             val asm = frame.wrapFun2 (#frame f) asm
-            val texts = map (asm.print temp.toString) asm
-            val _ = map (fn s => out (s ^ "\n")) texts
             val flow = flowcalc asm
             val (liv, interf) = liveness flow
             val FGRAPH cfg = flow
@@ -106,8 +104,24 @@ struct
             val _ = List.app (print o p_liv_1) (nodes (#control cfg))
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
             val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
-            val c = case color (length frame.gpregs) (#graph itf) of OK c => c | _ => raise Fail "color failed"
-            val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (c n) ^ "\n")) (nodes (#graph itf))
+            val C = case color (length frame.gpregs) (#graph itf) of OK c => c | _ => raise Fail "color failed"
+
+            fun C_inv c =
+                let val p = List.filter (fn (_,c') => c = c') (map (fn r => (r, C (#tnode itf r))) frame.gpregs)
+                 in case p of
+                    [(r,_)] => r
+                  | [] => raise Fail "no coloring?"
+                  | _ => raise Fail "multipli coloring?"
+                end
+
+            fun allocation r = C_inv (C (#tnode itf r))
+
+            val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (C n) ^ "\n")) (nodes (#graph itf))
+
+            val asm = asm.replace_alloc allocation asm
+
+            val texts = map (asm.print temp.toString) asm
+            val _ = map (fn s => out (s ^ "\n")) texts
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
