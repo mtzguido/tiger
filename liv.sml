@@ -1,6 +1,6 @@
 structure liv :> liv =
 struct
-    open set graph flow common temp
+    open set graph flow common temp frame
 
     datatype igraph =
         IGRAPH of { graph : graph.graph,
@@ -87,9 +87,18 @@ struct
                    else interf
                 end
 
-            val interf'  = foldl (fn (n, s) => add_node s n) init (temps (nodes control))
-            val interf'' = foldl (fn (n,s) => interf_proc_node s n) interf' (nodes control)
-        in interf'' end
+            fun interfere ((p,q), s) =
+                let val IGRAPH {tnode,...} = s
+                 in mk_edge_sym (tnode p) (tnode q);
+                    s
+                end
+
+            val itf0 = init
+            val itf1 = foldl (fn (n, s) => add_node s n) itf0 gpregs
+            val itf2 = foldl interfere itf1 (cartesian gpregs gpregs)
+            val itf3 = foldl (fn (n, s) => add_node s n) itf2 (temps (nodes control))
+            val itf4 = foldl (fn (n,s) => interf_proc_node s n) itf3 (nodes control)
+        in itf4 end
 
     fun liveness flow =
         let val FGRAPH {control, use, def, ismove} = flow
