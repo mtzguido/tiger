@@ -132,11 +132,16 @@ struct
                 emit (MOVE { asm = "movq 's0, 'd0", src = rax, dst = lt})
             end
 
-      | Move (l, r) =>
-             emit (MOVE { asm = "movq 's0, 'd0",
-                          dst = gen_e l,
-                          src = gen_e r})
-
+      | Move (l, r) => (
+        case r of
+            Const i => emit (OPER { asm = "movq $"^makestring i^", 'd0",
+                                    dst = [gen_e l],
+                                    src = [],
+                                    jump = []})
+          | _ => emit (MOVE { asm = "movq 's0, 'd0",
+                              dst = gen_e l,
+                              src = gen_e r})
+        )
       | Jump (_, labs) => (* FIXME: this ok? *)
             emit (OPER { asm = "jmp "^(hd labs),
                          dst = [], src = [],
