@@ -77,7 +77,7 @@ struct
       | Temp t => t
       | Name l =>
         let val t = newtemp ()
-        in emit (OPER { asm = "movq " ^ l ^ " 'd0", dst = [t], src = [],
+        in emit (OPER { asm = "movq " ^ l ^ ", 'd0", dst = [t], src = [],
                         jump = [] }); t end
 
       | Binop (binop, l, r) =>
@@ -102,19 +102,19 @@ struct
                          jump = []}) end
 
     fun gen_cjump relop l r tl fl =
-    let val text = case relop of
-        Eq => "je"
-      | Ne => "jne"
-      | Gt => "jgt"
-      | Ge => "jge"
-      | Lt => "jlt"
-      | Le => "jle"
-      | Ult => "jb"
-      | Ule => "jbe"
-      | Ugt => "ja"
-      | Uge => "jae"
+    let val (l', r', text) = case relop of
+        Eq  => (l, r, "je")
+      | Ne  => (l, r, "jne")
+      | Gt  => (r, l, "jle")
+      | Ge  => (l, r, "jge")
+      | Lt  => (l, r, "jlt")
+      | Le  => (l, r, "jle")
+      | Ult => (l, r, "jb")
+      | Ule => (l, r, "jbe")
+      | Ugt => (l, r, "ja")
+      | Uge => (l, r, "jae")
     in
-    emit (OPER { asm = "cmpq 's0 's1", src = [l, r], dst = [], jump = [] }) ;
+    emit (OPER { asm = "cmpq 's0, 's1", src = [l', r'], dst = [], jump = [] }) ;
     emit (OPER { asm = text ^ " " ^ tl, src = [], dst = [],
                     jump = [tl, fl]}) end
 
