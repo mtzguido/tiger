@@ -126,6 +126,16 @@ struct
       | Exp _ =>
             raise Fail "Exp in codegen?"
 
+      | Move (Mem (Binop (Plus, Const i, Temp t)), r) =>
+          emit (MOVE { asm = "movq 's0, " ^ makestring i ^ "('d0)",
+                              dst = t,
+                              src = gen_e r})
+
+      | Move (Mem e, r) =>
+          emit (MOVE { asm = "movq 's0, ('d0)",
+                              dst = gen_e e,
+                              src = gen_e r})
+
       | Move (l, Call (Name f, args)) =>
             let val lt = gen_e l in
                 gen_call f args;
@@ -145,14 +155,6 @@ struct
           else emit (OPER { asm = "leaq "^makestring i^"('s0), 'd0",
                             dst = [gen_e l], src = [r], jump = []})
 
-      | Move (Mem (Binop (Plus, Const i, Temp t)), r) =>
-          emit (MOVE { asm = "movq 's0, " ^ makestring i ^ "('d0)",
-                              dst = t,
-                              src = gen_e r})
-      | Move (Mem e, r) =>
-          emit (MOVE { asm = "movq 's0, ('d0)",
-                              dst = gen_e e,
-                              src = gen_e r})
       | Move (l, r) =>
           emit (MOVE { asm = "movq 's0, 'd0",
                               dst = gen_e l,
