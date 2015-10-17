@@ -71,9 +71,9 @@ struct
 
     fun addString s =
         let val l = strlabel ()
-            val asm_lab = l ^ ": "
-            val asm_len = ".long " ^ makestring (String.size s) ^ " "
-            val asm_str = ".ascii \"" ^ escape (explode s) ^ "\"\n"
+            val asm_lab = l ^ ":\n"
+            val asm_len = " .long " ^ makestring (String.size s) ^ "\n"
+            val asm_str = " .ascii \"" ^ escape (explode s) ^ "\"\n"
          in out (asm_lab ^ asm_len ^ asm_str);
             Name l
         end
