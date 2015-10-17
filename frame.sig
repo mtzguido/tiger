@@ -18,7 +18,7 @@ sig
 
     val addString : string -> ir.IRexp
 
-    val gpregs : temp.temp list
+    val allregs : temp.temp list
 
     val wrapFun1 : ir.IR -> Frame -> ir.IRstm
     val wrapFun2 : Frame -> asm.instr list -> asm.instr list

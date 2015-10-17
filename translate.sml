@@ -104,10 +104,10 @@ struct
             val _ = List.app (print o p_liv_1) (nodes (#control cfg))
             val _ = List.app (print o p_interf_1) (nodes (#graph itf))
             val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
-            val C = case color (length frame.gpregs) (#graph itf) of OK c => c | _ => raise Fail "color failed"
+            val C = case color (length frame.allregs) (#graph itf) of OK c => c | _ => raise Fail "color failed"
 
             fun C_inv c =
-                let val p = List.filter (fn (_,c') => c = c') (map (fn r => (r, C (#tnode itf r))) frame.gpregs)
+                let val p = List.filter (fn (_,c') => c = c') (map (fn r => (r, C (#tnode itf r))) frame.allregs)
                  in case p of
                     [(r,_)] => r
                   | [] => raise Fail "no coloring?"

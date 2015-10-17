@@ -94,8 +94,8 @@ struct
                 end
 
             val itf0 = init
-            val itf1 = foldl (fn (n, s) => add_node s n) itf0 gpregs
-            val itf2 = foldl interfere itf1 (cartesian gpregs gpregs)
+            val itf1 = foldl (fn (n, s) => add_node s n) itf0 allregs
+            val itf2 = foldl interfere itf1 (cartesian allregs allregs)
             val itf3 = foldl (fn (n, s) => add_node s n) itf2 (temps (nodes control))
             val itf4 = foldl (fn (n,s) => interf_proc_node s n) itf3 (nodes control)
         in itf4 end
