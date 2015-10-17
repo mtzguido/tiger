@@ -132,28 +132,26 @@ struct
                 emit (MOVE { asm = "movq 's0, 'd0", src = rax, dst = lt})
             end
 
-      | Move (l, r) => (
-        case r of
-            Const i => emit (OPER { asm = "movq $"^makestring i^", 'd0",
-                                    dst = [gen_e l],
-                                    src = [],
-                                    jump = []})
-          | Binop (Plus, Const i, r) =>
-            if l = r
-            then let val lt = gen_e l
-                  in emit (OPER { asm = "addq $"^makestring i^", 'd0",
-                                  dst = [lt], src = [lt], jump = []})
-                 end
-            else emit (OPER { asm = "leaq "^makestring i^"('s0), 'd0",
-                              dst = [gen_e l], src = [gen_e r], jump = []})
-          | _ => emit (MOVE { asm = "movq 's0, 'd0",
+      | Move (l, Const i) =>
+          emit (OPER { asm = "movq $"^makestring i^", 'd0",
+                       dst = [gen_e l], src = [], jump = []})
+
+      | Move (l, Binop (Plus, Const i, Temp r)) =>
+          if l = Temp r
+          then let val lt = gen_e l
+                in emit (OPER { asm = "addq $"^makestring i^", 'd0",
+                                dst = [lt], src = [lt], jump = []})
+               end
+          else emit (OPER { asm = "leaq "^makestring i^"('s0), 'd0",
+                            dst = [gen_e l], src = [r], jump = []})
+      | Move (l, r) =>
+          emit (MOVE { asm = "movq 's0, 'd0",
                               dst = gen_e l,
                               src = gen_e r})
-        )
+
       | Jump (_, labs) => (* FIXME: this ok? *)
             emit (OPER { asm = "jmp "^(hd labs),
-                         dst = [], src = [],
-                         jump = labs })
+                         dst = [], src = [], jump = labs })
 
       | CJump (relop, l, r, tl, fl) =>
             gen_cjump relop (gen_e l) (gen_e r) tl fl
