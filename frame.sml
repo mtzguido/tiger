@@ -3,7 +3,6 @@
 structure frame :> frame =
 struct
     open ir temp canon codegen flowcalc flow graph ofile
-    open Char
 
     val wordSize = 8
 
@@ -66,14 +65,11 @@ struct
       | simpleVar (InFrame i) fp =
               Mem (Binop (Plus, Const i, fp))
 
-    fun escape [] = ""
-      | escape (h::t) = toCString h ^ escape t
-
     fun addString s =
         let val l = strlabel ()
             val asm_lab = l ^ ":\n"
             val asm_len = " .long " ^ makestring (String.size s) ^ "\n"
-            val asm_str = " .ascii \"" ^ escape (explode s) ^ "\"\n"
+            val asm_str = " .ascii \"" ^ String.toCString s ^ "\"\n"
          in out (asm_lab ^ asm_len ^ asm_str);
             Name l
         end
