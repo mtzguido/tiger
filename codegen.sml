@@ -3,22 +3,22 @@ struct
     open asm ir temp
 
     (* COPIED FROM x86 FRAME, FIX THIS DUPLICATION! *)
-    val rax = real "rax"
-    val rbx = real "rbx"
-    val rcx = real "rcx"
-    val rdx = real "rdx"
-    val rsi = real "rsi"
-    val rdi = real "rdi"
-    val rbp = real "rbp"
-    val rsp = real "rsp"
-    val r8  = real "r8"
-    val r9  = real "r9"
-    val r10 = real "r10"
-    val r11 = real "r11"
-    val r12 = real "r12"
-    val r13 = real "r13"
-    val r14 = real "r14"
-    val r15 = real "r15"
+    val rax = real "%rax"
+    val rbx = real "%rbx"
+    val rcx = real "%rcx"
+    val rdx = real "%rdx"
+    val rsi = real "%rsi"
+    val rdi = real "%rdi"
+    val rbp = real "%rbp"
+    val rsp = real "%rsp"
+    val r8  = real "%r8"
+    val r9  = real "%r9"
+    val r10 = real "%r10"
+    val r11 = real "%r11"
+    val r12 = real "%r12"
+    val r13 = real "%r13"
+    val r14 = real "%r14"
+    val r15 = real "%r15"
 
     val arg_regs = [rdi, rsi, rdx, rcx, r8, r9]
     val callee_save_regs = [rbx, r12, r13, r14, r15]
