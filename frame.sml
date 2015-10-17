@@ -70,7 +70,7 @@ struct
       | escape (h::t) = toCString h ^ escape t
 
     fun addString s =
-        let val l = newlabel ()
+        let val l = strlabel ()
             val asm_lab = l ^ ": "
             val asm_len = ".long " ^ makestring (String.size s) ^ " "
             val asm_str = ".ascii \"" ^ escape (explode s) ^ "\"\n"
@@ -83,6 +83,8 @@ struct
             val args = #formals frame
             fun assign_arg (acc, reg) =
                 Move (simpleVar acc FP, reg)
+
+            val label = Label (#name frame)
 
             fun save_reg r =
                 let val t = newtemp ()
@@ -97,7 +99,7 @@ struct
 
             val do_restore_regs = List.map restore_one (ListPair.zip (callee_save_regs, save_temps))
 
-        in SEQ (assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
+        in SEQ (label :: assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
     fun wrapFun2 (frame:Frame) body =
         body @ [asm.OPER { asm = "", src = rsp :: callee_save_regs,

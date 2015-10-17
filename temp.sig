@@ -8,6 +8,7 @@ sig
 
     val mklabel : string * int -> label
     val newlabel : unit -> label
+    val strlabel : unit -> label
 
     val toString : temp -> string
 end
