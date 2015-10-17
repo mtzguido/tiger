@@ -31,4 +31,12 @@ struct
         "   " ^ implode (replace (explode asm) regstring dst src)
       | print regstring (MOVE {asm, dst, src}) =
         "   " ^ implode (replace (explode asm) regstring [dst] [src])
+
+    fun replace_alloc f is = map (replace_alloc1 f) is
+    and replace_alloc1 f i =
+        case i of
+            LABEL _ => i
+          | OPER {asm,dst,src,jump} => OPER {asm=asm, dst=map f dst, src=map f src, jump=jump}
+          | MOVE {asm,dst,src} => MOVE {asm=asm, dst=f dst, src=f src}
+
 end
