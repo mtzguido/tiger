@@ -42,6 +42,7 @@ struct
         Const i => ([], Const i)
       | Name n  => ([], Name n)
       | Temp t  => ([], Temp t)
+      | Binop (bop, l, Const e) => canon_expr (Binop (bop, Const e, l))
       | Binop (bop, l, r) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r

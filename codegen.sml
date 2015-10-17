@@ -138,6 +138,14 @@ struct
                                     dst = [gen_e l],
                                     src = [],
                                     jump = []})
+          | Binop (Plus, Const i, r) =>
+            if l = r
+            then let val lt = gen_e l
+                  in emit (OPER { asm = "addq $"^makestring i^", 'd0",
+                                  dst = [lt], src = [lt], jump = []})
+                 end
+            else emit (OPER { asm = "leaq "^makestring i^"('s0), 'd0",
+                              dst = [gen_e l], src = [gen_e r], jump = []})
           | _ => emit (MOVE { asm = "movq 's0, 'd0",
                               dst = gen_e l,
                               src = gen_e r})
