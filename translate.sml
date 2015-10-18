@@ -116,6 +116,10 @@ struct
 
             fun allocation r = C_inv (C (#tnode itf r))
 
+            val _ = if map allocation frame.allregs <> frame.allregs
+                    then raise Fail "allocation isn't ID on real regs???"
+                    else ()
+
             val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (C n) ^ "\n")) (nodes (#graph itf))
 
             val asm = asm.replace_alloc allocation asm
