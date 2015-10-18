@@ -123,9 +123,12 @@ struct
             val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (C n) ^ "\n")) (nodes (#graph itf))
 
             val asm = asm.replace_alloc allocation asm
+            val {prologue,body=asm,epilogue} = frame.wrapFun3 (#frame f) asm
 
             val texts = map (asm.print temp.toString) asm
+            val _ = out prologue
             val _ = map (fn s => out (s ^ "\n")) texts
+            val _ = out epilogue
          in () end
       | funcDecl _ _ =
         raise Fail "funcDecl unimplemented"
