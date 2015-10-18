@@ -77,7 +77,7 @@ struct
       | Temp t => t
       | Name l =>
         let val t = newtemp ()
-        in emit (OPER { asm = "movq " ^ l ^ ", 'd0", dst = [t], src = [],
+        in emit (OPER { asm = "leaq " ^ l ^ ", 'd0", dst = [t], src = [],
                         jump = [] }); t end
 
       | Binop (binop, l, r) =>
@@ -104,7 +104,7 @@ struct
     let val (l', r', text) = case relop of
         Eq  => (l, r, "je")
       | Ne  => (l, r, "jne")
-      | Gt  => (r, l, "jle")
+      | Gt  => (l, r, "jle")
       | Ge  => (l, r, "jge")
       | Lt  => (l, r, "jlt")
       | Le  => (l, r, "jle")
