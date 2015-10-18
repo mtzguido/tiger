@@ -100,4 +100,19 @@ struct
     fun wrapFun2 (frame:Frame) body =
         body @ [asm.OPER { asm = "", src = rsp :: callee_save_regs,
                            dst = [], jump = []}]
+
+    (* This assumes "h" is the entry label for the function *)
+    fun wrapFun3 (frame:Frame) (h::body) =
+        let val prologue = ".global " ^ #name frame ^ "\n"
+            val framesize = wordSize + !(#localoffset frame)
+            val intro =
+                [asm.OPER { asm = "push %rbp",
+                             dst = [], src = [], jump = [] },
+                 asm.OPER { asm = "mov %rsp, %rbp",
+                             dst = [], src = [], jump = [] },
+                 asm.OPER { asm = "subq $" ^ makestring framesize ^ ", %rsp",
+                             dst = [], src = [], jump = [] }
+                ]
+         in {prologue = prologue, body = h :: intro @ body, epilogue = "" } end
+      | wrapFun3 _ [] = raise Fail "empty fun on wrapFun3?"
 end
