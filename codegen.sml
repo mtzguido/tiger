@@ -1,6 +1,6 @@
 structure codegen :> codegen =
 struct
-    open asm ir temp
+    open asm ir temp common
 
     (* COPIED FROM x86 FRAME, FIX THIS DUPLICATION! *)
     val rax = real "%rax"
@@ -72,7 +72,7 @@ struct
     case e of
         Const i =>
             let val t = newtemp ()
-              in emit (OPER { asm = "movq $"^(makestring i)^", 'd0",
+              in emit (OPER { asm = "movq $"^(printInt i)^", 'd0",
                               dst = [t], src = [], jump = [] }); t end
       | Temp t => t
       | Name l =>
@@ -126,7 +126,7 @@ struct
             raise Fail "Exp in codegen?"
 
       | Move (Mem (Binop (Plus, Const i, Temp t)), r) =>
-          emit (MOVE { asm = "movq 's0, " ^ makestring i ^ "('d0)",
+          emit (MOVE { asm = "movq 's0, " ^ printInt i ^ "('d0)",
                               dst = t,
                               src = gen_e r})
 
@@ -142,16 +142,16 @@ struct
             end
 
       | Move (l, Const i) =>
-          emit (OPER { asm = "movq $"^makestring i^", 'd0",
+          emit (OPER { asm = "movq $"^printInt i^", 'd0",
                        dst = [gen_e l], src = [], jump = []})
 
       | Move (l, Binop (Plus, Const i, Temp r)) =>
           if l = Temp r
           then let val lt = gen_e l
-                in emit (OPER { asm = "addq $"^makestring i^", 'd0",
+                in emit (OPER { asm = "addq $"^printInt i^", 'd0",
                                 dst = [lt], src = [lt], jump = []})
                end
-          else emit (OPER { asm = "leaq "^makestring i^"('s0), 'd0",
+          else emit (OPER { asm = "leaq "^printInt i^"('s0), 'd0",
                             dst = [gen_e l], src = [r], jump = []})
 
       | Move (l, r) =>

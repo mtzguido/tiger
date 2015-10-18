@@ -68,7 +68,7 @@ struct
     fun addString s =
         let val l = strlabel ()
             val asm_lab = l ^ ":\n"
-            val asm_len = "\t.long " ^ makestring (String.size s) ^ "\n"
+            val asm_len = "\t.long " ^ printInt (String.size s) ^ "\n"
             val asm_str = "\t.ascii \"" ^ String.toCString s ^ "\"\n"
          in out (asm_lab ^ asm_len ^ asm_str ^ "\n");
             Name l
@@ -110,7 +110,7 @@ struct
                              dst = [], src = [], jump = [] },
                  asm.OPER { asm = "mov %rsp, %rbp",
                              dst = [], src = [], jump = [] },
-                 asm.OPER { asm = "subq $" ^ makestring framesize ^ ", %rsp",
+                 asm.OPER { asm = "subq $" ^ printInt framesize ^ ", %rsp",
                              dst = [], src = [], jump = [] }
                 ]
          in {prologue = prologue, body = h :: intro @ body, epilogue = "" } end

@@ -32,3 +32,10 @@ fun del x [] = []
 
 fun ldiff l r =
     foldl (fn (e,a) => del e a) l r
+
+fun printInt i =
+    let val p = Int.toString i in
+        if String.isPrefix "~" p
+        then "-" ^ String.extract(p,1,NONE)
+        else p
+    end
