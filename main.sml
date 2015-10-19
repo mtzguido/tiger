@@ -28,14 +28,16 @@ fun printTokens lbuf =
     in onetok () end
 and tokStr tok = case tok of TYPE => "type" | ARRAY => "array" | OF => "of" | VAR => "var" | FUNCTION => "function" | LET => "let" | IN => "in" | END => "end" | IF => "if" | THEN => "then" | ELSE => "else" | WHILE => "while" | DO => "do" | FOR => "for" | TO => "to" | BREAK => "break" | NIL => "nil" | IDENT x => "IDENT ("^x^")" | DOSPIG => ":=" | DOSP => ":" | PUNTO => "." | PCOMA => ";" | COMA => "," | EQ => "=" | LT => "<" | GT => ">" | GEQ => ">=" | LEQ => "<=" | NEQ => "<>" | PI => "(" | PD => ")" | LI => "{" | LD => "}" | CI => "[" | CD => "]" | AMPER => "&" | PIPE => "|" | PLUS => "+" | MINUS => "-" | DIV => "/" | MULT => "*" | NRO n => "NUM ("^(makestring n)^")" | LITERAL s => "LITERAL ("^s^")" | _ => raise Fail "Token no reconocido"
 
-fun output_filename s =
+fun basename s =
     let val ss = explode s
         val t4 = rev (List.take (rev ss, 4))
         val h  = rev (List.drop (rev ss, 4))
      in if t4 = explode ".tig"
-        then (implode h) ^ ".s"
-        else s ^ ".s"
+        then (implode h)
+        else s
     end
+
+fun output_filename s = basename s ^ ".s"
 
 val _ =
 let
@@ -59,10 +61,12 @@ let
     val lexbuf       = lexstream entrada
     val _            = if tokOpt then (printTokens lexbuf; Process.exit success) else ()
     val ast          = prog Tok lexbuf handle _ => raise ParseErr (!lineno, Lexing.getLexeme lexbuf)
+    val asm_file     = output_filename namein
 in if !verbose then print "Parsing finalizado OK.\n" else ();
    if not noEscape then marcarEscapes ast else () ;
    if !verbose then print "Escapes marcados\n" else () ;
-   ofile := open_out (output_filename namein);
+   ofile := open_out asm_file;
    semantics ast ;
-   print "COMPILATION OK\n"
+   print "COMPILATION OK\n";
+   system ("gcc " ^ asm_file ^ " runtime.c -o " ^ basename namein)
 end handle x => (err x ; print "COMPILATION FAILED\n"; Process.exit failure)
