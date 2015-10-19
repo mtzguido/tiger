@@ -43,13 +43,16 @@ struct
        t end
 
     and gen_binop_rdx_rax binop l r =
-    let val text = case binop of
-        Mul => "imulq"
-      | Div => "idivq"
+    let val (cqto, text) = case binop of
+        Mul => (false, "imulq")
+      | Div => (true,  "idivq")
       | _ => raise Fail "Internal error on gen_binop_rdx_rax"
         val ll = gen_e l
         val rr = gen_e r
     in emit (MOVE { asm = "movq 's0, 'd0", src = ll, dst = rax });
+       if cqto
+       then emit ( OPER { asm = "cqto", src = [], dst = [rdx], jump = []})
+       else ();
        emit (OPER { asm = text ^ " 's0", src = [rr, rax], dst = [rax, rdx], jump = []});
        rax end
 
