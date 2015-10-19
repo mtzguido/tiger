@@ -13,7 +13,11 @@ datatype EnvEntry =
               label : string,
               level : Level }
 
-val curLevel : translate.Level ref = ref outermost
+val initLevel : translate.Level =
+    newLevel { parent = outermost,
+               name = "init_level",
+               formals = [] }
+val curLevel : translate.Level ref = ref initLevel
 
 val labelStack = ref []
 
@@ -465,23 +469,31 @@ and declSeman vt tt (VarDecl ({name,escape,typ,init}, ii)) =
                   val rettype = case #result fd of
                                   SOME t => type_lookup t
                                   | NONE => TUnit
+
+                  val argescape = map ((!) o (#escape)) (#params fd)
+                  val label = mklabel (#name fd, infoline ii)
+
+                  val level = newLevel { parent=(!curLevel), name=label,
+                                         formals=argescape }
+
                   val functype  =  Func { formals=argstypes,
                                           ret = rettype,
                                           extern = false,
-                                          label = mklabel (#name fd, infoline ii),
-                                          level = !curLevel }
+                                          label = label,
+                                          level = level }
               in
                   tabReplace newvt (#name fd, functype)
               end
           fun proc_one (fd, ii) =
               let val localvt = tabCopy newvt
-                  val label = ( case tabTake newvt (#name fd) of
-                                  Func {label,...} => label
+                  val finfo = ( case tabTake newvt (#name fd) of
+                                  Func x => x
                                   | _ => raise Fail ""
                               ) handle _ => semanError ii "error interno muy podrido"
-                  val argescape = map ((!) o (#escape)) (#params fd)
+                  val label = #label finfo
+                  val level = #level finfo
+
                   val oldLevel = !curLevel
-                  val level = newLevel {parent=oldLevel, name=label, formals=argescape}
                   fun argtype arg = case tabFind tt (#typ arg) of
                                       SOME t => tipoReal ii t
                                       | NONE => semanError ii ((#typ arg)^": no existe el tipo.")
