@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 struct string {
 	int len;
@@ -118,6 +119,24 @@ void *__mk_array(long init, long size)
 
 	for (i = 0; i < size; i++)
 		ret[i] = init;
+
+	return ret;
+}
+
+void *__mk_record(int len, ...)
+{
+	long *ret;
+	va_list l;
+	int i;
+
+	ret = malloc(len * sizeof ret[0]);
+
+	va_start(l, len);
+
+	for (i = 0; i < len; i++)
+		ret[i] = va_arg(l, long);
+
+	va_end(l);
 
 	return ret;
 }

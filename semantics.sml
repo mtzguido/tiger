@@ -250,7 +250,7 @@ fun seman vt tt exp =
                           false )
     in
       if check_flds flds_seman formal_types
-      then (Ex (Call (Name "__mk_record", flds_expr)), TRecord rectype)
+      then (Ex (Call (Name "__mk_record", (Const (length flds_expr))::flds_expr)), TRecord rectype)
       else raise SemanFail
     end
   | SeqE (es, _) =>
