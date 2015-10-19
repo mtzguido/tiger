@@ -89,7 +89,9 @@ struct
 
             fun interfere ((p,q), s) =
                 let val IGRAPH {tnode,...} = s
-                 in mk_edge_sym (tnode p) (tnode q);
+                 in if p = q
+                    then ()
+                    else mk_edge_sym (tnode p) (tnode q);
                     s
                 end
 
