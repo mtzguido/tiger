@@ -114,19 +114,20 @@ struct
                               jump = []}) end
 
     fun gen_cjump relop l r tl fl =
-    let val (l', r', text) = case relop of
-        Eq  => (l, r, "je")
-      | Ne  => (l, r, "jne")
-      | Gt  => (l, r, "jle")
-      | Ge  => (l, r, "jge")
-      | Lt  => (l, r, "jlt")
-      | Le  => (l, r, "jle")
-      | Ult => (l, r, "jb")
-      | Ule => (l, r, "jbe")
-      | Ugt => (l, r, "ja")
-      | Uge => (l, r, "jae")
+    let val text = case relop of
+        Eq  => "je"
+      | Ne  => "jne"
+      | Gt  => "jg"
+      | Ge  => "jge"
+      | Lt  => "jl"
+      | Le  => "jle"
+      | Ult => "jb"
+      | Ule => "jbe"
+      | Ugt => "ja"
+      | Uge => "jae"
     in
-    emit (OPER { asm = "cmpq 's0, 's1", src = [l', r'], dst = [], jump = [] }) ;
+    (* GAS syntax, ops are reversed *)
+    emit (OPER { asm = "cmpq 's0, 's1", src = [r, l], dst = [], jump = [] }) ;
     emit (OPER { asm = text ^ " " ^ tl, src = [], dst = [],
                     jump = [tl, fl]}) end
 

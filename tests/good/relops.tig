@@ -1,0 +1,21 @@
+(
+	print("\n"); print_int (if 5 > 5 then 0 else 1);
+	print("\n"); print_int (if 5 < 5 then 0 else 1);
+
+	print("\n"); print_int (if 5 <= 5 then 1 else 0);
+	print("\n"); print_int (if 5 >= 5 then 1 else 0);
+
+	print("\n"); print_int (if 4 <= 5 then 1 else 0);
+	print("\n"); print_int (if 4 >= 5 then 0 else 1);
+
+	print("\n"); print_int (if 5 <= 4 then 0 else 1);
+	print("\n"); print_int (if 5 >= 4 then 1 else 0);
+
+	print("\n"); print_int (if 4 < 5 then 1 else 0);
+	print("\n"); print_int (if 4 > 5 then 0 else 1);
+
+	print("\n"); print_int (if 5 < 4 then 0 else 1);
+	print("\n"); print_int (if 5 > 4 then 1 else 0);
+
+	print("\n")
+)
