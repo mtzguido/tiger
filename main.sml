@@ -68,5 +68,5 @@ in if !verbose then print "Parsing finalizado OK.\n" else ();
    ofile := open_out asm_file;
    semantics ast ;
    print "COMPILATION OK\n";
-   system ("gcc " ^ asm_file ^ " runtime.c -o " ^ basename namein)
+   system ("gcc " ^ asm_file ^ " runtime.c -o " ^ basename namein ^ ".bin")
 end handle x => (err x ; print "COMPILATION FAILED\n"; Process.exit failure)
