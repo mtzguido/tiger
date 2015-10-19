@@ -76,7 +76,7 @@ exp : NRO { IntE ($1, getinfo()) }
     | exp GEQ   exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) }
     | exp LEQ   exp { OpE ({left=$1, oper=LeOp,    right=$3}, getinfo()) }
     | exp GT    exp { OpE ({left=$1, oper=GtOp,    right=$3}, getinfo()) }
-    | exp LT    exp { OpE ({left=$1, oper=GeOp,    right=$3}, getinfo()) }
+    | exp LT    exp { OpE ({left=$1, oper=LtOp,    right=$3}, getinfo()) }
     | exp EQ    exp { OpE ({left=$1, oper=EqOp,    right=$3}, getinfo()) }
     | exp NEQ   exp { OpE ({left=$1, oper=NeqOp,   right=$3}, getinfo()) }
 
