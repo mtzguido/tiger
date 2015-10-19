@@ -39,16 +39,6 @@ struct
 
     val gpregs = arg_regs @ callee_save_regs @ caller_saved
 
-    (* FIXME: coallesce this duplication in here and frameAllocLocal *)
-    fun mkFrame {name, formals} =
-        let fun add_one (esc, (off, l)) =
-                    if esc then (off - wordSize, (InFrame off)::l)
-                           else (off, (InReg (temp.newtemp ()))::l)
-            val (off, args_access) = foldl add_one (~wordSize, []) formals
-        in
-            { name = name, formals = rev args_access, localoffset = ref off }
-        end
-
     fun frameName (fr:Frame) = #name fr
     fun frameFormals (fr:Frame) = #formals fr
     fun frameAllocLocal (fr:Frame) e =
@@ -57,6 +47,11 @@ struct
              in InFrame (!off) before off := !off - wordSize
              end
         else InReg (temp.newtemp ())
+
+    fun mkFrame {name, formals} =
+        let val f = { name = name, formals = [], localoffset = ref (~wordSize) }
+            val faccs = List.map (frameAllocLocal f) formals
+         in {name = #name f, formals = faccs, localoffset = #localoffset f} end
 
     val FP = Temp rbp
     val RV = Temp rax
