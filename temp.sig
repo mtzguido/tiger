@@ -11,4 +11,6 @@ sig
     val strlabel : unit -> label
 
     val toString : temp -> string
+
+    val isreal : temp -> bool
 end

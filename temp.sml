@@ -22,4 +22,7 @@ struct
       | toString (Real s) = s
 
     fun real s = Real s
+
+    fun isreal (Real _) = true
+      | isreal _ = false
 end

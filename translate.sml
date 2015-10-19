@@ -133,7 +133,10 @@ struct
                   | _ => raise Fail "multipli coloring?"
                 end
 
-            fun allocation r = C_inv (C (#tnode itf r))
+            fun allocation r =
+                if isreal r
+                then r
+                else C_inv (C (#tnode itf r))
 
             val _ = if map allocation frame.gpregs <> frame.gpregs
                     then raise Fail "allocation isn't ID on real gp-regs???"
