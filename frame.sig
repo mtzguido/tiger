@@ -22,7 +22,7 @@ sig
 
     val wrapFun1 : ir.IR -> Frame -> ir.IRstm
     val wrapFun2 : Frame -> asm.instr list -> asm.instr list
-    val wrapFun3 : Frame -> asm.instr list ->
+    val wrapFun3 : temp.label -> Frame -> asm.instr list ->
                         { prologue: string,
                           body: asm.instr list,
                           epilogue: string }

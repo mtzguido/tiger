@@ -111,6 +111,17 @@ struct string *_tiger_substring(struct string *s, int from, int to)
 	return NULL;
 }
 
+void *__mk_array(long init, long size)
+{
+	int i;
+	long *ret = malloc(size * sizeof ret[0]);
+
+	for (i = 0; i < size; i++)
+		ret[i] = init;
+
+	return ret;
+}
+
 int tigermain(void);
 
 int main()
