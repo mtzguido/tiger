@@ -82,6 +82,13 @@ struct
 
       | Binop (binop, l, r) =>
           gen_binop binop l r
+
+      | Mem (Binop (Plus, Const i, Temp b)) =>
+            let val t = newtemp ()
+             in emit (OPER { asm = "movq " ^(printInt i)^"('s0), 'd0",
+                             src = [b], dst = [t], jump = [] });
+                t end
+
       | Mem e =>
             let val ee = gen_e e
                 val t = newtemp ()
