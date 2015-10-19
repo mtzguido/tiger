@@ -107,7 +107,7 @@ struct
          in
              List.app (fn (a,r) => emit (MOVE { asm = "movq 's0, 'd0", dst = r, src = a}))
                     (ListPair.zip (args', arg_regs));
-             emit (OPER { asm = "call " ^ f, src = [], dst = caller_saved,
+             emit (OPER { asm = "call " ^ f, src = [], dst = arg_regs @ caller_saved,
                          jump = []}) end
 
     fun gen_cjump relop l r tl fl =
