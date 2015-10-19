@@ -37,7 +37,7 @@ struct
     val special_regs = [rsp, rbp]
     val caller_saved = [rax, r10, r11]
 
-    val allregs = arg_regs @ callee_save_regs @ caller_saved @ special_regs
+    val gpregs = arg_regs @ callee_save_regs @ caller_saved
 
     (* FIXME: coallesce this duplication in here and frameAllocLocal *)
     fun mkFrame {name, formals} =
