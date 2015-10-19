@@ -122,7 +122,7 @@ void *__mk_array(long init, long size)
 	return ret;
 }
 
-int tigermain(void);
+int _tigermain_0_0(void);
 
 int main()
 {
