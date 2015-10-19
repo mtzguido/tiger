@@ -80,7 +80,7 @@ struct
 
     fun bblocks ss =
         let val d = temp.newlabel ()
-        in (bblocks_out ss (temp.newlabel ()), d) end
+        in (bblocks_out ss d, d) end
 
     and bblocks_out [] d = []
       | bblocks_out ((Label l)::ss) d =
