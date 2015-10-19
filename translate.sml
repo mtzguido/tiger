@@ -32,17 +32,33 @@ struct
     val FP = frame.FP
     val RV = frame.RV
 
+    fun get_fp' (Frame tt) (Frame us) fp =
+        if #uniq tt = #uniq us
+        then fp
+        else get_fp' (Frame tt) (#parent us) (frame.simpleVar (#sl us) fp)
+      | get_fp' Outermost Outermost _ =
+        raise Fail "wrong get_fp (1) "
+      | get_fp' _ Outermost _ =
+        raise Fail "wrong get_fp (2) "
+      | get_fp' Outermost _ _ =
+        raise Fail "wrong get_fp (3) "
+
+    fun get_fp to us = get_fp' to us FP
+
+
     (*
      * Returns an expression for the var represented by acc
      * in frame _#frame ff_ from frame _l2_, traversing static links
      * as needed.
      *)
     fun simpleVar' (Frame tt, acc) (Frame cc) fp=
-        if #uniq tt = #uniq cc
-        then frame.simpleVar acc fp
-        else simpleVar' (Frame tt, acc) (#parent cc) (frame.simpleVar (#sl cc) fp)
-      | simpleVar' _ _ _ =
-        raise Fail "wrong simpleVar"
+        frame.simpleVar acc (get_fp (Frame tt) (Frame cc))
+      | simpleVar' (Outermost, _) Outermost _ =
+        raise Fail "wrong simpleVar (1) "
+      | simpleVar' _ Outermost _ =
+        raise Fail "wrong simpleVar (2) "
+      | simpleVar' (Outermost,_) _ _ =
+        raise Fail "wrong simpleVar (3) "
 
     fun simpleVar acc cf = simpleVar' acc cf FP
 
@@ -67,7 +83,7 @@ struct
     fun trCall true _ _ fname args =
         Call (Name fname, args)
       | trCall false (Frame f) (Frame us) fname args =
-        let val sl = simpleVar (Frame f, #sl f) (Frame us)
+        let val sl = get_fp' (#parent f) (Frame us) FP
         in Call (Name fname, sl :: args) end
       | trCall _ _ _ _ _ =
           raise Fail "trCall unimplemented"
