@@ -1,5 +1,6 @@
 let
  type intlist = { h:int, t:intlist }
+ var a := intlist{h=23,t=nil}
 in
- intlist{h=23,t=nil}
+ print_int(a.h)
 end

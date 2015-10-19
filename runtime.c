@@ -123,7 +123,7 @@ void *__mk_array(long init, long size)
 	return ret;
 }
 
-void *__mk_record(int len, ...)
+void *__mk_record(long len, ...)
 {
 	long *ret;
 	va_list l;
