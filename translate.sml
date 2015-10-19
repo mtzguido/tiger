@@ -98,6 +98,9 @@ struct
             val asm = List.concat (map codegen trace)
             val asm = frame.wrapFun2 (#frame f) asm
             val flow = flowcalc asm
+
+            val texts = map (asm.print temp.toString) asm
+            val _ = List.app (fn t => print (t ^ "\n")) texts
             val (liv, interf) = liveness flow
             val FGRAPH cfg = flow
             val IGRAPH itf = interf
