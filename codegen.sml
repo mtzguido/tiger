@@ -126,14 +126,16 @@ struct
             raise Fail "Exp in codegen?"
 
       | Move (Mem (Binop (Plus, Const i, Temp t)), r) =>
-          emit (MOVE { asm = "movq 's0, " ^ printInt i ^ "('d0)",
-                              dst = t,
-                              src = gen_e r})
+          emit (OPER { asm = "movq 's1, " ^ printInt i ^ "('s0)",
+                              dst = [],
+                              src = [t, gen_e r],
+                              jump = []})
 
       | Move (Mem e, r) =>
-          emit (MOVE { asm = "movq 's0, ('d0)",
-                              dst = gen_e e,
-                              src = gen_e r})
+          emit (OPER { asm = "movq 's1, ('s0)",
+                              dst = [],
+                              src = [gen_e e, gen_e r],
+                              jump = [] })
 
       | Move (l, Call (Name f, args)) =>
             let val lt = gen_e l in
