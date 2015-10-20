@@ -46,3 +46,9 @@ fun printInt i =
         then "-" ^ String.extract(p,1,NONE)
         else p
     end
+
+fun indent s = "\t" ^ implode (indent' (explode s))
+and indent' [] = []
+  | indent' (h::t) = if h = #"\n"
+                     then h :: #"\t" :: indent' t
+                     else h :: indent' t

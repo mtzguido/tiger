@@ -89,7 +89,11 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        let
+        let val _ = print ("Generated IR for " ^  frame.frameName (#frame f) ^ ":\n")
+            val text = irToString b
+            val _ = print (indent text)
+            val _ = print "\n\n"
+
             (*
              * call wrapFun1, which saves callee-saved
              * registers into fresh temporaries and
@@ -107,9 +111,10 @@ struct
             val trace = traceSched blocks
 
             (* print the trace *)
-            fun p_stmts s = print ("\t" ^ irToString (Nx s) ^ "\n")
+            fun p_stmts s = print (indent (irToString (Nx s)) ^ "\n")
             val _ = print "Trace: \n"
             val _ = List.app p_stmts trace
+            val _ = print "\n"
 
             (* generate real machine code, with unbounded regs *)
             val asm = List.concat (map codegen trace)
