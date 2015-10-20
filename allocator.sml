@@ -32,13 +32,8 @@ fun spill1 reg acc i = case i of
 fun spill reg acc asm =
     List.concat (map (spill1 reg acc) asm)
 
-fun allocate_regs interf asm =
+fun do_allocate C frame interf asm =
     let val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
-
-        val C = case color (length frame.gpregs) itf of
-                    OK c => c
-                  | _ => raise Fail "color failed"
-
         val Ct = C o tnode
 
         fun mapped_to r = List.filter (fn t => not (isreal (ntemp t)) andalso C t = Ct r) (nodes itf)
@@ -72,7 +67,18 @@ fun allocate_regs interf asm =
         val asm = asm.replace_alloc allocation asm
     in asm end
 
-fun run f asm =
+fun allocate_regs frame interf asm =
+    let val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
+     in case color (length frame.gpregs) itf of
+              OK c => do_allocate c frame interf asm
+            | FAILED n => let val reg = ntemp n
+                              val _ = print ("Spilled node! : " ^ toString reg)
+                              val acc = frame.frameAllocLocal frame true
+                              val asm = spill reg acc asm
+                           in allocate_regs frame interf asm end
+    end
+
+fun run frame asm =
     let val texts = map (asm.print temp.toString) asm
 
         val _ = print "Unallocated asm text:\n"
@@ -116,5 +122,5 @@ fun run f asm =
                     else ()
         (* /Print verbose debug info *)
 
-   in allocate_regs interf asm end
+   in allocate_regs frame interf asm end
 end
