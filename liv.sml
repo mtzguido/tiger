@@ -69,11 +69,7 @@ struct
                                                 | _ => raise Fail "non-singleton use in move??"
                                          else lo'
                     val interf_list = map tnode (tolist interf_set)
-                in List.app (fn (p,q) => (
-                              print ("interference between " ^ toString (ntemp p)
-                                      ^ " and " ^ toString (ntemp q) ^ "\n");
-                              mk_edge_sym p q)) (cartesian defN interf_list);
-                   print ("\n");
+                in List.app (uncurry mk_edge_sym) (cartesian defN interf_list);
                    if ismove node
                    then let val src = (case use node of
                                           [h] => tnode h
