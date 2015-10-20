@@ -89,18 +89,47 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        let val b = frame.wrapFun1 b (#frame f)
+        let
+            (*
+             * call wrapFun1, which saves callee-saved
+             * registers into fresh temporaries and
+             * restores them at exit.
+             *)
+            val b = frame.wrapFun1 b (#frame f)
+
+            (* canonize the IR tree *)
             val b = canon b
+
+            (* split into basic blocks *)
             val (blocks, done_label) = bblocks b
+
+            (* linearize the basic blocks into a trace *)
             val trace = traceSched blocks
-            fun p_stmts ss = concat (List.map (fn s => "  " ^ (irToString (Nx s) ^ "\n")) ss)
-            val _ = print ("Trace: \n" ^ p_stmts trace)
+
+            (* print the trace *)
+            fun p_stmts s = print ("\t" ^ irToString (Nx s) ^ "\n")
+            val _ = print "Trace: \n"
+            val _ = List.app p_stmts trace
+
+            (* generate real machine code, with unbounded regs *)
             val asm = List.concat (map codegen trace)
+
+            (*
+             * Call wrapFun2 which adds a dummy instruction
+             * to keep that callee save regs live. This is needed
+             * so they're not overwritten when allocating real
+             * registers
+             *)
             val asm = frame.wrapFun2 (#frame f) asm
+
             val flow = flowcalc asm
 
             val texts = map (asm.print temp.toString) asm
+
+            val _ = print "unallocated asm text:\n"
             val _ = List.app (fn t => print (t ^ "\n")) texts
+            val _ = print "\n"
+
             val (liv, interf) = liveness flow
             val FGRAPH cfg = flow
             val IGRAPH itf = interf
