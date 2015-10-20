@@ -42,5 +42,8 @@ struct
          end
 
     fun color k graph =
-        OK ((try_color k graph) o id) handle Retry n => FAILED n
+        OK ((try_color k graph) o id)
+        handle Retry n => let val Id = id n
+                              val n' = List.filter (fn n => id n = Id) (nodes graph)
+                           in FAILED (hd n') end
 end
