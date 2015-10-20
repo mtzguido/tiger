@@ -1,0 +1,7 @@
+let var x := 10
+in for i := 1 to 10 do
+      x := x + 1;
+   print_int(x);
+   print("\n")
+end
+
