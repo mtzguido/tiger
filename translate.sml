@@ -33,34 +33,21 @@ struct
     val RV = frame.RV
 
     fun get_fp' (Frame tt) (Frame us) fp =
-        if #uniq tt = #uniq us
-        then fp
+        if #uniq tt = #uniq us then fp
         else get_fp' (Frame tt) (#parent us) (frame.simpleVar (#sl us) fp)
-      | get_fp' Outermost Outermost _ =
-        raise Fail "wrong get_fp (1) "
-      | get_fp' _ Outermost _ =
-        raise Fail "wrong get_fp (2) "
-      | get_fp' Outermost _ _ =
-        raise Fail "wrong get_fp (3) "
+      | get_fp' Outermost Outermost _ = raise Fail "wrong get_fp (1) "
+      | get_fp' _         Outermost _ = raise Fail "wrong get_fp (2) "
+      | get_fp' Outermost _         _ = raise Fail "wrong get_fp (3) "
 
     fun get_fp to us = get_fp' to us FP
-
 
     (*
      * Returns an expression for the var represented by acc
      * in frame _#frame ff_ from frame _l2_, traversing static links
      * as needed.
      *)
-    fun simpleVar' (Frame tt, acc) (Frame cc) fp=
-        frame.simpleVar acc (get_fp (Frame tt) (Frame cc))
-      | simpleVar' (Outermost, _) Outermost _ =
-        raise Fail "wrong simpleVar (1) "
-      | simpleVar' _ Outermost _ =
-        raise Fail "wrong simpleVar (2) "
-      | simpleVar' (Outermost,_) _ _ =
-        raise Fail "wrong simpleVar (3) "
-
-    fun simpleVar acc cf = simpleVar' acc cf FP
+    fun simpleVar (tt, acc) cc =
+        frame.simpleVar acc (get_fp tt cc)
 
     fun indexVar base i =
         Ex (Mem (Binop (Plus, base, Binop (Mul, i, Const frame.wordSize))))
