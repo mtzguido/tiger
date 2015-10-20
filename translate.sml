@@ -127,11 +127,7 @@ struct
              *)
             val asm = frame.wrapFun2 (#frame f) asm
 
-            val allocation = allocator.run asm
-
-            val _ = if map allocation frame.gpregs <> frame.gpregs
-                    then raise Fail "allocation isn't ID on real gp-regs???"
-                    else ()
+            val asm = allocator.run (#frame f) asm
 
             (*
              * wrapFun3 finishes the function declaration
@@ -139,7 +135,6 @@ struct
              * and handling the special registers such as the
              * frame pointer
              *)
-            val asm = asm.replace_alloc allocation asm
             val {prologue, body = asm, epilogue} =
                 frame.wrapFun3 done_label (#frame f) asm
 

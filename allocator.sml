@@ -1,14 +1,17 @@
+structure allocator :> allocator =
+struct
+
 open flow flowcalc liv graph common set temp color
 
-fun run asm =
+fun run f asm =
     let val flow = flowcalc asm
 
         val texts = map (asm.print temp.toString) asm
-        
+
         val _ = print "unallocated asm text:\n"
         val _ = List.app (fn t => print (t ^ "\n")) texts
         val _ = print "\n"
-        
+
         val (liv, interf) = liveness flow
         val FGRAPH cfg = flow
         val IGRAPH itf = interf
@@ -19,15 +22,15 @@ fun run asm =
                 "IN: " ^ list_decor (map temp.toString (tolist inS)) ^ "\n" ^
                 "OUT: " ^ list_decor (map temp.toString (tolist outS)) ^ "\n"
              end
-        
+
         fun p_interf_1 n =
             let val ntemp = #ntemp itf
             in "interferences for " ^ toString (ntemp n) ^ ":\n" ^
                list_decor (map (temp.toString o ntemp) (succ n)) ^ "\n"
             end
-        
+
         fun print_move (l,r) = "(" ^ toString (#ntemp itf l) ^ ", " ^ toString (#ntemp itf r) ^ ")"
-        
+
         val _ = List.app (print o p_liv_1) (nodes (#control cfg))
         val _ = List.app (print o p_interf_1) (nodes (#graph itf))
         val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
@@ -42,9 +45,17 @@ fun run asm =
               | [] => raise Fail "no coloring?"
               | _ => raise Fail "multipli coloring?"
             end
-        
+
         fun allocation r =
             if isreal r
             then r
             else C_inv (C (#tnode itf r))
-    in allocation end
+
+        val _ = if map allocation frame.gpregs <> frame.gpregs
+                then raise Fail "allocation isn't ID on real gp-regs???"
+                else ()
+
+        val asm = asm.replace_alloc allocation asm
+    in asm end
+
+end
