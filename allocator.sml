@@ -8,14 +8,15 @@ fun run f asm =
 
         val texts = map (asm.print temp.toString) asm
 
-        val _ = print "unallocated asm text:\n"
+        val _ = print "Unallocated asm text:\n"
         val _ = List.app (fn t => print (t ^ "\n")) texts
-        val _ = print "\n"
+        val _ = print "\n\n"
 
         val (liv, interf) = liveness flow
         val FGRAPH cfg = flow
         val IGRAPH itf = interf
         val _ = printGraph (#control cfg)
+
         fun p_liv_1 n =
             let val (inS, outS) = liv n
              in "liveness for " ^ nodename n ^ ":\n" ^
@@ -31,9 +32,18 @@ fun run f asm =
 
         fun print_move (l,r) = "(" ^ toString (#ntemp itf l) ^ ", " ^ toString (#ntemp itf r) ^ ")"
 
-        val _ = List.app (print o p_liv_1) (nodes (#control cfg))
-        val _ = List.app (print o p_interf_1) (nodes (#graph itf))
-        val _ = print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
+        val _ = if !verbose
+                    then List.app (print o p_liv_1) (nodes (#control cfg))
+                    else ()
+
+        val _ = if !verbose
+                    then List.app (print o p_interf_1) (nodes (#graph itf))
+                    else ()
+
+        val _ = if !verbose
+                    then print ("Moves: " ^ list_decor (map print_move (#moves itf)) ^ "\n")
+                    else ()
+
         val C = case color (length frame.gpregs) (#graph itf) of OK c => c | _ => raise Fail "color failed"
 
         val _ = List.app (fn n => print (toString (#ntemp itf n) ^ ": " ^ makestring (C n) ^ "\n")) (nodes (#graph itf))
