@@ -95,28 +95,28 @@ struct
             val _ = print "\n\n"
 
             (*
-             * call wrapFun1, which saves callee-saved
+             * Call wrapFun1, which saves callee-saved
              * registers into fresh temporaries and
              * restores them at exit.
              *)
             val b = frame.wrapFun1 b (#frame f)
 
-            (* canonize the IR tree *)
+            (* Canonize the IR tree *)
             val b = canon b
 
-            (* split into basic blocks *)
+            (* Split into basic blocks *)
             val (blocks, done_label) = bblocks b
 
-            (* linearize the basic blocks into a trace *)
+            (* Linearize the basic blocks into a trace *)
             val trace = traceSched blocks
 
-            (* print the trace *)
+            (* Print the trace *)
             fun p_stmts s = print (indent (irToString (Nx s)) ^ "\n")
             val _ = print "Trace: \n"
             val _ = List.app p_stmts trace
             val _ = print "\n"
 
-            (* generate real machine code, with unbounded regs *)
+            (* Generate real machine code, with unbounded regs *)
             val asm = List.concat (map codegen trace)
 
             (*
@@ -133,9 +133,17 @@ struct
                     then raise Fail "allocation isn't ID on real gp-regs???"
                     else ()
 
+            (*
+             * wrapFun3 finishes the function declaration
+             * by setting the stack pointer as proper,
+             * and handling the special registers such as the
+             * frame pointer
+             *)
             val asm = asm.replace_alloc allocation asm
-            val {prologue,body=asm,epilogue} = frame.wrapFun3 done_label (#frame f) asm
+            val {prologue, body = asm, epilogue} =
+                frame.wrapFun3 done_label (#frame f) asm
 
+            (* Output to the file! *)
             val texts = map (asm.print temp.toString) asm
             val _ = out prologue
             val _ = map (fn s => out (s ^ "\n")) texts
