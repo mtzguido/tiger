@@ -15,7 +15,7 @@ fun spill1 reg acc i = case i of
                  val ii   = asm.OPER { asm = asm, jump = jump,
                                        dst = common.replace reg t dst,
                                        src = common.replace reg t src }
-                 val post = if elem reg src
+                 val post = if elem reg dst
                             then codegen (Move (simpleVar acc FP, Temp t))
                             else []
              in pre @ (ii :: post) end
