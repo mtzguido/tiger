@@ -181,30 +181,54 @@ fun seman vt tt exp =
           in if typeMatch ii lt rt (* matchean *)
                 andalso not (lt = TNil andalso rt = TNil) (* no son ambos nil *)
                 andalso not (lt = TUnit) (* ninguno es unit *)
-               then let val irop = case oo of
-                                       EqOp => Eq
-                                     | NeqOp => Ne
-                                     | _ => semanError ii "internal error (eq)"
-                    in (Cx (fn (t,f) =>
-                               CJump (irop, unEx li, unEx ri, t, f)
-                           ), TInt)
-                    end
+               then if typeMatch ii lt TString
+                    then let val irop = case oo of
+                                            EqOp => Eq
+                                          | NeqOp => Ne
+                                          | _ => semanError ii "internal error (eq)"
+                         in (Cx (fn (t,f) =>
+                                    CJump (irop, Call (Name "_tiger_strcmp",
+                                                        [unEx li, unEx ri]), Const 0, t, f)
+                                ), TInt)
+                         end
+
+                    else let val irop = case oo of
+                                            EqOp => Eq
+                                          | NeqOp => Ne
+                                          | _ => semanError ii "internal error (eq)"
+                         in (Cx (fn (t,f) =>
+                                    CJump (irop, unEx li, unEx ri, t, f)
+                                ), TInt)
+                         end
                else semanError ii "comparación de igualdad inválida"
           end
         fun ord oo l r =
           let val (li,lt) = seman' l
               val (ri,rt) = seman' r
           in if typeMatch ii lt rt andalso (typeMatch ii lt TInt orelse typeMatch ii lt TString)
-               then let val irop = case oo of
-                                       LtOp => Lt
-                                     | GtOp => Gt
-                                     | GeOp => Ge
-                                     | LeOp => Le
-                                     | _ => semanError ii "internal error (ord)"
-                    in (Cx (fn (t,f) =>
-                               CJump (irop, unEx li, unEx ri, t, f)
-                           ), TInt)
-                    end
+               then if typeMatch ii lt TString
+                    then let val irop = case oo of
+                                            LtOp => Lt
+                                          | GtOp => Gt
+                                          | GeOp => Ge
+                                          | LeOp => Le
+                                          | _ => semanError ii "internal error (ord)"
+                         in (Cx (fn (t,f) =>
+                                    CJump (irop, Call (Name "_tiger_strcmp",
+                                                        [unEx li, unEx ri]), Const 0, t, f)
+                                ), TInt)
+                         end
+
+                    else let val irop = case oo of
+                                            LtOp => Lt
+                                          | GtOp => Gt
+                                          | GeOp => Ge
+                                          | LeOp => Le
+                                          | _ => semanError ii "internal error (ord)"
+                         in (Cx (fn (t,f) =>
+                                    CJump (irop, unEx li, unEx ri, t, f)
+                                ), TInt)
+                         end
                else semanError ii "comparación de orden inválida"
           end
         val opertype = case oper of

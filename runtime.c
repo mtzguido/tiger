@@ -113,20 +113,6 @@ int _tiger_strcmp(struct string *l, struct string *r)
 	return 0;
 }
 
-int _tiger_streq(struct string *l, struct string *r)
-{
-	int i;
-
-	if (l->len != r->len)
-		return 1;
-
-	for (i = 0; i < l->len; i++)
-		if (l->c[i] != r->c[i])
-			return 1;
-
-	return 0;
-}
-
 struct string *_tiger_substring(struct string *s, int from, int len)
 {
 	struct string *ret = _alloc_string(len);
