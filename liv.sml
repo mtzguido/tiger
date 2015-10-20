@@ -59,9 +59,19 @@ struct
                                                   ntemp=ntemp', moves=moves} end
                 end
 
+            fun interfere ((p, q), s) =
+                let val IGRAPH {tnode,...} = s
+                 in if p = q orelse (isreal p andalso not (elem p gpregs))
+                             orelse (isreal q andalso not (elem q gpregs))
+                    then ()
+                    else mk_edge_sym (tnode p) (tnode q);
+                    s
+                end
+
             fun interf_proc_node interf node =
                 let val IGRAPH {graph, tnode, ntemp, moves} = interf
                     val defN = map tnode (def node)
+                    val defT = def node
                     val (_, lo') = liv_fun node
                     val interf_set = if ismove node
                                          then case use node of
@@ -69,8 +79,9 @@ struct
                                                 | _ => raise Fail "non-singleton use in move??"
                                          else lo'
                     val interf_list = map tnode (tolist interf_set)
-                in List.app (uncurry mk_edge_sym) (cartesian defN interf_list);
-                   if ismove node
+                    val interf_regs = tolist interf_set
+                    val interf = foldl interfere interf (cartesian defT interf_regs)
+                in if ismove node
                    then let val src = (case use node of
                                           [h] => tnode h
                                         | _ => raise Fail "non-singleton use in move??")
@@ -83,20 +94,12 @@ struct
                    else interf
                 end
 
-            fun interfere ((p,q), s) =
-                let val IGRAPH {tnode,...} = s
-                 in if p = q
-                    then ()
-                    else mk_edge_sym (tnode p) (tnode q);
-                    s
-                end
-
-            val itf0 = init
-            val itf1 = foldl (fn (n, s) => add_node s n) itf0 gpregs
-            val itf2 = foldl interfere itf1 (cartesian gpregs gpregs)
-            val itf3 = foldl (fn (n, s) => add_node s n) itf2 (temps (nodes control))
-            val itf4 = foldl (fn (n,s) => interf_proc_node s n) itf3 (nodes control)
-        in itf4 end
+            val itf = init
+            val itf = foldl (fn (n, s) => add_node s n) itf gpregs
+            val itf = foldl interfere itf (cartesian gpregs gpregs)
+            val itf = foldl (fn (n, s) => add_node s n) itf (temps (nodes control))
+            val itf = foldl (fn (n, s) => interf_proc_node s n) itf (nodes control)
+        in itf end
 
     fun liveness flow =
         let val FGRAPH {control, use, def, ismove} = flow

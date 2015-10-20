@@ -1,5 +1,7 @@
 signature liv =
 sig
+    exception Unmapped
+
     datatype igraph =
         IGRAPH of { graph : graph.graph,
                     tnode : temp.temp -> graph.node,

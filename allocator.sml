@@ -33,7 +33,7 @@ fun spill reg acc asm =
     List.concat (map (spill1 reg acc) asm)
 
 fun do_allocate C frame interf asm =
-    let val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
+    let val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
         val Ct = C o tnode
 
         fun mapped_to r = List.filter (fn t => not (isreal (ntemp t)) andalso C t = Ct r) (nodes itf)
@@ -68,17 +68,28 @@ fun do_allocate C frame interf asm =
     in asm end
 
 fun allocate_regs frame interf asm =
-    let val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
+    let val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
+        val _ = print "Trying to color....\n"
      in case color (length frame.gpregs) itf of
-              OK c => do_allocate c frame interf asm
+              OK c => let val _ = print "Coloring OK!\n"
+                       in do_allocate c frame interf asm end
             | FAILED n => let val reg = ntemp n
                               val _ = print ("Spilled node! : " ^ toString reg)
+                              val _ = if isreal reg
+                                          then raise Fail "spilled real node"
+                                          else ()
                               val acc = frame.frameAllocLocal frame true
                               val asm = spill reg acc asm
-                           in allocate_regs frame interf asm end
+
+                              val texts = map (asm.print temp.toString) asm
+                              val _ = print "Spilled assembly text:\n"
+                              val _ = List.app (fn t => print (t ^ "\n")) texts
+                              val _ = print "\n\n"
+
+                           in run frame asm end
     end
 
-fun run frame asm =
+and run frame asm =
     let val texts = map (asm.print temp.toString) asm
 
         val _ = print "Unallocated asm text:\n"
@@ -94,7 +105,7 @@ fun run frame asm =
         val _ = print "Interference graph built\n"
 
         val FGRAPH {control=cfg,...} = flow
-        val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
+        val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
 
         (* Print *very* verbose debugging info *)
         fun p_liv_1 n =
