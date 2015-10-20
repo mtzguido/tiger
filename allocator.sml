@@ -74,9 +74,9 @@ fun allocate_regs frame interf asm =
               OK c => let val _ = print "Coloring OK!\n"
                        in do_allocate c frame interf asm end
             | FAILED n => let val reg = ntemp n
-                              val _ = print ("Spilled node! : " ^ toString reg)
+                              val _ = print ("Spilled node! : " ^ toString reg ^ "\n")
                               val _ = if isreal reg
-                                          then raise Fail "spilled real node"
+                                          then raise Fail "spilled real node??\n"
                                           else ()
                               val acc = frame.frameAllocLocal frame true
                               val asm = spill reg acc asm
