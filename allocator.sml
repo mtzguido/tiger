@@ -24,8 +24,10 @@ fun spill1 reg acc i = case i of
     let val t = newtemp ()
      in if reg = src
         then codegen (Move (Temp t, simpleVar acc FP))
+             @ [asm.MOVE {asm=asm, dst=dst, src=t}]
         else if reg = dst
-        then codegen (Move (simpleVar acc FP, Temp t))
+        then [asm.MOVE {asm=asm, dst=t, src=src}]
+             @ codegen (Move (simpleVar acc FP, Temp t))
         else [i]
     end
 
