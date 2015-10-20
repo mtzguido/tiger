@@ -32,6 +32,11 @@ fun spill1 reg acc i = case i of
 fun spill reg acc asm =
     List.concat (map (spill1 reg acc) asm)
 
+fun is_trivial_move (asm.MOVE {asm, dst, src}) = dst = src
+  | is_trivial_move _ = false
+
+fun remove_trivial_moves asm = List.filter (not o is_trivial_move) asm
+
 fun do_allocate C frame interf asm =
     let val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
         val Ct = C o tnode
@@ -65,6 +70,7 @@ fun do_allocate C frame interf asm =
                 else ()
 
         val asm = asm.replace_alloc allocation asm
+        val asm = remove_trivial_moves asm
     in asm end
 
 fun allocate_regs frame interf asm =
