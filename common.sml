@@ -31,11 +31,17 @@ fun index_safe x [] = NONE
                                        SOME v => SOME (v + 1)
                                      | NONE => NONE)
 
+fun elem x [] = false
+  | elem x (h::t) = x = h orelse elem x t
+
 fun del x [] = []
   | del x (h::t) =
     if x = h
     then t
     else h :: (del x t)
+
+fun replace a b [] = []
+  | replace a b (h::t) = (if h = a then b else h) :: replace a b t
 
 fun ldiff l r =
     foldl (fn (e,a) => del e a) l r

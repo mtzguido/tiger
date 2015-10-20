@@ -2,6 +2,35 @@ structure allocator :> allocator =
 struct
 
 open flow flowcalc liv graph common set temp color
+open codegen ir frame
+
+fun spill1 reg acc i = case i of
+    asm.LABEL _ => [i]
+  | asm.OPER {asm, dst, src, jump} =>
+        if elem reg dst orelse elem reg src
+        then let val t = newtemp ()
+                 val pre  = if elem reg src
+                            then codegen (Move (Temp t, simpleVar acc FP))
+                            else []
+                 val ii   = asm.OPER { asm = asm, jump = jump,
+                                       dst = common.replace reg t dst,
+                                       src = common.replace reg t src }
+                 val post = if elem reg src
+                            then codegen (Move (simpleVar acc FP, Temp t))
+                            else []
+             in pre @ (ii :: post) end
+        else [i]
+  | asm.MOVE {asm, dst, src} =>
+    let val t = newtemp ()
+     in if reg = src
+        then codegen (Move (Temp t, simpleVar acc FP))
+        else if reg = dst
+        then codegen (Move (simpleVar acc FP, Temp t))
+        else [i]
+    end
+
+fun spill reg acc asm =
+    List.concat (map (spill1 reg acc) asm)
 
 fun allocate_regs interf asm =
     let val IGRAPH {graph=itf,tnode=tnode,ntemp=ntemp,moves=moves} = interf
