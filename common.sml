@@ -58,3 +58,8 @@ and indent' [] = []
   | indent' (h::t) = if h = #"\n"
                      then h :: #"\t" :: indent' t
                      else h :: indent' t
+
+fun splitAt i []     = ([], [])
+  | splitAt 0 l      = ([], l)
+  | splitAt n (h::t) = let val (a, b) = splitAt (n-1) t
+                       in (h::a, b) end

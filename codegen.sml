@@ -104,17 +104,36 @@ struct
 
     fun gen_call e f args =
         let val args' = List.map gen_e args
-            val actual_regs = List.take (arg_regs, length args)
+            val (by_reg, by_stack) = splitAt (length arg_regs) args'
+            val actual_regs = List.take (arg_regs, length by_reg)
+            val size = ref 0
+
+            fun set_arg_reg (a, r) =
+                emit (MOVE { asm = "movq 's0, 'd0", dst = r, src = a})
+
+            fun set_arg_stack a = (
+                emit (OPER { asm = "pushq 's0", src = [a], dst = [], jump = []});
+                size := 8 + !size
+            )
+
          in
-             List.app (fn (a,r) => emit (MOVE { asm = "movq 's0, 'd0", dst = r, src = a}))
-                    (ListPair.zip (args', arg_regs));
+             List.app set_arg_stack (rev by_stack);
+             List.app set_arg_reg (ListPair.zip (by_reg, actual_regs));
+
              if e then
              emit (OPER { asm = "xorq %rax, %rax",
                               src = [], dst = [rax], jump = []})
              else ();
+
              emit (OPER { asm = "call " ^ f,
                               src = actual_regs, dst = arg_regs @ caller_saved,
-                              jump = []}) end
+                              jump = []});
+
+             if !size <> 0
+             then emit (OPER {asm = "addq $" ^ printInt (!size) ^ ", %rsp",
+                              dst = [], src = [], jump = []})
+             else ()
+        end
 
     fun gen_cjump relop l r tl fl =
     let val text = case relop of
