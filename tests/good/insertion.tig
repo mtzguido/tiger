@@ -1,0 +1,46 @@
+let
+	var N := 10
+
+	type as = array of string
+	var A := as[N] of "."
+
+	function print_arr () = (
+		for i := 0 to N-1 do (
+			print("A["); print_int(i); print ("] = ");
+			print(A[i]); print("\n")
+		);
+		print("\n")
+	)
+
+	function push (a : as, i : int, k : int) =
+		if i < k
+		then (push(a, i + 1, k); a[i + 1] := a[i])
+
+	function insert (x : string, a : as, i : int, k : int) =
+		if x > a[i] & i < k
+		then insert (x, a, i + 1, k)
+		else (push (a, i, k) ; a[i] := x)
+
+	function insertion_sort(a : as, i : int, len : int) =
+		for i := 1 to len - 1 do
+			insert(a[i], a, 0, i)
+
+in
+	A[0] := "a";
+	A[1] := "g";
+	A[2] := "c";
+	A[3] := "3";
+	A[4] := "d";
+	A[5] := "o";
+	A[6] := "m";
+
+	print("Unsorted:\n");
+	print_arr();
+	print("\n");
+
+	insertion_sort(A, 0, N);
+
+	print("Sorted:\n");
+	print_arr();
+	print("\n")
+end
