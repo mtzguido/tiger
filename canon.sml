@@ -5,12 +5,14 @@ struct
     type stmlist = IRstm list
 
     fun conmute1 (Exp _) _ = raise Fail "exp on left?"
+      | conmute1 Skip _ = true
       | conmute1 _ (Const _) = true
       | conmute1 _ (Name _) = true
       | conmute1 s (Anot (_, e)) = conmute1 s e
       | conmute1 _ _ = false
 
-    fun conmute ss e = List.all (fn s => conmute1 s e) ss
+    fun conmute (Seq (l, r)) e = conmute l e andalso conmute r e
+      | conmute s e = conmute1 s e
 
     fun fold_binop bop = case bop of
         Plus => curry op+
@@ -19,44 +21,39 @@ struct
       | Div => (fn a => fn b => a div b)
       | _ => raise Fail "can't fold op"
 
-    (*
-     * FIXME: there is a heavy usage of list concatenation
-     * here, which should be slow. We can change this into
-     * using Seq and then flattening into a list, which
-     * should be O(n) (while this is O(n^2), I think)
-     *)
     fun canon_stm s =
     case s of
-        Seq (l,r) => (canon_stm l)@(canon_stm r)
+        Seq (l,r) => Seq (canon_stm l, canon_stm r)
       | Jump (e, l) =>
             let val (ep, er) = canon_expr e
-             in ep @ [Jump (er, l)] end
+             in Seq (ep, Jump (er, l)) end
       | Exp e =>
             let val (ep, _) = canon_expr e in ep end
       | CJump (bop, l, r, t, f) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r
-             in lp @ rp @ [CJump (bop, le, re, t, f)] end
+             in Seq (lp, Seq (rp, CJump (bop, le, re, t, f))) end
       | Move (l, r) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r
-             in lp @ rp @ [Move (le, re)] end
-      | Label l => [Label l]
-      | Skip => []
+             in Seq (lp, Seq (rp, Move (le, re))) end
+      | Label l => Label l
+      | Skip => Skip
 
     and canon_expr e =
     case e of
-        Const i => ([], Const i)
-      | Name n  => ([], Name n)
-      | Temp t  => ([], Temp t)
-      | Binop (bop, Const l, Const r) => ([], Const (fold_binop bop l r))
+        Const i => (Skip, Const i)
+      | Name n  => (Skip, Name n)
+      | Temp t  => (Skip, Temp t)
+      | Binop (bop, Const l, Const r) =>
+          (Skip, Const (fold_binop bop l r))
       | Binop (bop, l, r) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r
              in if conmute rp le
-                then (lp @ rp, Binop (bop, le, re))
+                then (Seq (lp, rp), Binop (bop, le, re))
                 else let val t = Temp (temp.newtemp ())
-                      in (lp @ [Move (t, le)] @ rp, Binop (bop, t, re))
+                      in (Seq (Seq (lp, (Move (t, le))), rp), Binop (bop, t, re))
                       end
             end
       | Mem l =>
@@ -66,16 +63,23 @@ struct
             let val (fp, fe) = canon_expr f
                 val (ap, ae) = ListPair.unzip (List.map canon_expr args)
                 val t = temp.newtemp ()
-             in (fp @ List.concat ap @ [Move (Temp t, Call (e, fe, ae))], Temp t) end
+             in (Seq (fp, Seq (SEQ ap, Move (Temp t, Call (e, fe, ae)))), Temp t) end
       | Eseq (s, e) =>
             let val (ep, ee) = canon_expr e
-             in (canon_stm s @ ep, ee) end
+             in (Seq (canon_stm s, ep), ee) end
       | Anot (l, e) =>
             let val (ep, ee) = canon_expr e
              in (ep, Anot (l, ee)) end
 
+    fun flatten (Seq (l, r)) a =
+            flatten l (flatten r a)
+      | flatten Skip a =
+            a
+      | flatten x a =
+            x :: a
+
     fun canon s =
-        canon_stm s
+        flatten (canon_stm s) []
 
     fun bblocks ss =
         let val d = temp.newlabel ()
