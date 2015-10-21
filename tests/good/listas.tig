@@ -1,0 +1,46 @@
+let
+	type any = {any : int}
+	type a = int
+	type list = {first : a, tail  : list}
+
+	var buffer := getchar ()
+
+	function showlist (xs : list) = 
+		if xs <> nil then (print_int(xs.first);print(" ");showlist(xs.tail))
+
+	function f (i : a) : a =
+		i
+
+	function g (x : a, y : a) : a = x + y
+
+	function foldl (init : a, xs : list) : a =
+		if xs = nil
+		then init
+		else foldl(g(xs.first,init),xs.tail)
+
+	function readint (any : any) : int =
+		let	var i := 0
+			function isdigit (s : string) : int =
+				ord ("0") <= ord (s) & ord (s) <= ord ("9")
+			function skipto () =
+				while buffer = " " | buffer = "\n"
+					do buffer := getchar ()
+		in skipto ();
+			any.any := isdigit (buffer);
+			while isdigit (buffer)
+				do (i := i * 10 + ord (buffer) - ord ("0");
+			buffer := getchar ());
+			i
+		end
+
+	function readlist () : list =
+		let	var any := any{any=0}
+			var i := readint (any)
+		in if any.any
+			then list{first=i,tail=readlist ()}
+			else nil
+		end
+in
+	print_int(foldl(0, readlist()));
+	print("\n")
+end
