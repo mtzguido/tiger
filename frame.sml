@@ -71,11 +71,13 @@ struct
 
     fun wrapFun1 body (frame:Frame) =
         let val body = Nx (Move (RV, unEx body))
+            val label = Label (#name frame)
+
             val args = #formals frame
             fun assign_arg (acc, reg) =
-                Move (simpleVar acc FP, Temp reg)
+                Move (simpleVar acc FP, reg)
 
-            val label = Label (#name frame)
+            val (by_reg, by_stack) = splitAt (length arg_regs) args
 
             fun save_reg r =
                 let val t = newtemp ()
@@ -84,13 +86,22 @@ struct
             fun restore_one (r, t) =
                 Move (Temp r, Temp t)
 
-            val assign_args = ListPair.map assign_arg (args, arg_regs)
+            val idx = ref 16
+
+            val assign_regs = ListPair.map assign_arg (by_reg, map Temp arg_regs)
+
+            fun assign_stack_arg r =
+                Move (simpleVar r FP, Mem (Binop (Plus, Const (!idx), FP)))
+                before idx := (!idx) + 8
+
+            val assign_stack = map assign_stack_arg by_stack
+
             val (save_temps, do_save_regs) =
                     ListPair.unzip (List.map save_reg callee_save_regs)
 
             val do_restore_regs = List.map restore_one (ListPair.zip (callee_save_regs, save_temps))
 
-        in SEQ (label :: assign_args @ do_save_regs @ [unNx body] @ do_restore_regs) end
+        in SEQ (label :: assign_regs @ assign_stack @ do_save_regs @ [unNx body] @ do_restore_regs) end
 
     fun wrapFun2 (frame:Frame) body =
         body @ [asm.OPER { asm = "", src = rsp :: callee_save_regs,
