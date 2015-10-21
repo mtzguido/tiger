@@ -7,7 +7,8 @@ sig
         | Temp of temp.temp
         | Binop of binop * IRexp * IRexp
         | Mem of IRexp
-        | Call of IRexp * IRexp list
+        (* bool = is the call external? *)
+        | Call of bool * IRexp * IRexp list
         | Eseq of IRstm * IRexp
         | Anot of string * IRexp
     and IRstm =

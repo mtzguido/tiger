@@ -62,11 +62,11 @@ struct
       | Mem l =>
             let val (lp, le) = canon_expr l
              in (lp, Mem le) end
-      | Call (f, args) =>
+      | Call (e, f, args) =>
             let val (fp, fe) = canon_expr f
                 val (ap, ae) = ListPair.unzip (List.map canon_expr args)
                 val t = temp.newtemp ()
-             in (fp @ List.concat ap @ [Move (Temp t, Call (fe, ae))], Temp t) end
+             in (fp @ List.concat ap @ [Move (Temp t, Call (e, fe, ae))], Temp t) end
       | Eseq (s, e) =>
             let val (ep, ee) = canon_expr e
              in (canon_stm s @ ep, ee) end

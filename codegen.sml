@@ -102,14 +102,16 @@ struct
       | Eseq _ => raise Fail "Eseq on codegen?"
       | Anot (_,e) => gen_e e
 
-    fun gen_call f args =
+    fun gen_call e f args =
         let val args' = List.map gen_e args
             val actual_regs = List.take (arg_regs, length args)
          in
              List.app (fn (a,r) => emit (MOVE { asm = "movq 's0, 'd0", dst = r, src = a}))
                     (ListPair.zip (args', arg_regs));
+             if e then
              emit (OPER { asm = "xorq %rax, %rax",
-                              src = [], dst = [rax], jump = []});
+                              src = [], dst = [rax], jump = []})
+             else ();
              emit (OPER { asm = "call " ^ f,
                               src = actual_regs, dst = arg_regs @ caller_saved,
                               jump = []}) end
@@ -134,8 +136,8 @@ struct
 
     fun gen_s s =
     case s of
-        Exp (Call (Name f, args)) =>
-            gen_call f args
+        Exp (Call (e, Name f, args)) =>
+            gen_call e f args
 
       | Exp _ =>
             raise Fail "Exp in codegen?"
@@ -152,9 +154,9 @@ struct
                               src = [gen_e e, gen_e r],
                               jump = [] })
 
-      | Move (l, Call (Name f, args)) =>
+      | Move (l, Call (e, Name f, args)) =>
             let val lt = gen_e l in
-                gen_call f args;
+                gen_call e f args;
                 emit (MOVE { asm = "movq 's0, 'd0", src = rax, dst = lt})
             end
 

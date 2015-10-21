@@ -73,7 +73,7 @@ struct
         let val body = Nx (Move (RV, unEx body))
             val args = #formals frame
             fun assign_arg (acc, reg) =
-                Move (simpleVar acc FP, reg)
+                Move (simpleVar acc FP, Temp reg)
 
             val label = Label (#name frame)
 
@@ -84,7 +84,7 @@ struct
             fun restore_one (r, t) =
                 Move (Temp r, Temp t)
 
-            val assign_args = ListPair.map assign_arg (args, map Temp arg_regs)
+            val assign_args = ListPair.map assign_arg (args, arg_regs)
             val (save_temps, do_save_regs) =
                     ListPair.unzip (List.map save_reg callee_save_regs)
 

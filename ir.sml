@@ -6,7 +6,7 @@ struct
         | Temp of temp.temp
         | Binop of binop * IRexp * IRexp
         | Mem of IRexp
-        | Call of IRexp * IRexp list
+        | Call of bool * IRexp * IRexp list
         | Eseq of IRstm * IRexp
         | Anot of string * IRexp
     and IRstm =
@@ -60,7 +60,7 @@ struct
       | p_expr (Temp t) = temp.toString t
       | p_expr (Binop (binop,l,r)) = paren (p_expr l ^ " " ^ p_binop binop ^ " " ^ p_expr r)
       | p_expr (Mem e) = "MEM[" ^ p_expr e ^ "]"
-      | p_expr (Call (n, a)) = p_expr n ^ paren (p_exprlist a)
+      | p_expr (Call (_, n, a)) = p_expr n ^ paren (p_exprlist a)
       | p_expr (Eseq (s, e)) = "Eseq (" ^ p_stmt s ^ ", " ^ p_expr e ^ ")"
       | p_expr (Anot (s, e)) = "Anot: <"^s^"> " ^ p_expr e
     and p_exprlist [] = "[]"

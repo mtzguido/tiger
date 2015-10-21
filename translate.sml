@@ -68,10 +68,10 @@ struct
      *)
 
     fun trCall true _ _ fname args =
-        Call (Name fname, args)
+        Call (true, Name fname, args)
       | trCall false (Frame f) (Frame us) fname args =
         let val sl = get_fp' (#parent f) (Frame us) FP
-        in Call (Name fname, sl :: args) end
+        in Call (false, Name fname, sl :: args) end
       | trCall _ _ _ _ _ =
           raise Fail "trCall unimplemented"
 

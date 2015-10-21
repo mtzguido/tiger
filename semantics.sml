@@ -187,7 +187,7 @@ fun seman vt tt exp =
                                           | NeqOp => Ne
                                           | _ => semanError ii "internal error (eq)"
                          in (Cx (fn (t,f) =>
-                                    CJump (irop, Call (Name "_tiger_strcmp",
+                                    CJump (irop, Call (true, Name "_tiger_strcmp",
                                                         [unEx li, unEx ri]), Const 0, t, f)
                                 ), TInt)
                          end
@@ -214,7 +214,7 @@ fun seman vt tt exp =
                                           | LeOp => Le
                                           | _ => semanError ii "internal error (ord)"
                          in (Cx (fn (t,f) =>
-                                    CJump (irop, Call (Name "_tiger_strcmp",
+                                    CJump (irop, Call (true, Name "_tiger_strcmp",
                                                         [unEx li, unEx ri]), Const 0, t, f)
                                 ), TInt)
                          end
@@ -274,7 +274,7 @@ fun seman vt tt exp =
                           false )
     in
       if check_flds flds_seman formal_types
-      then (Ex (Call (Name "__mk_record", (Const (length flds_expr))::flds_expr)), TRecord rectype)
+      then (Ex (Call (true, Name "__mk_record", (Const (length flds_expr))::flds_expr)), TRecord rectype)
       else raise SemanFail
     end
   | SeqE (es, _) =>
@@ -419,7 +419,7 @@ fun seman vt tt exp =
         val (size_e, sizet) = seman' size
         in if typeMatch ii elemt initt
                then if typeMatch ii sizet TInt
-                    then (Ex (Call (Name "__mk_array", [unEx init_e, unEx size_e])),
+                    then (Ex (Call (true, Name "__mk_array", [unEx init_e, unEx size_e])),
                             TArray (elemt, uq))
                     else semanError ii "el tamaño del array no tipa a entero"
                else semanError ii "la inicialización del array no tipa al tipo del array"
