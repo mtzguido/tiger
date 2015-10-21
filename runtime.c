@@ -5,11 +5,11 @@
 #include <stdarg.h>
 
 struct string {
-	int len;
+	long len;
 	char c[0];
 };
 
-struct string *_alloc_string(int l)
+struct string *_alloc_string(long l)
 {
 	struct string *ret = malloc(offsetof(struct string, c[l]));
 
@@ -40,14 +40,14 @@ void _tiger_print_err(struct string *s)
 	_tiger_print_file(s, stderr);
 }
 
-int _tiger_ord(struct string *s)
+long _tiger_ord(struct string *s)
 {
 	return s->c[0];
 }
 
 struct string *chrs[256];
 
-struct string *_tiger_chr(int i)
+struct string *_tiger_chr(long i)
 {
 	return chrs[i];
 }
@@ -62,7 +62,7 @@ struct string *_tiger_concat(struct string *l, struct string *r)
 	return ret;
 }
 
-void _tiger_exit(int c)
+void _tiger_exit(long c)
 {
 	exit(c);
 }
@@ -79,22 +79,22 @@ struct string *_tiger_getchar(void)
 	return ret;
 }
 
-int _tiger_not(int v)
+long _tiger_not(long v)
 {
 	return !v;
 }
 
-void _tiger_print_int(int i)
+void _tiger_print_int(long i)
 {
-	printf("%d", i);
+	printf("%ld", i);
 }
 
-int _tiger_size(struct string *s)
+long _tiger_size(struct string *s)
 {
 	return s->len;
 }
 
-int _tiger_strcmp(struct string *l, struct string *r)
+long _tiger_strcmp(struct string *l, struct string *r)
 {
 	int i;
 
@@ -113,7 +113,7 @@ int _tiger_strcmp(struct string *l, struct string *r)
 	return 0;
 }
 
-struct string *_tiger_substring(struct string *s, int from, int len)
+struct string *_tiger_substring(struct string *s, long from, long len)
 {
 	struct string *ret = _alloc_string(len);
 
@@ -150,7 +150,7 @@ void *__mk_record(long len, ...)
 	return ret;
 }
 
-int _tigermain_0_0(void);
+long _tigermain_0_0(void);
 
 int main()
 {

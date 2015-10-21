@@ -63,7 +63,7 @@ struct
     fun addString s =
         let val l = strlabel ()
             val asm_lab = l ^ ":\n"
-            val asm_len = "\t.long " ^ printInt (String.size s) ^ "\n"
+            val asm_len = "\t.quad " ^ printInt (String.size s) ^ "\n"
             val asm_str = "\t.ascii \"" ^ String.toCString s ^ "\"\n"
          in out (asm_lab ^ asm_len ^ asm_str ^ "\n");
             Name l
