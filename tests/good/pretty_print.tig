@@ -23,5 +23,14 @@ let
         end
     in show (0, tree); output
     end
-in 0
-end
+
+    var a := tree { key = "a", left = nil, right = nil }
+    var b := tree { key = "b", left = nil, right = nil }
+    var c := tree { key = "c", left = a, right = b }
+
+    var d := tree { key = "d", left = nil, right = nil }
+    var e := tree { key = "e", left = nil, right = nil }
+    var f := tree { key = "f", left = d, right = e }
+
+    var g := tree { key = "g", left = c, right = f }
+in print(prettyprint(g)); print("\n") end
