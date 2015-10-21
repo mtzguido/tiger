@@ -44,12 +44,12 @@ struct
     fun frameAllocLocal (fr:Frame) e =
         if e
         then let val off = #localoffset fr
-             in InFrame (!off) before off := !off - wordSize
+             in (off := !off - wordSize ; InFrame (!off))
              end
         else InReg (temp.newtemp ())
 
     fun mkFrame {name, formals} =
-        let val f = { name = name, formals = [], localoffset = ref (~wordSize) }
+        let val f = { name = name, formals = [], localoffset = ref 0 }
             val faccs = List.map (frameAllocLocal f) formals
          in {name = #name f, formals = faccs, localoffset = #localoffset f} end
 
@@ -112,11 +112,11 @@ struct
     (* This assumes "h" is the entry label for the function *)
     fun wrapFun3 lab (frame:Frame) (h::body) =
         let val prologue = ".global " ^ #name frame ^ "\n"
-            val framesize = wordSize + abs (!(#localoffset frame))
+            val framesize = !(#localoffset frame)
             val intro = [
                 literal "pushq %rbp",
                 literal "movq %rsp, %rbp",
-                literal ("subq $" ^ printInt framesize ^ ", %rsp")
+                literal ("addq $" ^ printInt framesize ^ ", %rsp")
             ]
             val exit = [
                 asm.LABEL { asm = lab^":", lab = lab },
