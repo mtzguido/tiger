@@ -27,8 +27,18 @@ struct
       | Jump (e, l) =>
             let val (ep, er) = canon_expr e
              in Seq (ep, Jump (er, l)) end
+
+      | Exp (Call (e, f, args)) =>
+            let val (cp, ce) = canon_call e f args
+             in Seq (cp, Exp ce) end
+
+      | Move (Temp t, Call (e, f, args)) =>
+            let val (cp, ce) = canon_call e f args
+             in Seq (cp, Move (Temp t, ce)) end
+
       | Exp e =>
             let val (ep, _) = canon_expr e in ep end
+
       | CJump (bop, l, r, t, f) =>
             let val (lp, le) = canon_expr l
                 val (rp, re) = canon_expr r
@@ -60,16 +70,21 @@ struct
             let val (lp, le) = canon_expr l
              in (lp, Mem le) end
       | Call (e, f, args) =>
-            let val (fp, fe) = canon_expr f
-                val (ap, ae) = ListPair.unzip (List.map canon_expr args)
+            let val (cp, ce) = canon_call e f args
                 val t = temp.newtemp ()
-             in (Seq (fp, Seq (SEQ ap, Move (Temp t, Call (e, fe, ae)))), Temp t) end
+             in (Seq (cp, Move (Temp t, ce)), Temp t) end
       | Eseq (s, e) =>
             let val (ep, ee) = canon_expr e
              in (Seq (canon_stm s, ep), ee) end
       | Anot (l, e) =>
             let val (ep, ee) = canon_expr e
              in (ep, Anot (l, ee)) end
+
+    and canon_call e f args =
+            let val (fp, fe) = canon_expr f
+                val (ap, ae) = ListPair.unzip (List.map canon_expr args)
+             in (Seq (fp, SEQ ap), Call (e, fe, ae)) end
+
 
     fun flatten (Seq (l, r)) a =
             flatten l (flatten r a)
