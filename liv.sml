@@ -19,8 +19,8 @@ struct
 
     fun fixpoint graph use def =
         let fun proc1 n (inS, outS, p) =
-            let val inSn' = union (fromlist (use n)) (diff (outS n) (fromlist (def n)))
-                val outSn' = foldl (fn (n2, s) => union s (inS n2)) emptySet (succ n)
+            let val inSn' = union (fromlist tcomp (use n)) (diff (outS n) (fromlist tcomp (def n)))
+                val outSn' = foldl (fn (n2, s) => union s (inS n2)) (emptySet tcomp) (succ n)
                 val inS'  = oplus inS  n inSn'
                 val outS' = oplus outS n outSn'
                 val p' = p
@@ -35,7 +35,7 @@ struct
                     then rep (inS', outS')
                     else (inS, outS)
                 end
-             val (inS, outS) = rep (all emptySet, all emptySet)
+             val (inS, outS) = rep (all (emptySet tcomp), all (emptySet tcomp))
           in fn n => (inS n, outS n) end
 
     fun interf_calc flow liv_fun =
@@ -74,7 +74,7 @@ struct
                     val (_, lo') = liv_fun node
                     val interf_set = if ismove node
                                          then case use node of
-                                                  [h] => diff lo' (singleton h)
+                                                  [h] => diff lo' (singleton tcomp h)
                                                 | _ => raise Fail "non-singleton use in move??"
                                          else lo'
                     val interf_list = map tnode (tolist interf_set)

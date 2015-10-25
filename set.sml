@@ -1,40 +1,20 @@
 structure set :> set =
 struct
-    type 'a set = 'a list * ('a -> 'a -> bool)
+    type 'a set = 'a Binaryset.set
 
-    fun beq a b = a = b
+    fun emptySet f = Binaryset.empty f
 
-    val emptySet = ([], beq)
-    fun emptySet' f = ([], f)
+    fun insert e s = Binaryset.add (s, e)
+    fun delete e s = Binaryset.delete (s, e)
+    fun member e s = Binaryset.member (s, e)
+    fun tolist s = Binaryset.listItems s
 
-    fun elem f x [] = false
-      | elem f x (h::t) = f x h orelse elem f x t
+    fun singleton f e = Binaryset.singleton f e
 
-    fun del f x [] = []
-      | del f x (h::t) =
-        if f x h
-        then t
-        else h :: (del f x t)
+    fun fromlist f l = Binaryset.addList (emptySet f, l)
 
-    fun insert x (l, f) =
-        if elem f x l   
-        then (l, f)
-        else (x :: l, f)
+    fun union s r = Binaryset.union (s, r)
+    fun diff s r  = Binaryset.difference (s, r)
 
-    fun delete x (l, f) = (del f x l, f)
-
-    fun member x (l, f) = elem f x l
-
-    fun tolist (l, _) = l
-
-    fun singleton e = insert e emptySet
-    fun fromlist l = foldl (fn (e, s) => insert e s) emptySet l
-
-    fun union (l, _) r =
-        foldl (fn (e,s) => insert e s) r l
-
-    fun diff l (r, _) =
-        foldl (fn (e,s) => delete e s) l r
-
-    fun size (l, _) = length l
+    fun size s = Binaryset.numItems s
 end
