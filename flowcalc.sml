@@ -16,8 +16,10 @@ struct
         let val jmap = (!(#jmp st))
             val lmap = (!(#lmap st))
             fun add1 l = case lmap l of
-                             (* This can only happen on the last
-                                label, let's ignore it for now *)
+                             (* FIXME: (maybe?)
+                              * This can only happen on the last
+                              * label, let's ignore it for now
+                              *)
                              NONE => ()
                            | SOME n2 => mk_edge n n2
          in List.app add1 (jmap n) end

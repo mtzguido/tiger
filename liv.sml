@@ -23,17 +23,18 @@ struct
                 val outSn' = foldl (fn (n2, s) => union s (inS n2)) (emptySet tcomp) (succ n)
                 val inS'  = oplus inS  n inSn'
                 val outS' = oplus outS n outSn'
-                val p' = p
-                            orelse (size inSn'  > size (inS n))
-                            orelse (size outSn' > size (outS n))
+                val p' = p orelse (size inSn'  > size (inS n))
+                           orelse (size outSn' > size (outS n))
              in (inS', outS', p') end
+
              fun lap (inS, outS) =
                 foldl (fn (n,s) => proc1 n s) (inS, outS, false) (nodes graph)
+
              fun rep (inS, outS) =
                 let val (inS', outS', p) = lap (inS, outS)
                  in if p
                     then rep (inS', outS')
-                    else (inS, outS)
+                    else     (inS, outS)
                 end
              val (inS, outS) = rep (all (emptySet tcomp), all (emptySet tcomp))
           in fn n => (inS n, outS n) end
