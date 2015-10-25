@@ -2,6 +2,7 @@ structure translate :> translate =
 struct
     open ir canon codegen flowcalc flow graph liv common set temp
     open color ofile
+    open Time Timer
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -76,7 +77,14 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        let val _ = print ("Generated IR for " ^  frame.frameName (#frame f) ^ ":\n")
+        let val timer = ref (startCPUTimer ())
+            fun start_t _ = timer := startCPUTimer ()
+            fun stop_t M =
+                let val {usr=usr,...} = checkCPUTimer (!timer)
+                 in print (M ^ " took: " ^ toString usr ^ "\n")
+                end
+
+            val _ = print ("Generated IR for " ^  frame.frameName (#frame f) ^ ":\n")
             val text = irToString b
             val _ = print (indent text)
             val _ = print "\n\n"
@@ -89,13 +97,19 @@ struct
             val b = frame.wrapFun1 b (#frame f)
 
             (* Canonize the IR tree *)
+            val _ = start_t ()
             val b = canon b
+            val _ = stop_t "Canonizing"
 
             (* Split into basic blocks *)
+            val _ = start_t ()
             val (blocks, done_label) = bblocks b
+            val _ = stop_t "B-Blocking"
 
             (* Linearize the basic blocks into a trace *)
+            val _ = start_t ()
             val trace = traceSched blocks
+            val _ = stop_t "Tracing"
 
             (* Print the trace *)
             fun p_stmts s = print (indent (irToString (Nx s)) ^ "\n")
@@ -104,7 +118,9 @@ struct
             val _ = print "\n"
 
             (* Generate real machine code, with unbounded regs *)
+            val _ = start_t ()
             val asm = List.concat (map codegen trace)
+            val _ = stop_t "Code generation"
 
             (*
              * Call wrapFun2 which adds a dummy instruction
@@ -114,7 +130,9 @@ struct
              *)
             val asm = frame.wrapFun2 (#frame f) asm
 
+            val _ = start_t ()
             val asm = allocator.run (#frame f) asm
+            val _ = stop_t "Allocating"
 
             (*
              * wrapFun3 finishes the function declaration
