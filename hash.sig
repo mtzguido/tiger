@@ -18,8 +18,13 @@ val tabHas  : (''a, 'b) Tabla -> ''a -> bool
 val tabFind : (''a, 'b) Tabla -> ''a -> 'b option
 val tabTake : (''a, 'b) Tabla -> ''a -> 'b             (* lanza excepcion si no está *)
 
+val tabDel : (''a, 'b) Tabla -> ''a -> unit
+
 val tabToList : (''a, 'b) Tabla -> (''a * 'b) list
 val tabInsertList  : (''a, 'b) Tabla -> (''a * 'b) list -> unit
 val tabReplaceList : (''a, 'b) Tabla -> (''a * 'b) list -> unit
+
+(* copia la tabla *)
+val tabMap : (''a, 'b) Tabla -> (''a * 'b -> 'b) -> (''a, 'b) Tabla
 
 end

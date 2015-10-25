@@ -20,7 +20,13 @@ struct
     fun tabFind t k = peek t k
     fun tabTake t k = find t k
 
+    fun tabDel t k =
+        (remove t k; ()) handle _ => ()
+
     fun tabToList t = listItems t
     fun tabInsertList t l = List.app (tabInsert t) l
     fun tabReplaceList t l = List.app (tabReplace t) l
+
+    fun tabMap t f =
+        map f t
 end
