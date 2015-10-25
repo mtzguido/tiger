@@ -2,6 +2,7 @@ structure temp :> temp =
 struct
     datatype temp = Temp of int
                   | Real of string
+
     type label = string
 
     val curr = ref 100
@@ -25,4 +26,9 @@ struct
 
     fun isreal (Real _) = true
       | isreal _ = false
+
+    fun tcomp (Real s1, Real s2) = String.compare (s1, s2)
+      | tcomp (Temp i,  Temp j)  = Int.compare (i, j)
+      | tcomp (Temp _, Real _)   = LESS
+      | tcomp (Real _, Temp _)   = GREATER
 end

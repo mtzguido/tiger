@@ -13,4 +13,5 @@ sig
     val toString : temp -> string
 
     val isreal : temp -> bool
+    val tcomp : (temp * temp) -> order
 end
