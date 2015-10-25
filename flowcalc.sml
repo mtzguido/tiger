@@ -24,7 +24,6 @@ struct
 
     fun all e = fn _ => e
     fun oplus m v e = fn x => if x = v then e else m x
-    fun oplus_n m v e = fn x => if eq x v then e else m x
 
     fun initstate () = { lmap = ref (all NONE),
                          def = ref (all []),
@@ -44,14 +43,14 @@ struct
                     (#lmap s) := oplus (!(#lmap s)) (#lab info) (SOME n);
                     make_nodes' (SOME n) g s is )
               | MOVE info => (
-                  (#def s) := oplus_n (!(#def s)) n [#dst info];
-                  (#use s) := oplus_n (!(#use s)) n [#src info];
-                  (#ismove s) := oplus_n (!(#ismove s)) n true;
+                  (#def s) := oplus (!(#def s)) n [#dst info];
+                  (#use s) := oplus (!(#use s)) n [#src info];
+                  (#ismove s) := oplus (!(#ismove s)) n true;
                   make_nodes' (SOME n) g s is )
               | OPER info =>  (
-                  (#def s) := oplus_n (!(#def s)) n (#dst info);
-                  (#use s) := oplus_n (!(#use s)) n (#src info);
-                  (#jmp s) := oplus_n (!(#jmp s)) n (#jump info);
+                  (#def s) := oplus (!(#def s)) n (#dst info);
+                  (#use s) := oplus (!(#use s)) n (#src info);
+                  (#jmp s) := oplus (!(#jmp s)) n (#jump info);
                   make_nodes' (case #jump info of [] => SOME n | l => NONE) g s is )
          end
 

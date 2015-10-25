@@ -13,7 +13,6 @@ struct
 
     fun all e = fn _ => e
     fun oplus m v e = fn x => if x = v then e else m x
-    fun oplus_n m v e = fn x => if eq x v then e else m x
 
     fun rep 0 f b = b
       | rep n f b = rep (n-1) f (f b)
@@ -22,8 +21,8 @@ struct
         let fun proc1 n (inS, outS, p) =
             let val inSn' = union (fromlist (use n)) (diff (outS n) (fromlist (def n)))
                 val outSn' = foldl (fn (n2, s) => union s (inS n2)) emptySet (succ n)
-                val inS'  = oplus_n inS  n inSn'
-                val outS' = oplus_n outS n outSn'
+                val inS'  = oplus inS  n inSn'
+                val outS' = oplus outS n outSn'
                 val p' = p
                             orelse (size inSn'  > size (inS n))
                             orelse (size outSn' > size (outS n))
@@ -54,7 +53,7 @@ struct
                  in (case tnode temp of _ => interf)
                     handle Unmapped => let val n = newNode graph
                                         val tnode' = oplus tnode temp n
-                                        val ntemp' = oplus_n ntemp n temp
+                                        val ntemp' = oplus ntemp n temp
                                        in IGRAPH {graph=graph, tnode=tnode',
                                                   ntemp=ntemp', moves=moves} end
                 end

@@ -35,8 +35,6 @@ struct
     fun pred n = List.map fst (List.filter (sndeq n) (nedges n))
     fun adj  n = uniq (succ n @ pred n)
 
-    fun eq n1 n2 = n1 = n2
-
     fun newGraph () = G (ref { nodes = [], edges = [] })
 
     fun newNode (G g) =
