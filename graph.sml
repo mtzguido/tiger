@@ -155,4 +155,7 @@ struct
 
          in r := { nodes = nodes', next = next', prev = prev', counter = counter };
             graph end
+
+    fun outdeg n = size (succ n)
+    fun  indeg n = size (pred n)
 end

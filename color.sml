@@ -8,9 +8,6 @@ struct
         OK of (node -> int)
       | FAILED of node
 
-    (* Maybe check that the graph is actually symmetrical? *)
-    fun deg n = size (succ n)
-
     fun empty_coloring n = ~1
     fun oplus f id c = fn id' => if id = id' then c else f id'
 
@@ -30,7 +27,7 @@ struct
         let val ns = List.filter (fn n => pre (id n) = NONE) (tolist (nodes g))
          in case ns of
                [] => valOf o pre
-             | _ => let val easy = List.filter (fn n => deg n < k) ns
+             | _ => let val easy = List.filter (fn n => outdeg n < k) ns
                         val g' = copy g
                         val rm = case easy of
                                      (h::_) => h

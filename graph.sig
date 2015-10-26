@@ -30,4 +30,7 @@ sig
     val printGraph : graph -> unit
 
     val copy : graph -> graph
+
+    val outdeg : node -> int
+    val indeg : node -> int
 end
