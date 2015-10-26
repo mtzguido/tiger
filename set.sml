@@ -19,4 +19,6 @@ struct
     fun size s = Binaryset.numItems s
 
     fun find p s = Binaryset.find p s
+
+    fun foldl f e s = Binaryset.foldl f e s
 end

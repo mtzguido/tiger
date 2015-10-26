@@ -20,7 +20,7 @@ struct
     fun fixpoint graph use def =
         let fun proc1 n (inS, outS, p) =
             let val inSn' = union (fromlist tcomp (use n)) (diff (outS n) (fromlist tcomp (def n)))
-                val outSn' = foldl (fn (n2, s) => union s (inS n2)) (emptySet tcomp) (tolist (succ n))
+                val outSn' = List.foldl (fn (n2, s) => union s (inS n2)) (emptySet tcomp) (tolist (succ n))
                 val inS'  = oplus inS  n inSn'
                 val outS' = oplus outS n outSn'
                 val p' = p orelse (size inSn'  > size (inS n))
@@ -28,7 +28,7 @@ struct
              in (inS', outS', p') end
 
              fun lap (inS, outS) =
-                foldl (fn (n,s) => proc1 n s) (inS, outS, false) (tolist (nodes graph))
+                List.foldl (fn (n,s) => proc1 n s) (inS, outS, false) (tolist (nodes graph))
 
              fun rep (inS, outS) =
                 let val (inS', outS', p) = lap (inS, outS)
@@ -80,7 +80,7 @@ struct
                                          else lo'
                     val interf_list = map tnode (tolist interf_set)
                     val interf_regs = tolist interf_set
-                    val interf = foldl interfere interf (cartesian defT interf_regs)
+                    val interf = List.foldl interfere interf (cartesian defT interf_regs)
                 in if ismove node
                    then let val src = (case use node of
                                           [h] => tnode h
@@ -95,10 +95,10 @@ struct
                 end
 
             val itf = init
-            val itf = foldl (fn (n, s) => add_node s n) itf gpregs
-            val itf = foldl interfere itf (cartesian gpregs gpregs)
-            val itf = foldl (fn (n, s) => add_node s n) itf (temps (tolist (nodes control)))
-            val itf = foldl (fn (n, s) => interf_proc_node s n) itf (tolist (nodes control))
+            val itf = List.foldl (fn (n, s) => add_node s n) itf gpregs
+            val itf = List.foldl interfere itf (cartesian gpregs gpregs)
+            val itf = List.foldl (fn (n, s) => add_node s n) itf (temps (tolist (nodes control)))
+            val itf = List.foldl (fn (n, s) => interf_proc_node s n) itf (tolist (nodes control))
         in itf end
 
     fun liveness flow =
