@@ -27,9 +27,9 @@ struct
         end
 
     fun try_color pre k g =
-        let val ns = List.filter (fn n => pre n = NONE) (tolist (nodes g))
+        let val ns = List.filter (fn n => pre (id n) = NONE) (tolist (nodes g))
          in case ns of
-               [] => empty_coloring
+               [] => valOf o pre
              | _ => let val easy = List.filter (fn n => deg n < k) ns
                         val g' = copy g
                         val rm = case easy of
@@ -42,8 +42,14 @@ struct
          end
 
     fun color k precolor graph =
-        OK ((try_color precolor k graph) o id)
-        handle Retry n => let val Id = id n
-                              val n' = List.filter (fn n => id n = Id) (tolist (nodes graph))
-                           in FAILED (hd n') end
+        let fun pre Id =
+            let val rnode = hd (List.filter (fn n => id n = Id) (tolist (nodes graph)))
+             in precolor rnode end
+         in OK ((try_color pre k graph) o id)
+                handle Retry n =>
+                    let val Id = id n
+                        val n' = List.filter (fn n => id n = Id) (tolist (nodes graph))
+                     in FAILED (hd n')
+                    end
+        end
 end

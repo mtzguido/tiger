@@ -58,8 +58,8 @@ fun do_allocate C frame interf asm =
             let val p = List.filter (fn (_,c') => c = c') (map (fn r => (r, C (tnode r))) frame.gpregs)
              in case p of
                 [(r,_)] => r
-              | [] => raise Fail "no coloring?"
-              | _ => raise Fail "multipli coloring?"
+              | [] => raise Fail ("no coloring for color " ^ printInt c ^ "?")
+              | _ => raise Fail "multiple coloring?"
             end
 
         fun allocation r =
