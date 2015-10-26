@@ -122,9 +122,8 @@ struct
              *)
             val asm = frame.wrapFun2 (#frame f) asm
 
-            val _ = start_t ()
+            (* Allocator prints its own timing info *)
             val asm = allocator.run (#frame f) asm
-            val _ = stop_t "Allocating"
 
             (*
              * wrapFun3 finishes the function declaration

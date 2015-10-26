@@ -83,10 +83,16 @@ fun allocate_regs frame interf asm =
         fun precolor n = case (index_safe (ntemp n) gpregs) handle _ => NONE of
                             NONE => NONE
                           | SOME v => SOME (v + 1)
+        val _ = start_t ()
+        val cres = color (length frame.gpregs) precolor itf
+        val _= stop_t "Coloring"
 
-     in case color (length frame.gpregs) precolor itf of
+     in case cres of
               OK c => let val _ = print "Coloring OK!\n"
-                       in do_allocate c frame interf asm end
+                          val _ = start_t ()
+                          val asm = do_allocate c frame interf asm
+                          val _= stop_t "Final allocation"
+                       in asm end
             | FAILED n => let val reg = ntemp n
                               val _ = print ("Spilled node! : " ^ toString reg ^ "\n")
                               val _ = if isreal reg
@@ -111,12 +117,14 @@ and run frame asm =
         val _ = print "\n\n"
 
         (* build a CFG *)
+        val _ = start_t ()
         val flow = flowcalc asm
-        val _ = print "CFG built\n"
+        val _= stop_t "Flow analysis"
 
         (* Do liveness analysis, and build the interference graph *)
+        val _ = start_t ()
         val (liv, interf) = liveness flow
-        val _ = print "Interference graph built\n"
+        val _= stop_t "Liveness analysis"
 
         val FGRAPH {control=cfg,...} = flow
         val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
