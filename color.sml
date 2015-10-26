@@ -41,7 +41,7 @@ struct
                       in fixup k c' g rm end
          end
 
-    fun color k graph =
+    fun color k precolor graph =
         OK ((try_color k graph) o id)
         handle Retry n => let val Id = id n
                               val n' = List.filter (fn n => id n = Id) (nodes graph)

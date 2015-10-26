@@ -78,7 +78,7 @@ fun do_allocate C frame interf asm =
 fun allocate_regs frame interf asm =
     let val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
         val _ = print "Trying to color....\n"
-     in case color (length frame.gpregs) itf of
+     in case color (length frame.gpregs) (fn _ => NONE) itf of
               OK c => let val _ = print "Coloring OK!\n"
                        in do_allocate c frame interf asm end
             | FAILED n => let val reg = ntemp n

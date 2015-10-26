@@ -4,5 +4,5 @@ sig
         OK of (graph.node -> int)
       | FAILED of graph.node
 
-    val color : int -> graph.graph -> coloring
+    val color : int -> (graph.node -> int option) -> graph.graph -> coloring
 end
