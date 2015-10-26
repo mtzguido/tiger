@@ -24,8 +24,10 @@ struct
                            orelse (size outSn' > size (outS n))
              in (inS', outS', p') end
 
+             val sorted_nodes = revdfs graph
+
              fun lap (inS, outS) =
-                set.foldl (fn (n,s) => proc1 n s) (inS, outS, false) (nodes graph)
+                List.foldl (fn (n,s) => proc1 n s) (inS, outS, false) sorted_nodes
 
              fun rep (inS, outS) =
                 let val (inS', outS', p) = lap (inS, outS)
