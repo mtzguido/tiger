@@ -19,4 +19,5 @@ sig
     val find : ('a -> bool) -> 'a set -> 'a option
 
     val foldl : ('a * 'b -> 'b) -> 'b -> 'a set -> 'b
+    val app : ('a -> unit) -> 'a set -> unit
 end
