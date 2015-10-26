@@ -158,4 +158,23 @@ struct
 
     fun outdeg n = size (succ n)
     fun  indeg n = size (pred n)
+
+    fun revdfs g =
+        let val visited : (node, bool) Tabla = tabNew ()
+            val trace = ref []
+            fun mark n = trace := n::(!trace)
+
+            fun visit node = (
+                case tabFind visited node of
+                    NONE => (
+                        tabReplace visited (node, true);
+                        mark node;
+                        set.app visit (succ node)
+                    )
+                  | SOME _ => ()
+            )
+
+         in set.app visit (nodes g);
+            !trace
+        end
 end

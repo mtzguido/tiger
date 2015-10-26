@@ -33,4 +33,6 @@ sig
 
     val outdeg : node -> int
     val indeg : node -> int
+
+    val revdfs : graph -> node list
 end
