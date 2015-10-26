@@ -14,9 +14,6 @@ struct
     fun all e = fn _ => e
     fun oplus m v e = fn x => if x = v then e else m x
 
-    fun rep 0 f b = b
-      | rep n f b = rep (n-1) f (f b)
-
     fun fixpoint graph use def =
         let fun proc1 n (inS, outS, p) =
             let val inSn' = union (fromlist tcomp (use n)) (diff (outS n) (fromlist tcomp (def n)))
@@ -34,7 +31,7 @@ struct
                 let val (inS', outS', p) = lap (inS, outS)
                  in if p
                     then rep (inS', outS')
-                    else     (inS, outS)
+                    else     (inS,  outS)
                 end
              val (inS, outS) = rep (all (emptySet tcomp), all (emptySet tcomp))
           in fn n => (inS n, outS n) end
@@ -47,7 +44,6 @@ struct
                                moves = []}
 
             fun temp1 node = (def node) @ (use node)
-            fun temps nodes = List.concat (List.map temp1 nodes)
 
             fun add_node interf temp =
                 let val IGRAPH {graph, tnode, ntemp, moves} = interf
@@ -78,7 +74,6 @@ struct
                                                   [h] => diff lo' (singleton tcomp h)
                                                 | _ => raise Fail "non-singleton use in move??"
                                          else lo'
-                    val interf_list = map tnode (tolist interf_set)
                     val interf_regs = tolist interf_set
                     val interf = List.foldl interfere interf (cartesian defT interf_regs)
                 in if ismove node
@@ -97,7 +92,7 @@ struct
             val itf = init
             val itf = List.foldl (fn (n, s) => add_node s n) itf gpregs
             val itf = List.foldl interfere itf (cartesian gpregs gpregs)
-            val itf = List.foldl (fn (n, s) => add_node s n) itf (temps (tolist (nodes control)))
+            val itf = set.foldl (fn (n, s) => List.foldl (fn (n,a) => add_node a n) s (temp1 n)) itf (nodes control)
             val itf = foldl (fn (n, s) => interf_proc_node s n) itf (nodes control)
         in itf end
 
