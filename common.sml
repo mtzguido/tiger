@@ -63,3 +63,11 @@ fun splitAt i []     = ([], [])
   | splitAt 0 l      = ([], l)
   | splitAt n (h::t) = let val (a, b) = splitAt (n-1) t
                        in (h::a, b) end
+
+val timer = ref (Timer.startCPUTimer ())
+
+fun start_t _ = timer := Timer.startCPUTimer ()
+fun stop_t M =
+    let val {usr=usr,...} = Timer.checkCPUTimer (!timer)
+     in print (M ^ " took: " ^ Time.toString usr ^ "\n")
+    end

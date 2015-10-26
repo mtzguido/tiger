@@ -2,7 +2,6 @@ structure translate :> translate =
 struct
     open ir canon codegen flowcalc flow graph liv common set temp
     open color ofile
-    open Time Timer
 
     datatype Level = Outermost
                    | Frame of { frame : frame.Frame,
@@ -77,14 +76,7 @@ struct
           raise Fail "trCall unimplemented"
 
     fun funcDecl (Frame f) b =
-        let val timer = ref (startCPUTimer ())
-            fun start_t _ = timer := startCPUTimer ()
-            fun stop_t M =
-                let val {usr=usr,...} = checkCPUTimer (!timer)
-                 in print (M ^ " took: " ^ toString usr ^ "\n")
-                end
-
-            val _ = print ("Generated IR for " ^  frame.frameName (#frame f) ^ ":\n")
+        let val _ = print ("Generated IR for " ^  frame.frameName (#frame f) ^ ":\n")
             val text = irToString b
             val _ = print (indent text)
             val _ = print "\n\n"
