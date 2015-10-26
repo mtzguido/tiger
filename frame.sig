@@ -27,4 +27,6 @@ sig
                         { prologue: string,
                           body: asm.instr list,
                           epilogue: string }
+
+    val spill : Frame -> temp.temp -> asm.instr list -> asm.instr list
 end

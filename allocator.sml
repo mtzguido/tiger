@@ -4,36 +4,6 @@ struct
 open flow flowcalc liv graph common set temp color
 open codegen ir frame
 
-fun spill1 reg acc i = case i of
-    asm.LABEL _ => [i]
-  | asm.OPER {asm, dst, src, jump} =>
-        if elem reg dst orelse elem reg src
-        then let val t = newtemp ()
-                 val pre  = if elem reg src
-                            then codegen (Move (Temp t, simpleVar acc FP))
-                            else []
-                 val ii   = asm.OPER { asm = asm, jump = jump,
-                                       dst = common.replace reg t dst,
-                                       src = common.replace reg t src }
-                 val post = if elem reg dst
-                            then codegen (Move (simpleVar acc FP, Temp t))
-                            else []
-             in pre @ (ii :: post) end
-        else [i]
-  | asm.MOVE {asm, dst, src} =>
-    let val t = newtemp ()
-     in if reg = src
-        then codegen (Move (Temp t, simpleVar acc FP))
-             @ [asm.MOVE {asm=asm, dst=dst, src=t}]
-        else if reg = dst
-        then [asm.MOVE {asm=asm, dst=t, src=src}]
-             @ codegen (Move (simpleVar acc FP, Temp t))
-        else [i]
-    end
-
-fun spill reg acc asm =
-    List.concat (map (spill1 reg acc) asm)
-
 fun is_trivial_move (asm.MOVE {asm, dst, src}) = dst = src
   | is_trivial_move _ = false
 
@@ -98,8 +68,8 @@ fun allocate_regs frame interf asm =
                               val _ = if isreal reg
                                           then raise Fail "spilled real node??\n"
                                           else ()
-                              val acc = frame.frameAllocLocal frame true
-                              val asm = spill reg acc asm
+
+                              val asm = spill frame reg asm
 
                               val texts = map (asm.print temp.toString) asm
                               val _ = print "Spilled assembly text:\n"

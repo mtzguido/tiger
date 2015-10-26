@@ -86,6 +86,7 @@ struct
             fun restore_one (r, t) =
                 Move (Temp r, Temp t)
 
+            (* Skip saved FP and return address *)
             val idx = ref 16
 
             val assign_regs = ListPair.map assign_arg (by_reg, map Temp arg_regs)
@@ -128,4 +129,37 @@ struct
          in {prologue = prologue, body = h :: intro @ body @ exit,
              epilogue = "" } end
       | wrapFun3 _ _ [] = raise Fail "empty fun on wrapFun3?"
+
+
+fun spill1 frame reg acc i = case i of
+    asm.LABEL _ => [i]
+  | asm.OPER {asm, dst, src, jump} =>
+        if elem reg dst orelse elem reg src
+        then let val t = newtemp ()
+                 val pre  = if elem reg src
+                            then codegen (Move (Temp t, simpleVar acc FP))
+                            else []
+                 val ii   = asm.OPER { asm = asm, jump = jump,
+                                       dst = common.replace reg t dst,
+                                       src = common.replace reg t src }
+                 val post = if elem reg dst
+                            then codegen (Move (simpleVar acc FP, Temp t))
+                            else []
+             in pre @ (ii :: post) end
+        else [i]
+  | asm.MOVE {asm, dst, src} =>
+    let val t = newtemp ()
+     in if reg = src
+        then codegen (Move (Temp t, simpleVar acc FP))
+             @ [asm.MOVE {asm=asm, dst=dst, src=t}]
+        else if reg = dst
+        then [asm.MOVE {asm=asm, dst=t, src=src}]
+             @ codegen (Move (simpleVar acc FP, Temp t))
+        else [i]
+    end
+
+fun spill frame reg asm =
+    let val acc = frameAllocLocal frame true
+     in List.concat (map (spill1 frame reg acc) asm) end
+
 end
