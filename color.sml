@@ -26,8 +26,8 @@ struct
             | [] => raise Retry n
         end
 
-    fun try_color k g =
-        let val ns = nodes g
+    fun try_color pre k g =
+        let val ns = List.filter (fn n => pre n = NONE) (nodes g)
          in case ns of
                [] => empty_coloring
              | _ => let val easy = List.filter (fn n => deg n < k) ns
@@ -37,12 +37,12 @@ struct
                                    | [] => hd (ns)
 
                         val _ = rm_node_id g' (id rm)
-                        val c' = try_color k g'
+                        val c' = try_color pre k g'
                       in fixup k c' g rm end
          end
 
     fun color k precolor graph =
-        OK ((try_color k graph) o id)
+        OK ((try_color precolor k graph) o id)
         handle Retry n => let val Id = id n
                               val n' = List.filter (fn n => id n = Id) (nodes graph)
                            in FAILED (hd n') end
