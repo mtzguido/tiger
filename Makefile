@@ -89,7 +89,8 @@ canon.ui: ir.ui
 codegen.uo: codegen.ui
 codegen.ui: asm.ui
 frame.uo: asm.ui
-graph.uo: graph.ui
+graph.uo: graph.ui set.ui
+graph.ui: set.ui
 flowcalc.uo: flowcalc.ui graph.ui flow.ui
 flowcalc.ui: flow.ui asm.ui
 flow.ui: graph.ui temp.ui

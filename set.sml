@@ -5,7 +5,7 @@ struct
     fun emptySet f = Binaryset.empty f
 
     fun insert e s = Binaryset.add (s, e)
-    fun delete e s = Binaryset.delete (s, e)
+    fun delete e s = Binaryset.delete (s, e) handle NotFound => s
     fun member e s = Binaryset.member (s, e)
     fun tolist s = Binaryset.listItems s
 
@@ -17,4 +17,6 @@ struct
     fun diff s r  = Binaryset.difference (s, r)
 
     fun size s = Binaryset.numItems s
+
+    fun find p s = Binaryset.find p s
 end

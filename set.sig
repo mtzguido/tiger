@@ -15,4 +15,6 @@ sig
     val diff  : 'a set -> 'a set -> 'a set
 
     val size : 'a set -> int
+
+    val find : ('a -> bool) -> 'a set -> 'a option
 end

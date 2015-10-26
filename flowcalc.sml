@@ -1,6 +1,6 @@
 structure flowcalc :> flowcalc =
 struct
-    open graph flow asm temp
+    open graph flow asm temp set
 
     type fstate = {
         lmap : (label -> node option) ref,
@@ -11,7 +11,7 @@ struct
     }
 
     (* Adds edges to the CFG *)
-    fun flow g (st : fstate) = List.app (flow1 st) (nodes g)
+    fun flow g (st : fstate) = List.app (flow1 st) (tolist (nodes g))
     and flow1 st n =
         let val jmap = (!(#jmp st))
             val lmap = (!(#lmap st))

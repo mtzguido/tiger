@@ -1,6 +1,6 @@
 structure color :> color =
 struct
-    open graph common
+    open graph common set
 
     exception Retry of node
 
@@ -9,7 +9,7 @@ struct
       | FAILED of node
 
     (* Maybe check that the graph is actually symmetrical? *)
-    fun deg n = length (adj n)
+    fun deg n = size (succ n)
 
     fun empty_coloring n = ~1
     fun oplus f id c = fn id' => if id = id' then c else f id'
@@ -19,7 +19,7 @@ struct
     fun fixup k cf g n =
         let val colors = interval 1 k
             val Nn = adj n
-            val used = map (fn n => cf (id n)) Nn
+            val used = map (fn n => cf (id n)) (tolist Nn)
             val possible = ldiff colors used
          in case possible of
               (h::t) => oplus cf (id n) h
@@ -27,7 +27,7 @@ struct
         end
 
     fun try_color pre k g =
-        let val ns = List.filter (fn n => pre n = NONE) (nodes g)
+        let val ns = List.filter (fn n => pre n = NONE) (tolist (nodes g))
          in case ns of
                [] => empty_coloring
              | _ => let val easy = List.filter (fn n => deg n < k) ns
@@ -44,6 +44,6 @@ struct
     fun color k precolor graph =
         OK ((try_color precolor k graph) o id)
         handle Retry n => let val Id = id n
-                              val n' = List.filter (fn n => id n = Id) (nodes graph)
+                              val n' = List.filter (fn n => id n = Id) (tolist (nodes graph))
                            in FAILED (hd n') end
 end

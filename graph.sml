@@ -1,60 +1,88 @@
 structure graph :> graph =
 struct
+    open hash set
+
     datatype node = N of {
         id: int,
         g: graph
     }
     and graph = G of {
-        nodes: node list,
-        edges: (node * node) list
+        nodes: node set,
+        counter: int,
+        next: (int, node set) Tabla,
+        prev: (int, node set) Tabla
     } ref
 
     fun unG (G g) = g
     fun ngraph (N n) = #g n
 
+    fun ncomp (N m, N n) = Int.compare (#id m, #id n)
+    fun id (N n) = #id n
+
     fun nodes (G g) = #nodes (!g)
-    fun edges (G g) = #edges (!g)
-
-    fun nedges n = edges (ngraph n)
-
-    fun fst (a,b) = a
-    fun snd (a,b) = b
-
-    fun fsteq x (a,b) = x = a
-    fun sndeq x (a,b) = x = b
-    fun anyeq x (a,b) = x = a orelse x = b
 
     fun elem x [] = false
       | elem x (h::t) = x = h orelse elem x t
 
     fun add_uniq x l = if elem x l then l else x :: l
-
     fun uniq l = rev (foldl (fn (e,a) => add_uniq e a) [] l)
 
-    fun succ n = List.map snd (List.filter (fsteq n) (nedges n))
-    fun pred n = List.map fst (List.filter (sndeq n) (nedges n))
-    fun adj  n = uniq (succ n @ pred n)
+    fun succ n =
+        let val G g = ngraph n
+         in case tabFind (#next (!g)) (id n) of
+                SOME v => v
+              | NONE => emptySet ncomp
+        end
 
-    fun newGraph () = G (ref { nodes = [], edges = [] })
+    fun pred n =
+        let val G g = ngraph n
+         in case tabFind (#prev (!g)) (id n) of
+                SOME v => v
+              | NONE => emptySet ncomp
+        end
+
+    fun adj  n = union (succ n) (pred n)
+
+    fun newGraph () = G (ref {
+        nodes = emptySet ncomp,
+        next = tabNew (),
+        prev = tabNew (),
+        counter = 0
+    })
 
     fun newNode (G g) =
-        let val nodes = #nodes (!g)
-            val edges = #edges (!g)
-            val id = 1 + length (#nodes (!g))
+        let val nodes   = #nodes (!g)
+            val next    = #next (!g)
+            val prev    = #prev (!g)
+            val counter = #counter (!g)
+            val id = 1 + counter
             val n = N { id = id, g = (G g)}
-         in g := { nodes = add_uniq n nodes, edges = edges};
+         in g := { nodes = insert n nodes,
+                   next = next, prev = prev,
+                   counter = counter + 1 };
             n end
 
-    fun newEdge (G g) n1 n2 =
-        let val nodes = #nodes (!g)
-            val edges = #edges (!g)
-         in g := { nodes = nodes, edges = add_uniq (n1,n2) edges} end
+    fun newEdge (G g) m n =
+        let val nodes   = #nodes (!g)
+            val next    = #next (!g)
+            val prev    = #prev (!g)
+            val counter = #counter (!g)
+            val msucc   = succ m
+            val npred   = pred n
+         in tabReplace next (id m, insert n msucc);
+            tabReplace prev (id n, insert m npred)
+        end
 
-    fun delEdge (G g) n1 n2 =
-        let val nodes = #nodes (!g)
-            val edges = #edges (!g)
-            val edges' = List.filter (fn (a,b) => a <> n1 orelse b <> n2) edges
-         in g := { nodes = nodes, edges = edges'} end
+    fun delEdge (G g) m n =
+        let val nodes   = #nodes (!g)
+            val next    = #next (!g)
+            val prev    = #prev (!g)
+            val counter = #counter (!g)
+            val msucc   = succ m
+            val npred   = pred n
+         in tabReplace next (id m, delete n msucc);
+            tabReplace prev (id n, delete m npred)
+        end
 
     exception GraphEdge
     exception GraphFail of string
@@ -80,36 +108,51 @@ struct
 
     fun rm_node n =
         let val G g = ngraph n
-            val nodes' = List.filter (fn x => x <> n) (#nodes (!g))
-            val edges' = List.filter (not o anyeq n)  (#edges (!g))
-         in g := { nodes = nodes', edges = edges' } end
+            val nodes   = #nodes (!g)
+            val next    = #next (!g)
+            val prev    = #prev (!g)
+            val counter = #counter (!g)
+            val next'   = tabMap next (fn (k, v) => delete n v)
+            val prev'   = tabMap prev (fn (k, v) => delete n v)
+         in g := { nodes = delete n nodes,
+                   next = next', prev = prev',
+                   counter = counter }
+        end
 
     fun id (N n) = #id n
 
     fun rm_node_id (G g) Id =
-        let val n = case List.filter (fn n => (id n) = Id) (#nodes (!g)) of
-                      [] => raise Fail "rm of missing id"
-                    | [x] => x
-                    | _ => raise Fail "repeated ids??"
-            val nodes' = List.filter (fn x => x <> n) (#nodes (!g))
-            val edges' = List.filter (not o anyeq n)  (#edges (!g))
-         in g := { nodes = nodes', edges = edges' } end
+        let val n = case find (fn n => (id n) = Id) (#nodes (!g)) of
+                      NONE => raise Fail "rm of missing id"
+                    | SOME x => x
+         in rm_node n end
 
     fun nodename (N n) = "n" ^ (makestring (#id n))
 
     fun printGraph g =
         let val ns = nodes g
             fun p1 n = (print ((nodename n) ^ ": ");
-                       List.app (fn n => print ((nodename n) ^ ", ")) (succ n);
+                       List.app (fn n => print ((nodename n) ^ ", ")) (tolist (succ n));
                        print "\n")
-         in List.app p1 ns end
+         in List.app p1 (tolist ns) end
 
-    fun copy g =
-        let val r = ref { nodes = [], edges = [] }
+    fun copy (G g) =
+        let val nodes   = #nodes (!g)
+            val next    = #next (!g)
+            val prev    = #prev (!g)
+            val counter = #counter (!g)
+            val r       = ref { nodes = nodes, prev = prev, next = next, counter = 0 }
             val graph = G r
+
             fun map_node (N {id, g}) = N {id=id, g=graph}
-            val nodes' = map map_node (nodes g)
-            val edges' = map (fn (a,b) => (map_node a, map_node b)) (edges g)
-         in r := { nodes = nodes', edges = edges' } ;
+
+            (* this sucks *)
+            fun fixup (k, v) = fromlist ncomp (map map_node (tolist v))
+
+            val nodes'  = fromlist ncomp (map map_node (tolist nodes))
+            val next'   = tabMap next fixup
+            val prev'   = tabMap prev fixup
+
+         in r := { nodes = nodes', next = next', prev = prev', counter = counter };
             graph end
 end

@@ -6,10 +6,10 @@ sig
     exception GraphEdge
     exception GraphFail of string
 
-    val nodes : graph -> node list
-    val succ : node -> node list
-    val pred : node -> node list
-    val adj  : node -> node list
+    val nodes : graph -> node set.set
+    val succ : node -> node set.set
+    val pred : node -> node set.set
+    val adj  : node -> node set.set
 
     val newGraph : unit -> graph
     val newNode : graph -> node

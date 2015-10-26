@@ -43,7 +43,7 @@ fun do_allocate C frame interf asm =
     let val IGRAPH {graph=itf, tnode=tnode, ntemp=ntemp, moves=moves} = interf
         val Ct = C o tnode
 
-        fun mapped_to r = List.filter (fn t => not (isreal (ntemp t)) andalso C t = Ct r) (nodes itf)
+        fun mapped_to r = List.filter (fn t => not (isreal (ntemp t)) andalso C t = Ct r) (tolist (nodes itf))
 
         fun p_alloc_1 r =
             let val m = mapped_to r
@@ -130,16 +130,16 @@ and run frame asm =
              end
 
         fun p_interf_1 n = "interferences for " ^ toString (ntemp n) ^ ":\n" ^
-                           list_decor (map (temp.toString o ntemp) (succ n)) ^ "\n"
+                           list_decor (map (temp.toString o ntemp) (tolist (succ n))) ^ "\n"
 
         fun print_move (l,r) = "(" ^ toString (ntemp l) ^ ", " ^ toString (ntemp r) ^ ")"
 
         val _ = if !verbose
-                    then List.app (print o p_liv_1) (nodes cfg)
+                    then List.app (print o p_liv_1) (tolist (nodes cfg))
                     else ()
 
         val _ = if !verbose
-                    then List.app (print o p_interf_1) (nodes itf)
+                    then List.app (print o p_interf_1) (tolist (nodes itf))
                     else ()
 
         val _ = if !verbose

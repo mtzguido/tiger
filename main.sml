@@ -1,6 +1,7 @@
 open BasicIO Nonstdio Lexing List Process
 
 open lexer parser ast escape common semantics ofile liv
+open graph
 
 fun lexstream(is: instream) =
     Lexing.createLexer(fn b => fn n => buff_input is b 0 n);
@@ -18,6 +19,7 @@ fun err (VarNoDec name)  = print ("Error: variable no definida ("^name^").\n")
   | err  NoInput         = print (CommandLine.name()^": no input files\n")
   | err  Subscript       = print "Error interno: Subscript\n"
   | err  Unmapped        = print "Unmapped...\n"
+  | err  (GraphFail s)   = print ("Graph Fail" ^ s ^ "\n")
   | err x = print "Excepción no reconocida!\n"
 
 fun printTokens lbuf =
