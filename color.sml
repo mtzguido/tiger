@@ -52,7 +52,7 @@ struct
 
     fun color k precolor graph moves =
         let fun pre Id =
-            let val rnode = hd (List.filter (fn n => id n = Id) (tolist (nodes graph)))
+            let val rnode = valOf (set.find (fn n => id n = Id) (nodes graph))
              in precolor rnode end
          in OK ((simplify pre k graph) o id)
                 handle Retry n =>
