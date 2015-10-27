@@ -5,7 +5,7 @@ struct
     exception Retry of node
 
     datatype coloring =
-        OK of (node -> int)
+        OK of node -> int
       | FAILED of node
 
     fun empty_coloring n = ~1
@@ -23,26 +23,38 @@ struct
             | [] => raise Retry n
         end
 
-    fun try_color pre k g =
-        let val ns = List.filter (fn n => pre (id n) = NONE) (tolist (nodes g))
-         in case ns of
-               [] => valOf o pre
-             | _ => let val easy = List.filter (fn n => outdeg n < k) ns
-                        val g' = copy g
-                        val rm = case easy of
-                                     (h::_) => h
-                                   | [] => hd (ns)
+    fun possible_spills pre k g =
+        let val n = set.find (fn n => pre (id n) = NONE)
+                    (nodes g)
+         in case n of
+               NONE => valOf o pre
+             | SOME n =>
+                 let val g' = copy g
+                     val _ = rm_node_id g' (id n)
+                     val c' = simplify pre k g'
+                  in fixup k c' g n end
+         end
 
-                        val _ = rm_node_id g' (id rm)
-                        val c' = try_color pre k g'
-                      in fixup k c' g rm end
+    and coallesce pre k g =
+        possible_spills pre k g
+
+    and simplify pre k g =
+        let val n = set.find (fn n => pre (id n) = NONE andalso outdeg n < k)
+                    (nodes g)
+         in case n of
+               NONE => coallesce pre k g
+             | SOME n =>
+                 let val g' = copy g
+                     val _ = rm_node_id g' (id n)
+                     val c' = simplify pre k g'
+                  in fixup k c' g n end
          end
 
     fun color k precolor graph moves =
         let fun pre Id =
             let val rnode = hd (List.filter (fn n => id n = Id) (tolist (nodes graph)))
              in precolor rnode end
-         in OK ((try_color pre k graph) o id)
+         in OK ((simplify pre k graph) o id)
                 handle Retry n =>
                     let val Id = id n
                         val n' = List.filter (fn n => id n = Id) (tolist (nodes graph))
