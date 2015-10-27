@@ -177,4 +177,12 @@ struct
          in set.app visit (nodes g);
             !trace
         end
+
+    fun related m n =
+        let val gm = ngraph m
+            val gn = ngraph n
+         in if gm <> gn
+            then raise GraphFail "related en grafos distintos"
+            else member n (succ m)
+        end
 end

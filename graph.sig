@@ -11,6 +11,8 @@ sig
     val pred : node -> node set.set
     val adj  : node -> node set.set
 
+    val related : node -> node -> bool
+
     val newGraph : unit -> graph
     val newNode : graph -> node
 
