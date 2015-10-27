@@ -32,37 +32,37 @@ struct
             end
 
         fun possible_spills g =
-            let val n = set.find (fn n => pre (id n) = NONE)
-                        (nodes g)
+            let val n = set.find (fn n => pre (id n) = NONE) (nodes g)
              in case n of
                    NONE => valOf o pre
-                 | SOME n =>
-                     let val g' = copy g
-                         val _ = rm_node_id g' (id n)
-                         val c' = simplify g'
-                      in fixup c' g n end
+                 | SOME n => remove_and_simplify g n
              end
+
+        and remove_and_simplify g n =
+            let val g' = copy g
+                val _ = rm_node_id g' (id n)
+                val c' = simplify g'
+             in fixup c' g n
+            end
 
         and coallesce g =
             possible_spills g
 
         and simplify g =
-            let val n = set.find (fn n => pre (id n) = NONE andalso not (significant n))
-                        (nodes g)
+            let val n = set.find (fn n => pre (id n) = NONE andalso not (significant n)) (nodes g)
              in case n of
                    NONE => coallesce g
-                 | SOME n =>
-                     let val g' = copy g
-                         val _ = rm_node_id g' (id n)
-                         val c' = simplify g'
-                      in fixup c' g n end
+                 | SOME n => remove_and_simplify g n
              end
 
-         in OK ((simplify graph) o id)
-                handle Retry n =>
-                    let val Id = id n
-                        val n' = List.filter (fn n => id n = Id) (tolist (nodes graph))
-                     in FAILED (hd n')
-                    end
+         in let val id_color = simplify graph
+             in OK (fn n => id_color (id n)) end
+            handle Retry n =>
+                let val Id = id n
+                    val mn' = set.find (fn n => id n = Id) (nodes graph)
+                 in case mn' of
+                        SOME n' => FAILED n'
+                      | NONE => raise Fail "color: internal error"
+                end
         end
 end
