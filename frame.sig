@@ -28,5 +28,5 @@ sig
                           body: asm.instr list,
                           epilogue: string }
 
-    val spill : Frame -> temp.temp -> asm.instr list -> asm.instr list
+    val spill : Frame -> temp.temp list -> asm.instr list -> asm.instr list
 end

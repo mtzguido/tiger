@@ -69,7 +69,7 @@ fun allocate_regs frame interf asm =
                                           then raise Fail "spilled real node??\n"
                                           else ()
 
-                              val asm = spill frame reg asm
+                              val asm = spill frame [reg] asm
 
                               val texts = map (asm.print temp.toString) asm
                               val _ = print "Spilled assembly text:\n"

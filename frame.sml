@@ -158,8 +158,12 @@ fun spill1 frame reg acc i = case i of
         else [i]
     end
 
-fun spill frame reg asm =
+fun spill_reg frame reg acc asm =
+     List.concat (map (spill1 frame reg acc) asm)
+
+fun spill frame regs asm =
     let val acc = frameAllocLocal frame true
-     in List.concat (map (spill1 frame reg acc) asm) end
+        val asm = foldl (fn (r, asm) => spill_reg frame r acc asm) asm regs
+     in asm end
 
 end
