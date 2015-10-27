@@ -54,7 +54,7 @@ fun allocate_regs frame interf asm =
                             NONE => NONE
                           | SOME v => SOME (v + 1)
         val _ = start_t ()
-        val cres = color (length frame.gpregs) precolor itf
+        val cres = color (length frame.gpregs) precolor itf moves
         val _= stop_t "Coloring"
 
      in case cres of

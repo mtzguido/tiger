@@ -38,7 +38,7 @@ struct
                       in fixup k c' g rm end
          end
 
-    fun color k precolor graph =
+    fun color k precolor graph moves =
         let fun pre Id =
             let val rnode = hd (List.filter (fn n => id n = Id) (tolist (nodes graph)))
              in precolor rnode end
