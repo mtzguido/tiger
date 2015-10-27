@@ -15,9 +15,16 @@ struct
 
 
     fun color k precolor graph moves =
+
         let fun pre Id =
             let val rnode = valOf (set.find (fn n => id n = Id) (nodes graph))
              in precolor rnode end
+
+        (* We work with IDs *)
+        val moves = map (fn (a,b) => (id a, id b)) moves
+
+        (* Set of move related IDs *)
+        val mr_set = fromlist Int.compare (map (#1) moves @ map (#2) moves)
 
         fun significant n = outdeg n >= k
 
@@ -31,10 +38,18 @@ struct
                 | [] => raise Retry n
             end
 
+        fun precolored n = pre (id n) <> NONE
+
+        fun move_related n =
+            member (id n) mr_set
+
         fun possible_spills g =
-            let val n = set.find (fn n => pre (id n) = NONE) (nodes g)
+            pop_and_fixup (not o precolored) g (fn _ => valOf o pre)
+
+        and pop_and_fixup pred g next =
+            let val n = set.find pred (nodes g)
              in case n of
-                   NONE => valOf o pre
+                   NONE => next g
                  | SOME n => remove_and_simplify g n
              end
 
@@ -45,15 +60,19 @@ struct
              in fixup c' g n
             end
 
+        and try_briggs g =
+            false
+
         and coallesce g =
-            possible_spills g
+            case try_briggs g of
+                true => simplify g
+              | false => possible_spills g
 
         and simplify g =
-            let val n = set.find (fn n => pre (id n) = NONE andalso not (significant n)) (nodes g)
-             in case n of
-                   NONE => coallesce g
-                 | SOME n => remove_and_simplify g n
-             end
+            let fun pred n = not (precolored n) andalso
+                             not (significant n) andalso
+                             not (move_related n)
+            in pop_and_fixup pred g coallesce end
 
          in let val id_color = simplify graph
              in OK (fn n => id_color (id n)) end
