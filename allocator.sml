@@ -63,20 +63,25 @@ fun allocate_regs frame interf asm =
                           val asm = do_allocate c frame interf asm
                           val _= stop_t "Final allocation"
                        in asm end
-            | FAILED n => let val reg = ntemp n
-                              val _ = print ("Spilled node! : " ^ toString reg ^ "\n")
-                              val _ = if isreal reg
-                                          then raise Fail "spilled real node??\n"
-                                          else ()
+            | FAILED nss =>
+                let val regs = case nss of
+                                   [ns] => map ntemp ns
+                                 | _ => raise Fail "spilled >1 sets"
 
-                              val asm = spill frame [reg] asm
+                    val _ = print ("Spilled nodes! : " ^ list_decor (map toString regs) ^ "\n")
 
-                              val texts = map (asm.print temp.toString) asm
-                              val _ = print "Spilled assembly text:\n"
-                              val _ = List.app (fn t => print (t ^ "\n")) texts
-                              val _ = print "\n\n"
+                    val _ = if List.all isreal regs
+                            then raise Fail "spilled all real nodes??"
+                            else ()
 
-                           in run frame asm end
+                    val regs = List.filter (not o isreal) regs
+                    val asm = spill frame regs asm
+
+                    val texts = map (asm.print temp.toString) asm
+                    val _ = print "Spilled assembly text:\n"
+                    val _ = List.app (fn t => print (t ^ "\n")) texts
+                    val _ = print "\n\n"
+                 in run frame asm end
     end
 
 and run frame asm =

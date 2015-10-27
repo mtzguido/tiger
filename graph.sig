@@ -16,6 +16,7 @@ sig
     val newGraph : unit -> graph
     val newNode : graph -> node
 
+    val ncomp : node * node -> order
     
     val mk_edge : node -> node -> unit
     val rm_edge : node -> node -> unit

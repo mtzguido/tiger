@@ -86,6 +86,7 @@ struct
                                           [h] => h
                                         | _ => raise Fail "non-singleton def in move??")
                         in IGRAPH {graph=graph, tnode=tnode,
+                                    (* FIXME: Should moves be symmetrical?? *)
                                    ntemp=ntemp, moves=(src,dst)::moves}
                         end
                    else interf
