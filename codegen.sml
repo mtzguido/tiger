@@ -83,6 +83,26 @@ struct
         in emit (OPER { asm = "leaq " ^ l ^ ", 'd0", dst = [t], src = [],
                         jump = [] }); t end
 
+      | Binop (Plus, Const i, Temp t) =>
+        let val t' = newtemp ()
+         in emit (MOVE { asm = "movq 's0, 'd0", src = t, dst = t'});
+            emit (OPER { asm = "addq $" ^ printInt i ^ ", 'd0", src = [], dst = [t'], jump = []});
+            t'
+        end
+
+      | Binop (Plus, Temp t, Const i) =>
+        gen_e (Binop (Plus, Const i, Temp t))
+
+      | Binop (Plus, Mem (Binop (Plus, Const i, Temp b)), Temp r) =>
+            let val t = newtemp ()
+             in emit (MOVE { asm = "movq 's0, 'd0", src = r, dst = t });
+                emit (OPER { asm = "addq " ^(printInt i)^"('s0), 'd0",
+                             src = [b], dst = [t], jump = [] });
+                t end
+
+      | Binop (Plus, Temp r, Mem (Binop (Plus, Const i, Temp b))) =>
+        gen_e (Binop (Plus, Mem (Binop (Plus, Const i, Temp b)), Temp r))
+
       | Binop (binop, l, r) =>
           gen_binop binop l r
 
