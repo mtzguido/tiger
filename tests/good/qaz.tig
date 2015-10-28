@@ -1,0 +1,44 @@
+let
+var i0 := 0
+var i1 := 1
+var i2 := 2
+var i3 := 3
+var i4 := 4
+var i5 := 5
+var i6 := 6
+var i7 := 7
+var i8 := 8
+var i9 := 9
+var i10 := 10
+var i11 := 11
+var i12 := 12
+var i13 := 13
+var i14 := 14
+var i15 := 15
+var i16 := 16
+var i17 := 17
+var i18 := 18
+var i19 := 19
+var i20 := 20
+var i21 := 21
+var i22 := 22
+var i23 := 23
+var i24 := 24
+var i25 := 25
+var i26 := 26
+var i27 := 27
+var i28 := 28
+var i29 := 29
+var i30 := 30
+var i31 := 31
+var i32 := 32
+var i33 := 33
+var i34 := 34
+var i35 := 35
+var i36 := 36
+var i37 := 37
+var i38 := 38
+var i39 := 39
+in
+print_int(i0+ i1+ i2+ i3+ i4+ i5+ i6+ i7+ i8+ i9+ i10+ i11+ i12+ i13+ i14+ i15+ i16+ i17+ i18+ i19+ i20+ i21+ i22+ i23+ i24+ i25+ i26+ i27+ i28+ i29+ i30+ i31+ i32+ i33+ i34+ i35+ i36+ i37+ i38+ i39); 0
+end
